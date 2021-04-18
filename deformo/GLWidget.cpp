@@ -13,8 +13,8 @@ void GLWidget::initializeGL() {
 
   program_id = new QOpenGLShaderProgram(this);
 
-  const auto vertex_shader = ReadShader("./core.vs");
-  const auto fragment_shader = ReadShader("./core.frag");
+  const auto vertex_shader = ReadFileToString("./core.vs");
+  const auto fragment_shader = ReadFileToString("./core.frag");
 
   program_id->addShaderFromSourceCode(QOpenGLShader::Vertex,
                                       vertex_shader.data());
@@ -66,7 +66,7 @@ void GLWidget::paintGL() {
   program_id->release();
 }
 
-std::string ReadShader(const std::string& path) {
+std::string ReadFileToString(const std::string& path) {
   std::ostringstream sstr;
   const auto stream = std::ifstream{path};
   sstr << stream.rdbuf();

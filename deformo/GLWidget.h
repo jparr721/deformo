@@ -6,7 +6,7 @@
 #include <QMatrix4x4>
 #include <string>
 
-std::string ReadShader(const std::string& path);
+std::string ReadFileToString(const std::string& path);
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
