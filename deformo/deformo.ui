@@ -20,7 +20,7 @@
    <string>deformo</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <widget class="QOpenGLWidget" name="openGLWidget">
+   <widget class="GLWidget" name="openGLWidget">
     <property name="geometry">
      <rect>
       <x>10</x>
@@ -184,6 +184,13 @@
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>GLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>GLWidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="deformo.qrc"/>
  </resources>
