@@ -58,6 +58,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -103,6 +105,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GLWidget.cpp" />
+    <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
@@ -111,6 +114,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Mesh.h" />
     <QtMoc Include="GLWidget.h" />
     <ClInclude Include="Simulation.h" />
   </ItemGroup>
