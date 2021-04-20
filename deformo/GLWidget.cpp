@@ -22,11 +22,11 @@ void GLWidget::initializeGL() {
                                       fragment_shader.data());
   program_id->link();
 
-  position = program_id->attributeLocation("position_attribute");
+  position = program_id->attributeLocation("position");
   Q_ASSERT(position > 0);
-  color = program_id->attributeLocation("color_attribute");
+  color = program_id->attributeLocation("color");
   Q_ASSERT(color > 0);
-  matrix_uniform = program_id->uniformLocation("projection_matrix");
+  matrix_uniform = program_id->uniformLocation("projection");
   Q_ASSERT(matrix_uniform > 0);
 }
 

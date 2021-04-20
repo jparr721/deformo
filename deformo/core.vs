@@ -1,10 +1,13 @@
-attribute highp vec4 position_attribute;
-attribute lowp vec4 color_attribute;
+attribute highp vec4 position;
+attribute lowp vec4 color;
 
-varying lowp vec4 color;
-uniform highp mat4 projection_matrix;
+varying lowp vec4 v_color;
+
+uniform highp mat4 projection;
+uniform highp mat4 model;
+uniform highp mat4 view;
 
 void main() {
-    color = color_attribute;
-    gl_Position = projection_matrix * position_attribute;
+    v_color = color;
+    gl_Position = projection * position;
 }
