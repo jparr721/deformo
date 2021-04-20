@@ -105,6 +105,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GLWidget.cpp" />
+    <ClCompile Include="Integrators.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Simulation.cpp" />
     <QtRcc Include="deformo.qrc" />
@@ -114,13 +115,19 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="EigenTypes.h" />
+    <ClInclude Include="Integrators.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="resource.h" />
     <QtMoc Include="GLWidget.h" />
     <ClInclude Include="Simulation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="core.frag" />
     <None Include="core.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="deformo.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

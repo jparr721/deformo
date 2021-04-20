@@ -2,15 +2,17 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
+#include <vector>
+
 #include "EigenTypes.h"
 
 /**
-This class holds the numerical simulator for the FEA model.
+This class holds the numerical simulator for the FEA model. This system assumes
+uniform springs density based on the particle positions.
 **/
 class Simulation {
  public:
-  Simulation(Eigen::Ref<const Eigen::VectorXi> particles_,
-             Eigen::Ref<const Eigen::VectorXi> springs_);
+  Simulation(Eigen::Ref<const Eigen::VectorXd> particles_, const std::vector<Eigen::Vector3d>& fixed_indices);
   void Update();
   void Integrate();
 
@@ -29,7 +31,16 @@ class Simulation {
   double point_mass = 1.;
 
   // The Global Force Vector
-  Eigen::VectorXd F_ext; 
+  Eigen::VectorXd F_ext;
+
+  // Global stacked particle vector (xyz)
+  Eigen::VectorXd particles;
+
+  // Global stacked spring vector (xyz)
+  Eigen::VectorXd springs;
+
+  // Selection Matrix for particles
+  Eigen::SparseMatrixXd P;
 
   // The Mass Matrix
   Eigen::MatrixXd M;
@@ -40,4 +51,5 @@ class Simulation {
   void AssembleForces();
   void AssembleStiffness();
   void AssembleMassMatrix();
+  void AssembleFixedPointSelectionMatrices(const std::vector<Eigen::Vector3d>& fixed_indices);
 };
