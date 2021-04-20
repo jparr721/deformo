@@ -4,6 +4,8 @@ attribute highp vec3 position;
 varying lowp vec4 v_color;
 
 uniform highp mat4 projection;
+
+// TODO
 uniform highp mat4 model;
 uniform highp mat4 view;
 
