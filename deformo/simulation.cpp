@@ -34,8 +34,7 @@ void Simulation::Update() {
 void Simulation::Integrate() {
   const auto current_displacement = displacements;
 
-  // TODO(@jparr721) Use Cholesky LDLT solver for M
-  integrators::ExplicitCentralDifference(displacements, F_ext, M);
+  integrators::ExplicitCentralDifference(displacements, F_ext, M_hat);
 
   acceleration = a1 * (last_displacement + displacements);
   velocity =
@@ -187,22 +186,16 @@ void Simulation::AssembleMassMatrix() {
 
   // Triangularize M_hat
   Eigen::SimplicialLDLT<Eigen::SparseMatrixXd> solver;
-  solver.analyzePattern(M_hat);
-  solver.factorize(M_hat);
-
-  // Deal with solver failures
-  double regularization = 1e-4;
-
-  Eigen::SparseMatrixXd I(M_hat.rows(), M_hat.rows());
+  solver.compute(M_hat);
 
   // If the solver fails for some reason, regularize the result and re-run
   if (solver.info() != Eigen::Success) {
-    M_hat += (regularization * I).eval();
-    solver.factorize(M_hat);
-
-    std::cout << "Added: " << regularization << "identities to solver"
-              << std::endl;
+    std::cout << "Failed to solve M_hat" << std::endl;
   }
+
+  const auto inv_M_hat = solver.solve(M_hat).eval();
+
+  M_hat = inv_M_hat;
 }
 
 void Simulation::InitializeIntegrationConstants() {
