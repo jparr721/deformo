@@ -1,7 +1,9 @@
 #include "Simulation.h"
 
 #include <Eigen/Core>
+#include <Eigen/SparseCholesky>
 #include <algorithm>
+#include <iostream>
 
 #include "Integrators.h"
 
@@ -14,12 +16,20 @@ Simulation::Simulation(double mass_, double damping_, double E_, double NU_,
       displacements(displacements_) {
   InitializeIntegrationConstants();
 
+  // Assume no initial forces so U^-dt is always the same.
+  last_displacement = displacements;
+
   AssembleMassMatrix();
   AssembleForces();
-  AssembleStiffness();
+  AssembleElementStiffness();
+  AssembleGlobalStiffness();
 }
 
-void Simulation::Update() { current_time += timestep_size; }
+void Simulation::Update() {
+  current_time += timestep_size;
+
+  Integrate();
+}
 
 void Simulation::Integrate() {
   const auto current_displacement = displacements;
@@ -31,10 +41,12 @@ void Simulation::Integrate() {
   velocity =
       a0 * (last_displacement - 2 * current_displacement + displacements);
 
-  last_displacement = displacements;
+  last_displacement = current_displacement;
 }
 
-void Simulation::AssembleForces() {}
+void Simulation::AssembleForces() {
+  F_ext = Eigen::VectorXd::Zero(displacements.rows());
+}
 
 /**
 @brief Assemble 6x6 element stiffness matrix. Given by [k] = tA[B]^T[D][B]
@@ -53,7 +65,7 @@ void Simulation::AssembleElementStiffness() {
   double betai, betaj, betam, gammai, gammaj, gammam;
 
   // Plane interaction matrix
-  Eigen::Matrix<double, 3, 6> B;
+  Eigen::Matrix36d B;
 
   // Plane stress/strain matrix
   Eigen::Matrix3d D;
@@ -99,7 +111,7 @@ void Simulation::AssembleElementStiffness() {
   }
 }
 
-void Simulation::AssembleStiffness() {
+void Simulation::AssembleGlobalStiffness() {
   const double rowsize = displacements.rows() * 2;
 
   // Compute row size with 3 degrees of freedom.
@@ -108,9 +120,9 @@ void Simulation::AssembleStiffness() {
   // Iterate through all points and element stiffness matrices, generating the
   // output inside of the K matrix.
   for (const auto& [kk, pts] : k) {
-    const int i = pts[0];
-    const int j = pts[1];
-    const int m = pts[2];
+    const auto i = pts[0];
+    const auto j = pts[1];
+    const auto m = pts[2];
 
     // oof.
     K(2 * i - 1, 2 * i - 1) = K(2 * i - 1, 2 * i - 1) + kk(1, 1);
@@ -161,9 +173,36 @@ void Simulation::InitializeAcceleration() {
 }
 
 void Simulation::AssembleMassMatrix() {
-  M.resize(displacements.rows(), displacements.rows());
-  M.setIdentity();
-  M *= mass;
+  std::vector<Eigen::Triplet<double>> mass_entries;
+  mass_entries.reserve(displacements.rows());
+
+  for (int i = 0; i < displacements.rows(); ++i) {
+    mass_entries.push_back(Eigen::Triplet<double>(i, i, mass));
+  }
+
+  M.setFromTriplets(mass_entries.begin(), mass_entries.end());
+
+  // Set effective mass matrix
+  M_hat = (a0 * M).eval();
+
+  // Triangularize M_hat
+  Eigen::SimplicialLDLT<Eigen::SparseMatrixXd> solver;
+  solver.analyzePattern(M_hat);
+  solver.factorize(M_hat);
+
+  // Deal with solver failures
+  double regularization = 1e-4;
+
+  Eigen::SparseMatrixXd I(M_hat.rows(), M_hat.rows());
+
+  // If the solver fails for some reason, regularize the result and re-run
+  if (solver.info() != Eigen::Success) {
+    M_hat += (regularization * I).eval();
+    solver.factorize(M_hat);
+
+    std::cout << "Added: " << regularization << "identities to solver"
+              << std::endl;
+  }
 }
 
 void Simulation::InitializeIntegrationConstants() {

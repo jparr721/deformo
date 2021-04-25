@@ -9,6 +9,7 @@ namespace Eigen {
 
 	// Dense Matrix Types
 	using Matrix66d = Eigen::Matrix<double, 6, 6>;
+	using Matrix36d = Eigen::Matrix<double, 3, 6>;
 
 	// Sparse Matrix Types
 	using SparseMatrixXd = Eigen::SparseMatrix<double>;

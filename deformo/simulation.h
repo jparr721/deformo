@@ -33,7 +33,7 @@ class Simulation {
   double NU;
 
   // Thickness
-  double t;
+  double t = 2.5e-2;
 
   // Point mass
   double mass = 1.;
@@ -61,7 +61,10 @@ class Simulation {
   Eigen::VectorXd velocity;
 
   // The Mass Matrix
-  Eigen::MatrixXd M;
+  Eigen::SparseMatrixXd M;
+
+  // The Effective Mass Matrix
+  Eigen::SparseMatrixXd M_hat;
 
   // The global stiffness matrix
   Eigen::MatrixXd K;
@@ -70,7 +73,7 @@ class Simulation {
   std::vector<std::pair<Eigen::Matrix66d, std::vector<uint64_t>>> k;
 
   void AssembleForces();
-  void AssembleStiffness();
+  void AssembleGlobalStiffness();
   void AssembleElementStiffness();
   void AssembleMassMatrix();
 
