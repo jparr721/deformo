@@ -28,13 +28,17 @@ Simulation::Simulation(double mass_, double damping_, double E_, double NU_,
 void Simulation::Update() {
   current_time += timestep_size;
 
+  // R_hat = F_ext - (K - a2M)U - (M_hat)last_displacement
+  R_hat = F_ext - (K - a2 * M) * displacements - M_hat * last_displacement;
+
+  // Set U, U', and U''
   Integrate();
 }
 
 void Simulation::Integrate() {
   const auto current_displacement = displacements;
 
-  integrators::ExplicitCentralDifference(displacements, F_ext, M_hat);
+  integrators::ExplicitCentralDifference(displacements, F_ext, M_hat_inverse);
 
   acceleration = a1 * (last_displacement + displacements);
   velocity =
@@ -193,12 +197,12 @@ void Simulation::AssembleMassMatrix() {
     std::cout << "Failed to solve M_hat" << std::endl;
   }
 
-  const auto inv_M_hat = solver.solve(M_hat).eval();
-
-  M_hat = inv_M_hat;
+  M_hat_inverse = solver.solve(M_hat);
 }
 
 void Simulation::InitializeIntegrationConstants() {
   a0 = 1 / std::pow(timestep_size, 2);
   a1 = 1 / (timestep_size * 2);
+  a2 = 2 * a0;
+  a3 = 1 / a2;
 }

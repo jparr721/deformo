@@ -44,9 +44,14 @@ class Simulation {
   // Integration constants
   double a0 = 1e-10;
   double a1 = 1e-10;
+  double a2 = 1e-10;
+  double a3 = 1e-10;
 
-  // The Global Force Vector
+  // The Global Force Vector (Interaction Forces)
   Eigen::VectorXd F_ext;
+
+  // The Global Load Vector (at current_time)
+  Eigen::VectorXd R_hat;
 
   // Global stacked vertex vector from the last timestep
   Eigen::VectorXd last_displacement;
@@ -65,6 +70,9 @@ class Simulation {
 
   // The Effective Mass Matrix
   Eigen::SparseMatrixXd M_hat;
+
+  // The solved version of M_hat
+  Eigen::SparseMatrixXd M_hat_inverse;
 
   // The global stiffness matrix
   Eigen::MatrixXd K;
