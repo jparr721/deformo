@@ -1,14 +1,23 @@
 #include "GLWidget.h"
 
 #include <Eigen/Dense>
+#include <iostream>
 #include <fstream>
+#include <memory>
 #include <sstream>
+
+#include "Simulation.h"
 
 void GLWidget::Cleanup() { delete program_id; }
 
 void GLWidget::initializeGL() {
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
           &GLWidget::Cleanup);
+  Eigen::VectorXd displacements(6);
+  displacements << 0, 0, 0.5, 0, 0.5, 0.25;
+  const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, displacements);
+  std::cout << std::get<0>(sim->k[0]) << std::endl;
+
   initializeOpenGLFunctions();
 
   program_id = new QOpenGLShaderProgram(this);

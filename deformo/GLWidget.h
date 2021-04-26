@@ -1,9 +1,9 @@
 #pragma once
 
+#include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
-#include <QMatrix4x4>
 #include <string>
 
 std::string ReadFileToString(const std::string& path);
