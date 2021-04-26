@@ -24,7 +24,6 @@ namespace SimulationTest
 
 			const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, particles);
 
-			Assert::AreEqual(40000., 1 / std::pow(0.005, 2));
 			Assert::IsNotNull(sim.get());
 		}
 	};
