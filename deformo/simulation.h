@@ -3,8 +3,8 @@
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <unordered_map>
-#include <vector>
 #include <utility>
+#include <vector>
 
 #include "EigenTypes.h"
 
@@ -13,12 +13,6 @@ This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class Simulation {
  public:
-  Simulation(double mass_, double damping_, double E_, double NU_,
-             Eigen::Ref<const Eigen::VectorXd> displacements_);
-  void Update();
-  void Integrate();
-
- private:
   constexpr static int PLANE_STRESS = 1;
   constexpr static int PLANE_STRAIN = 2;
 
@@ -37,9 +31,6 @@ class Simulation {
 
   // Point mass
   double mass = 1.;
-
-  // Damping
-  double damping = 1.;
 
   // Integration constants
   double a0 = 1e-10;
@@ -79,6 +70,12 @@ class Simulation {
 
   // Element stiffness matrices and their node numbers
   std::vector<std::pair<Eigen::Matrix66d, std::vector<uint64_t>>> k;
+
+  Simulation() = default;
+  Simulation(double mass_, double E_, double NU_,
+             const Eigen::VectorXd& displacements_);
+  void Update();
+  void Integrate();
 
   void AssembleForces();
   void AssembleGlobalStiffness();

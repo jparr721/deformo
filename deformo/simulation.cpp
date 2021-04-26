@@ -7,22 +7,18 @@
 
 #include "Integrators.h"
 
-Simulation::Simulation(double mass_, double damping_, double E_, double NU_,
-                       Eigen::Ref<const Eigen::VectorXd> displacements_)
-    : E(E_),
-      NU(NU_),
-      mass(mass_),
-      damping(damping_),
-      displacements(displacements_) {
+Simulation::Simulation(double mass_, double E_, double NU_,
+                       const Eigen::VectorXd& displacements_)
+    : E(E_), NU(NU_), mass(mass_), displacements(displacements_) {
   InitializeIntegrationConstants();
 
   // Assume no initial forces so U^-dt is always the same.
   last_displacement = displacements;
 
-  AssembleMassMatrix();
   AssembleForces();
   AssembleElementStiffness();
   AssembleGlobalStiffness();
+  AssembleMassMatrix();
 }
 
 void Simulation::Update() {
@@ -178,6 +174,8 @@ void Simulation::InitializeAcceleration() {
 void Simulation::AssembleMassMatrix() {
   std::vector<Eigen::Triplet<double>> mass_entries;
   mass_entries.reserve(displacements.rows());
+
+  M.resize(displacements.rows(), displacements.rows());
 
   for (int i = 0; i < displacements.rows(); ++i) {
     mass_entries.push_back(Eigen::Triplet<double>(i, i, mass));

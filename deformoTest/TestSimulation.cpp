@@ -7,6 +7,8 @@
 #include "CppUnitTest.h"
 #include "../deformo/Simulation.h"
 #include "../deformo/Simulation.cpp"
+#include "../deformo/Integrators.h"
+#include "../deformo/Integrators.cpp"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -20,13 +22,10 @@ namespace SimulationTest
 			Eigen::VectorXd particles(10);
 			particles << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10;
 
-			const auto fixed_indices =
-			std::vector<Eigen::Vector3d>{Eigen::Vector3d(1, 2, 3)};
-			const auto sim = new Simulation(particles, fixed_indices);
+			const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, particles);
 
-			Assert::IsNotNull(sim);
-
-			delete sim;
+			Assert::AreEqual(40000., 1 / std::pow(0.005, 2));
+			Assert::IsNotNull(sim.get());
 		}
 	};
 }
