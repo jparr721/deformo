@@ -9,6 +9,14 @@
 #include "EigenTypes.h"
 #include "Mesh.h"
 
+/*
+Static boundary condition for a given node
+*/
+struct BoundaryCondition {
+  unsigned int node;
+  xy force;
+};
+
 /**
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
@@ -54,7 +62,7 @@ class Simulation {
   // Global stacked vertex vector from the last timestep
   Eigen::VectorXd last_displacement;
 
-  // Global stacked vertex vector (xy)
+  // Global stacked vertex vector (xy) with index mapping of node orientations
   std::shared_ptr<Mesh> mesh;
 
   // Global stacked acceleration vector
@@ -75,21 +83,69 @@ class Simulation {
   // The global stiffness matrix
   Eigen::MatrixXd K;
 
+  // The global displacement vector
+  Eigen::VectorXd U;
+
+  // The nodal displacement vector
+  std::vector<Eigen::Vector3d> nodal_displacements;
+
   // Element stiffness matrices and mapped coordinates
   std::vector<ElementStiffness> k;
 
+  // Element Stress vectors for each group of points
+  std::vector<Eigen::Vector3d> sigmas;
+
+  // The Plane Stresses from each stress vector
+  std::vector<Eigen::Vector3d> plane_stresses;
+
+  // Boundary conditions on nodes in the mesh
+  std::vector<BoundaryCondition> boundary_conditions;
+
   Simulation() = default;
   Simulation(double mass_, double E_, double NU_,
-             const std::shared_ptr<Mesh>& mesh_);
+             const std::shared_ptr<Mesh>& mesh_,
+             const std::vector<BoundaryCondition>& boundary_conditions_);
   void Update();
   void Integrate();
 
   void AssembleForces();
-  void AssembleGlobalStiffness();
-  void AssembleElementStiffness();
   void AssembleMassMatrix();
+
+  void AssembleGlobalStiffness();
+
+  void AssembleStressStrainMatrix();
+  void AssembleStrainRelationshipMatrix(double xi, double xj, double xm,
+                                        double yi, double yj, double ym);
+
+  /**
+  @brief Calculates the per-element stiffness matrix
+  **/
+  void AssembleElementStiffness();
+
+  /*
+  @brief Calculates the per-element stresses using our tensile parameters
+  */
+  void AssembleElementStresses();
+
+  /*
+  @bried Calculates the element principal stresses
+  */
+  void AssembleElementPlaneStresses();
+
+  /*
+  @brief Applies the vector of boundary conditions to the nodes
+  */
+  void ApplyBoundaryConditions();
+
+ private:
+  // Strain Relationship Matrix
+  Eigen::Matrix36d B;
+
+  // Stress-Strain Matrix
+  Eigen::Matrix3d D;
 
   void InitializeVelocity();
   void InitializeAcceleration();
   void InitializeIntegrationConstants();
+  void SolveU(Eigen::MatrixXd k, Eigen::VectorXd f);
 };
