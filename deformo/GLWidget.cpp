@@ -33,11 +33,8 @@ void GLWidget::initializeGL() {
   program_id->link();
 
   position = program_id->attributeLocation("position");
-  Q_ASSERT(position > 0);
   color = program_id->attributeLocation("color");
-  Q_ASSERT(color > 0);
   matrix_uniform = program_id->uniformLocation("projection");
-  Q_ASSERT(matrix_uniform > 0);
 }
 
 void GLWidget::paintGL() {
