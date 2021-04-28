@@ -1,11 +1,12 @@
 #include "GLWidget.h"
 
 #include <Eigen/Dense>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <sstream>
 
+#include "Mesh.h"
 #include "Simulation.h"
 
 void GLWidget::Cleanup() { delete program_id; }
@@ -15,8 +16,8 @@ void GLWidget::initializeGL() {
           &GLWidget::Cleanup);
   Eigen::VectorXd displacements(6);
   displacements << 0, 0, 0.5, 0.25, 0, 0.25;
-  const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, displacements);
-  std::cout << sim->k[0] << std::endl;
+  const auto mesh = std::make_shared<Mesh>(displacements);
+  const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, mesh);
 
   initializeOpenGLFunctions();
 

@@ -94,7 +94,7 @@ void Simulation::AssembleElementStiffness() {
     D.row(2) << 0., 0., (1. - NU) / 2.;
 
     // Plane stress calculation
-    D *= E / (1. - std::pow(NU, 2));
+    D = E / (1. - std::pow(NU, 2)) * D;
 
     const uint64_t node_number = (i / 3) + 1;
     const Eigen::Matrix66d kk = t * A * B.transpose() * D * B;
@@ -105,9 +105,9 @@ void Simulation::AssembleElementStiffness() {
     const auto r_node_number = mesh->index(xm, ym);
 
     const ElementStiffness stiffness_entry = {
-        .stiffness_matrix = kk,
-        .indices = std::vector<unsigned int>{l_node_number, m_node_number,
-                                             r_node_number},
+        kk,  // stiffness_matrix
+        std::vector<unsigned int>{l_node_number, m_node_number,
+                                  r_node_number}  // indices
     };
 
     k.emplace_back(stiffness_entry);
