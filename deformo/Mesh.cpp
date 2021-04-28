@@ -1,11 +1,21 @@
 #include "Mesh.h"
 
-Mesh::Mesh(std::vector<Vertex> vertices_, std::vector<unsigned int> indices_,
-           std::vector<Texture> textures_) :vertices(vertices_), indices(indices_), textures(textures_) {
-  SetupMesh();
+Mesh::Mesh(const Eigen::VectorXd& vertices_) : vertices(vertices_) {
+  LoadVBO();
 }
 
-void Mesh::Draw() {}
+void Mesh::LoadVBO() {
+  unsigned int node_number = 0;
+  for (auto i = 0u; i < vertices.rows(); i += 3) {
+    const std::array<double, 2> pos{
+        vertices(i),      // x
+        vertices(i + 1),  // y
+    };
 
-void Mesh::SetupMesh() {
+    const unsigned int index =
+        indices.find(pos) != indices.end() ? indices.at(pos) : node_number;
+
+    indices.insert({{pos, index}});
+    ++node_number;
+  }
 }

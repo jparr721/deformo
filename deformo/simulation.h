@@ -7,11 +7,18 @@
 #include <vector>
 
 #include "EigenTypes.h"
+#include "Mesh.h"
 
 /**
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class Simulation {
+ private:
+  struct ElementStiffness {
+    Eigen::Matrix66d stiffness_matrix;
+    std::vector<unsigned int> indices;
+  };
+
  public:
   constexpr static int PLANE_STRESS = 1;
   constexpr static int PLANE_STRAIN = 2;
@@ -48,7 +55,7 @@ class Simulation {
   Eigen::VectorXd last_displacement;
 
   // Global stacked vertex vector (xy)
-  Eigen::VectorXd displacements;
+  std::shared_ptr<Mesh> mesh;
 
   // Global stacked acceleration vector
   Eigen::VectorXd acceleration;
@@ -68,12 +75,12 @@ class Simulation {
   // The global stiffness matrix
   Eigen::MatrixXd K;
 
-  // Element stiffness matrices and their node numbers
-  std::vector<std::pair<Eigen::Matrix66d, std::vector<uint64_t>>> k;
+  // Element stiffness matrices and mapped coordinates
+  std::vector<ElementStiffness> k;
 
   Simulation() = default;
   Simulation(double mass_, double E_, double NU_,
-             const Eigen::VectorXd& displacements_);
+             const std::shared_ptr<Mesh>& mesh_);
   void Update();
   void Integrate();
 
