@@ -103,10 +103,11 @@ void Simulation::AssembleElementStiffness() {
 }
 
 void Simulation::AssembleElementStresses() {
-    // TODO(@jparr721) - Turn the increment into a contexpr for when we move up to 3d.
+  // TODO(@jparr721) - Turn the increment into a contexpr for when we move up to
+  // 3d.
   for (std::size_t i = 0; i < mesh->rows(); i += 6) {
     // Fetch at the 0-indexed value
-    const auto u = nodal_displacements.at(i / 6);
+    const Eigen::Vector6d& u = nodal_displacements.at(i / 6);
     const double xi = mesh->vertices(i);
     const double yi = mesh->vertices(i + 1);
     const double xj = mesh->vertices(i + 2);
@@ -116,8 +117,8 @@ void Simulation::AssembleElementStresses() {
 
     AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
 
-    const Eigen::Vector3d sigma = D * B * u;
-    sigmas.emplace_back(u);
+     const Eigen::Vector3d sigma = D * B * u;
+     sigmas.emplace_back(sigma);
   }
 }
 

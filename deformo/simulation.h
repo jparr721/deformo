@@ -87,7 +87,7 @@ class Simulation {
   Eigen::VectorXd U;
 
   // The nodal displacement vector
-  std::vector<Eigen::Vector3d> nodal_displacements;
+  std::vector<Eigen::Vector6d> nodal_displacements;
 
   // Element stiffness matrices and mapped coordinates
   std::vector<ElementStiffness> k;

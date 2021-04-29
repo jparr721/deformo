@@ -17,7 +17,8 @@ void GLWidget::initializeGL() {
   Eigen::VectorXd displacements(6);
   displacements << 0, 0, 0.5, 0.25, 0, 0.25;
   const auto mesh = std::make_shared<Mesh>(displacements);
-  const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, mesh);
+  const auto sim = std::make_unique<Simulation>(
+      1., 210e6, 0.3, mesh, std::vector<BoundaryCondition>{});
 
   initializeOpenGLFunctions();
 
@@ -35,14 +36,14 @@ void GLWidget::initializeGL() {
   position = program_id->attributeLocation("position");
   color = program_id->attributeLocation("color");
   matrix_uniform = program_id->uniformLocation("projection");
+
+  fov.perspective(45.f, 4.f / 3.f, 0.1f, 2000.f);
+  fov.translate(0, 0, -5);
 }
 
 void GLWidget::paintGL() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   program_id->bind();
-
-  fov.perspective(45.f, 4.f / 3.f, 0.1f, 2000.f);
-  fov.translate(0, 0, -5);
 
   program_id->setUniformValue(matrix_uniform, fov);
 
