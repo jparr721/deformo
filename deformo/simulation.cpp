@@ -86,7 +86,6 @@ void Simulation::AssembleElementStiffness() {
     // Construct beta as a 3x6 matrix.
     AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
 
-    const uint64_t node_number = (i / 3) + 1;
     const Eigen::Matrix66d kk = t * A * B.transpose() * D * B;
 
     // Nodes ordered in counter-clockwise fashion
@@ -187,7 +186,6 @@ void Simulation::Solve() {
   }
 
   igl::slice(K, kept_indices, kept_indices, kk);
-  std::cout << kk << std::endl;
 }
 
 void Simulation::AssembleGlobalStiffness() {

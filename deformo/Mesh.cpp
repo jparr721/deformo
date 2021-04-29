@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include <iostream>
 Mesh::Mesh(const Eigen::VectorXd& vertices_) : vertices(vertices_) {
   LoadVBO();
 }
@@ -12,10 +13,13 @@ void Mesh::LoadVBO() {
         vertices(i + 1),  // y
     };
 
-    const unsigned int index =
-        indices.find(pos) != indices.end() ? indices.at(pos) : node_number;
+    const bool found = indices.find(pos) != indices.end();
 
+    const unsigned int index = found ? indices.at(pos) : node_number;
     indices.insert({{pos, index}});
-    ++node_number;
+
+    if (!found) {
+      ++node_number;
+    }
   }
 }
