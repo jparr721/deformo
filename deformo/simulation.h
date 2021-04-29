@@ -133,9 +133,9 @@ class Simulation {
   void AssembleElementPlaneStresses();
 
   /*
-  @brief Applies the vector of boundary conditions to the nodes
+  @brief Applies the vector of boundary conditions to the nodes and solves
   */
-  void ApplyBoundaryConditions();
+  void Solve();
 
  private:
   // Strain Relationship Matrix

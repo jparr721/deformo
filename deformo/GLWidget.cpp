@@ -14,11 +14,22 @@ void GLWidget::Cleanup() { delete program_id; }
 void GLWidget::initializeGL() {
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
           &GLWidget::Cleanup);
-  Eigen::VectorXd displacements(6);
-  displacements << 0, 0, 0.5, 0.25, 0, 0.25;
+  Eigen::VectorXd displacements(12);
+  displacements << 0, 0, 0.5, 0.25, 0, 0.25, 0, 0, 0.5, 0, 0.5, 0.25;
+
   const auto mesh = std::make_shared<Mesh>(displacements);
-  const auto sim = std::make_unique<Simulation>(
-      1., 210e6, 0.3, mesh, std::vector<BoundaryCondition>{});
+  const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, mesh,
+                                                std::vector<BoundaryCondition>{
+                                                    {
+                                                        2,
+                                                        xy{9.375, 0},
+                                                    },
+                                                    {
+                                                        3,
+                                                        xy{9.375, 0},
+                                                    },
+                                                });
+  sim->Solve();
 
   initializeOpenGLFunctions();
 

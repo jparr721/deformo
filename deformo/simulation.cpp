@@ -2,6 +2,8 @@
 
 #include "Simulation.h"
 
+#include <igl/slice.h>
+
 #include <Eigen/Core>
 #include <Eigen/SparseCholesky>
 #include <algorithm>
@@ -117,8 +119,8 @@ void Simulation::AssembleElementStresses() {
 
     AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
 
-     const Eigen::Vector3d sigma = D * B * u;
-     sigmas.emplace_back(sigma);
+    const Eigen::Vector3d sigma = D * B * u;
+    sigmas.emplace_back(sigma);
   }
 }
 
@@ -146,7 +148,47 @@ void Simulation::AssembleElementPlaneStresses() {
   }
 }
 
-void Simulation::ApplyBoundaryConditions() {}
+void Simulation::Solve() {
+  // Per-element stiffness applied to our boundary conditions
+  Eigen::MatrixXd kk;
+
+  // Our local force vector
+  Eigen::VectorXd f;
+  // Resize the force vector to the # of boundary conditions * 2;
+  f.resize(boundary_conditions.size() * 2);
+
+  // Stacked vector of xy columns/rows to slice.
+  Eigen::VectorXi kept_indices;
+  kept_indices.resize(boundary_conditions.size() * 2);
+
+  // So we have a key difference from literature. Our boundary conditions
+  // specify external forces as opposed to specifying which nodes are fixed, we
+  // just assume nodes without forces are fixed at 0. So in a problem of the
+  // form U1 - U4 where we have 4 nodes, and 2 (U2, U3) are degrees of freedom,
+  // we can make conditions as:
+  //
+  // { node: 2, force(x, y), node: 2, force(x, y) }
+  //
+  // Where x and y are the directions in which the force is applied. We can map
+  // into the force vector at these coordinates
+  int segment = 0;  // Keep track of kept indices as a 0-indexed vector
+  for (const auto& boundary_condition : boundary_conditions) {
+    // Get the node number so we can begin indexing
+    const unsigned int node_number = boundary_condition.node;
+
+    // The row is the same as the index segment
+    f.row(segment) << boundary_condition.force.x;
+    f.row(segment + 1) << boundary_condition.force.y;
+
+    const unsigned int k_col_x = node_number * 2 - 2;
+    const unsigned int k_col_y = node_number * 2 - 1;
+    kept_indices.segment(segment, 2) << k_col_x, k_col_y;
+    segment += 2;
+  }
+
+  igl::slice(K, kept_indices, kept_indices, kk);
+  std::cout << kk << std::endl;
+}
 
 void Simulation::AssembleGlobalStiffness() {
   // Iterate through all points and element stiffness matrices, generating the
