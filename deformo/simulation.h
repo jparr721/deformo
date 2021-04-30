@@ -86,9 +86,6 @@ class Simulation {
   // The global displacement vector
   Eigen::VectorXd U;
 
-  // The nodal displacement vector
-  std::vector<Eigen::Vector6d> nodal_displacements;
-
   // Element stiffness matrices and mapped coordinates
   std::vector<ElementStiffness> k;
 
@@ -125,7 +122,7 @@ class Simulation {
   /*
   @brief Calculates the per-element stresses using our tensile parameters
   */
-  void AssembleElementStresses();
+  void AssembleElementStresses(Eigen::VectorXd nodal_displacement);
 
   /*
   @bried Calculates the element principal stresses
@@ -147,5 +144,5 @@ class Simulation {
   void InitializeVelocity();
   void InitializeAcceleration();
   void InitializeIntegrationConstants();
-  void SolveU(Eigen::MatrixXd k, Eigen::VectorXd f);
+  void SolveU(Eigen::MatrixXd k, Eigen::VectorXd f, Eigen::VectorXi indices);
 };

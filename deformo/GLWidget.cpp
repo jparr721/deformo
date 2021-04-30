@@ -15,7 +15,7 @@ void GLWidget::initializeGL() {
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
           &GLWidget::Cleanup);
   Eigen::VectorXd displacements(12);
-  displacements << 0, 0, 0.5, 0.25, 0, 0.25, 0, 0, 0.0, 0.25, 0.5, 0;
+  displacements << 0, 0, 0.5, 0, 0.5, 0.25, 0, 0, 0.5, 0.25, 0, 0.25;
 
   const auto mesh = std::make_shared<Mesh>(displacements);
   const auto sim = std::make_unique<Simulation>(1., 210e6, 0.3, mesh,

@@ -103,12 +103,11 @@ void Simulation::AssembleElementStiffness() {
   }
 }
 
-void Simulation::AssembleElementStresses() {
+void Simulation::AssembleElementStresses(Eigen::VectorXd nodal_displacement) {
   // TODO(@jparr721) - Turn the increment into a contexpr for when we move up to
   // 3d.
   for (std::size_t i = 0; i < mesh->rows(); i += 6) {
     // Fetch at the 0-indexed value
-    const Eigen::Vector6d& u = nodal_displacements.at(i / 6);
     const double xi = mesh->vertices(i);
     const double yi = mesh->vertices(i + 1);
     const double xj = mesh->vertices(i + 2);
@@ -118,7 +117,7 @@ void Simulation::AssembleElementStresses() {
 
     AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
 
-    const Eigen::Vector3d sigma = D * B * u;
+    const Eigen::Vector3d sigma = D * B * nodal_displacement;
     sigmas.emplace_back(sigma);
   }
 }
@@ -186,6 +185,42 @@ void Simulation::Solve() {
   }
 
   igl::slice(K, kept_indices, kept_indices, kk);
+
+  SolveU(kk, f, kept_indices);
+
+  // Set global force
+  F_ext = K * U;
+
+  std::cout << F_ext << "\n";
+
+  // Calculate Element Stresses
+  for (std::size_t i = 0; i < mesh->rows(); i += 6) {
+    // Fetch at the 0-indexed value
+    const double xi = mesh->vertices(i);
+    const double yi = mesh->vertices(i + 1);
+    const double xj = mesh->vertices(i + 2);
+    const double yj = mesh->vertices(i + 3);
+    const double xm = mesh->vertices(i + 4);
+    const double ym = mesh->vertices(i + 5);
+
+    // 2 * # of nodes in this segment
+    Eigen::Vector6d nodal_displacement = Eigen::Vector6d::Zero();
+
+    // Nodes are a bijection to the right-value of the index pair of U.
+    const unsigned int l_node = mesh->index(xi, yi);
+
+    nodal_displacement.segment(0, 2) << l_node - 1, l_node;
+
+    const unsigned int m_node = mesh->index(xj, yj);
+
+    nodal_displacement.segment(2, 2) << m_node - 1, m_node;
+
+    const unsigned int r_node = mesh->index(xm, ym);
+
+    nodal_displacement.segment(4, 2) << r_node - 1, r_node;
+
+    AssembleElementStresses(nodal_displacement);
+  }
 }
 
 void Simulation::AssembleGlobalStiffness() {
@@ -202,15 +237,15 @@ void Simulation::AssembleGlobalStiffness() {
     // oof.
     K(2 * i - 2, 2 * i - 2) += kk(0, 0);
     K(2 * i - 2, 2 * i - 1) += kk(0, 1);
-    K(2 * i - 2, 2 * j - 1) += kk(0, 2);
+    K(2 * i - 2, 2 * j - 2) += kk(0, 2);
     K(2 * i - 2, 2 * j - 1) += kk(0, 3);
-    K(2 * i - 2, 2 * m - 1) += kk(0, 4);
+    K(2 * i - 2, 2 * m - 2) += kk(0, 4);
     K(2 * i - 2, 2 * m - 1) += kk(0, 5);
     K(2 * i - 1, 2 * i - 2) += kk(1, 0);
     K(2 * i - 1, 2 * i - 1) += kk(1, 1);
     K(2 * i - 1, 2 * j - 2) += kk(1, 2);
     K(2 * i - 1, 2 * j - 1) += kk(1, 3);
-    K(2 * i - 1, 2 * m - 1) += kk(1, 4);
+    K(2 * i - 1, 2 * m - 2) += kk(1, 4);
     K(2 * i - 2, 2 * m - 1) += kk(1, 5);
     K(2 * j - 2, 2 * i - 2) += kk(2, 0);
     K(2 * j - 2, 2 * i - 1) += kk(2, 1);
@@ -309,14 +344,31 @@ void Simulation::InitializeIntegrationConstants() {
   a3 = 1 / a2;
 }
 
-void Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f) {
+void Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
+                        Eigen::VectorXi indices) {
   // Can't solve if we have a mismatch
   assert(k.rows() == f.rows() && "K AND F DO NOT MATCH IN SIZE");
 
-  U.resize(f.rows());
+  Eigen::VectorXd u;
+
+  // Indices is always # of nodes not including multi-coordinate layouts
+  u.resize(mesh->indices.size() * 2);
+
+  // Begin the process of initializing global displacement
+  U.setZero(u.rows());
 
   // Full pivot LU factorization of k minimized as far as it can go,
   // then we solve with respect to f, assigning to our global displacement
   // vector.
-  U = k.fullPivLu().solve(f);
+  u = k.fullPivLu().solve(f);
+
+  assert(indices.rows() == u.rows() && "INDEX AND U DIFFER");
+
+  // Sweep through indices, setting the segment value
+  for (int i = 0; i < u.rows(); ++i) {
+    const double val = u(i);
+    const unsigned int index = indices(i);
+
+    U.row(index) << val;
+  }
 }
