@@ -24,7 +24,7 @@ Simulation::Simulation(
   assert(mesh->rows() >= 6);
   InitializeIntegrationConstants();
 
-  const double K_rowsize = mesh->rows() * 2;
+  const double K_rowsize = mesh->indices.size() * 2;
 
   K = Eigen::MatrixXd::Zero(K_rowsize, K_rowsize);
 
