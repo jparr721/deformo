@@ -74,7 +74,7 @@ void Input::RegisterKeyPress(int key) {
 void Input::RegisterKeyRelease(int key) {
   const int key_idx = KeyExists(static_cast<Qt::Key>(key));
 
-  if (key_idx == -1) {
+  if (key_idx > -1) {
     keys[key_idx].second = InputState::Unregistered;
   }
 }
@@ -93,7 +93,7 @@ void Input::RegisterMouseButtonPress(Qt::MouseButton button) {
 void Input::RegisterMouseButtonRelease(Qt::MouseButton button) {
   const int mouse_button_idx = MouseButtonExists(button);
 
-  if (mouse_button_idx == -1) {
+  if (mouse_button_idx > -1) {
     mouse_buttons[mouse_button_idx].second = InputState::Unregistered;
   }
 }
