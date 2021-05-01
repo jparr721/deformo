@@ -51,23 +51,52 @@ void Input::Update() {
   mouse_cursor_pos = MousePosition();
   mouse_pos_delta = mouse_cursor_pos - last_mouse_cursor_pos;
 
-  UpdateStates(keys);
-  UpdateStates(buttons);
+  UpdateInputContainer(keys);
+  UpdateInputContainer(mouse_buttons);
 }
 
-void Input::Reset() {}
+void Input::Reset() {
+  keys.clear();
+  mouse_buttons.clear();
+}
 
 // ===========================================
 
-void Input::RegisterKeyPress(int key) {}
+void Input::RegisterKeyPress(int key) {
+  const int key_idx = KeyExists(static_cast<Qt::Key>(key));
 
-void Input::RegisterKeyRelease(int key) {}
+  if (key_idx == -1) {
+    keys.push_back(
+        KeyPressInstance(static_cast<Qt::Key>(key), InputState::Registered));
+  }
+}
+
+void Input::RegisterKeyRelease(int key) {
+  const int key_idx = KeyExists(static_cast<Qt::Key>(key));
+
+  if (key_idx == -1) {
+    keys[key_idx].second = InputState::Unregistered;
+  }
+}
 
 // ===========================================
 
-void Input::RegisterMouseButtonPress(Qt::MouseButton button) {}
+void Input::RegisterMouseButtonPress(Qt::MouseButton button) {
+  const int mouse_button_idx = MouseButtonExists(button);
 
-void Input::RegisterMouseButtonRelease(Qt::MouseButton button) {}
+  if (mouse_button_idx == -1) {
+    mouse_buttons.push_back(
+        MouseButtonPressInstance(button, InputState::Registered));
+  }
+}
+
+void Input::RegisterMouseButtonRelease(Qt::MouseButton button) {
+  const int mouse_button_idx = MouseButtonExists(button);
+
+  if (mouse_button_idx == -1) {
+    mouse_buttons[mouse_button_idx].second = InputState::Unregistered;
+  }
+}
 
 // ===========================================
 

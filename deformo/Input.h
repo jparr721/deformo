@@ -76,15 +76,17 @@ class Input {
 
   // Container Management
   template <typename InputInstanceContainer>
-  inline void UpdateInputContainers(InputInstanceContainer& container) {
+  inline void UpdateInputContainer(InputInstanceContainer& container) {
     const auto should_remove = [](auto instance) -> bool {
       return instance.second == InputState::Released;
     };
 
+    // Remove buttons that aren't being pressed.
     container.erase(
         std::remove_if(container.begin(), container.end(), should_remove),
         container.end());
 
+    // Update states of buttons which have been pressed.
     for (auto& value : container) {
       UpdateInputState(value);
     }
