@@ -3,21 +3,25 @@
 #include <QMatrix4x4>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
+#include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <string>
-
-std::string ReadFileToString(const std::string& path);
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
+	 // Global state vars
+  QOpenGLBuffer vbo;
+  QOpenGLVertexArrayObject vao;
   QOpenGLShaderProgram* program_id;
-  QMatrix4x4 fov;
 
-  GLint position = 0;
-  GLint color = 0;
-  GLint matrix_uniform = 0;
+  // Camera vars
+  int model;
+  int world;
+  int 
+  QMatrix4x4 projection;
 
   GLWidget(QWidget* parent = nullptr) : QOpenGLWidget(parent) {}
 

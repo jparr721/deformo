@@ -1,15 +1,13 @@
-attribute lowp vec4 color;
-attribute highp vec3 position;
+#version 330
 
-varying lowp vec4 v_color;
+layout(location = 0) in vec3 position;
+layout(location = 1) in vec4 color;
 
-uniform highp mat4 projection;
+out vec4 v_color;
 
-// TODO
-uniform highp mat4 model;
-uniform highp mat4 view;
+uniform mat4 m, v, p;
 
 void main() {
     v_color = color;
-    gl_Position = projection * vec4(position, 1.0);
+    gl_Position = p * vec4(position, 1.0);
 }

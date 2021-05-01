@@ -191,8 +191,6 @@ void Simulation::Solve() {
   // Set global force
   F_ext = K * U;
 
-  std::cout << F_ext << "\n";
-
   // Calculate Element Stresses
   for (std::size_t i = 0; i < mesh->rows(); i += 6) {
     // Fetch at the 0-indexed value

@@ -105,6 +105,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="GLWidget.cpp" />
+    <ClCompile Include="Input.cpp" />
     <ClCompile Include="Integrators.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Simulation.cpp" />
@@ -116,6 +117,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="EigenTypes.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="Integrators.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="resource.h" />
