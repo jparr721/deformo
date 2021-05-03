@@ -20,9 +20,9 @@ enum class InputState {
 template <typename InputType>
 struct InputInstance : std::pair<InputType, InputState> {
   inline InputInstance(InputType input_type)
-      : std::make_pair(input_type, InputState::Invalid) {}
+      : std::pair<InputType, InputState>(input_type, InputState::Invalid) {}
   inline InputInstance(InputType input_type, InputState state)
-      : std::make_pair(input_type, state) {}
+      : std::pair<InputType, InputState>(input_type, state) {}
   inline bool operator==(const InputInstance& rhs) const {
     return first == rhs.first;
   }

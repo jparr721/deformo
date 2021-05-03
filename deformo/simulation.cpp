@@ -29,7 +29,7 @@ Simulation::Simulation(
   K = Eigen::MatrixXd::Zero(K_rowsize, K_rowsize);
 
   // Assume no initial forces so U^-dt is always the same.
-  last_displacement = mesh->vertices;
+  last_displacement = mesh->raw_positions;
 
   AssembleForces();
   AssembleElementStiffness();
@@ -41,20 +41,20 @@ void Simulation::Update() {
   current_time += timestep_size;
 
   // R_hat = F_ext - (K - a2M)U - (M_hat)last_displacement
-  R_hat = F_ext - (K - a2 * M) * mesh->vertices - M_hat * last_displacement;
+  R_hat = F_ext - (K - a2 * M) * mesh->raw_positions - M_hat * last_displacement;
 
   // Set U, U', and U''
   Integrate();
 }
 
 void Simulation::Integrate() {
-  const auto current_displacement = mesh->vertices;
+  const auto current_displacement = mesh->raw_positions;
 
-  integrators::ExplicitCentralDifference(mesh->vertices, F_ext, M_hat_inverse);
+  integrators::ExplicitCentralDifference(mesh->raw_positions, F_ext, M_hat_inverse);
 
-  acceleration = a1 * (last_displacement + mesh->vertices);
+  acceleration = a1 * (last_displacement + mesh->raw_positions);
   velocity =
-      a0 * (last_displacement - 2 * current_displacement + mesh->vertices);
+      a0 * (last_displacement - 2 * current_displacement + mesh->raw_positions);
 
   last_displacement = current_displacement;
 }
@@ -74,12 +74,12 @@ void Simulation::AssembleElementStiffness() {
 
   // Iterate by groups of 3.
   for (std::size_t i = 0; i < mesh->rows(); i += 6) {
-    const double xi = mesh->vertices(i);
-    const double yi = mesh->vertices(i + 1);
-    const double xj = mesh->vertices(i + 2);
-    const double yj = mesh->vertices(i + 3);
-    const double xm = mesh->vertices(i + 4);
-    const double ym = mesh->vertices(i + 5);
+    const double xi = mesh->raw_positions(i);
+    const double yi = mesh->raw_positions(i + 1);
+    const double xj = mesh->raw_positions(i + 2);
+    const double yj = mesh->raw_positions(i + 3);
+    const double xm = mesh->raw_positions(i + 4);
+    const double ym = mesh->raw_positions(i + 5);
 
     const double A = (xi * (yj - ym) + xj * (ym - yi) + xm * (yi - yj)) / 2.;
 
@@ -108,12 +108,12 @@ void Simulation::AssembleElementStresses(Eigen::VectorXd nodal_displacement) {
   // 3d.
   for (std::size_t i = 0; i < mesh->rows(); i += 6) {
     // Fetch at the 0-indexed value
-    const double xi = mesh->vertices(i);
-    const double yi = mesh->vertices(i + 1);
-    const double xj = mesh->vertices(i + 2);
-    const double yj = mesh->vertices(i + 3);
-    const double xm = mesh->vertices(i + 4);
-    const double ym = mesh->vertices(i + 5);
+    const double xi = mesh->raw_positions(i);
+    const double yi = mesh->raw_positions(i + 1);
+    const double xj = mesh->raw_positions(i + 2);
+    const double yj = mesh->raw_positions(i + 3);
+    const double xm = mesh->raw_positions(i + 4);
+    const double ym = mesh->raw_positions(i + 5);
 
     AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
 
@@ -194,12 +194,12 @@ void Simulation::Solve() {
   // Calculate Element Stresses
   for (std::size_t i = 0; i < mesh->rows(); i += 6) {
     // Fetch at the 0-indexed value
-    const double xi = mesh->vertices(i);
-    const double yi = mesh->vertices(i + 1);
-    const double xj = mesh->vertices(i + 2);
-    const double yj = mesh->vertices(i + 3);
-    const double xm = mesh->vertices(i + 4);
-    const double ym = mesh->vertices(i + 5);
+    const double xi = mesh->raw_positions(i);
+    const double yi = mesh->raw_positions(i + 1);
+    const double xj = mesh->raw_positions(i + 2);
+    const double yj = mesh->raw_positions(i + 3);
+    const double xm = mesh->raw_positions(i + 4);
+    const double ym = mesh->raw_positions(i + 5);
 
     // 2 * # of nodes in this segment
     Eigen::Vector6d nodal_displacement = Eigen::Vector6d::Zero();

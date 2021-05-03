@@ -104,6 +104,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Integrators.cpp" />
@@ -116,11 +117,13 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="EigenTypes.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Integrators.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Vertex.h" />
     <QtMoc Include="GLWidget.h" />
     <ClInclude Include="Simulation.h" />
   </ItemGroup>
