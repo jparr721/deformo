@@ -123,7 +123,6 @@
     <ClInclude Include="Integrators.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="resource.h" />
-    <ClInclude Include="Vertex.h" />
     <QtMoc Include="GLWidget.h" />
     <ClInclude Include="Simulation.h" />
   </ItemGroup>
