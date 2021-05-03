@@ -8,7 +8,6 @@
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <string>
-#include "Vertex.h"
 
 void Perspective(Eigen::Matrix4d& camera, float vertical_angle,
                  float aspect_ratio, float near_plane, float far_plane);

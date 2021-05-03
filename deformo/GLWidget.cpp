@@ -13,11 +13,6 @@
 #include "Mesh.h"
 #include "Simulation.h"
 
-static VVertex tt[] = {
-    VVertex(QVector3D(0.00f, 0.75f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f)),
-    VVertex(QVector3D(-0.75f, -0.75f, 1.0f), QVector3D(0.0f, 1.0f, 0.0f)),
-    VVertex(QVector3D(0.75f, -0.75f, 1.0f), QVector3D(0.0f, 0.0f, 1.0f))};
-
 static std::vector<Vertex> triangle = {
     Vertex(QVector3D(0.00f, 0.75f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f)),
     Vertex(QVector3D(-0.75f, -0.75f, 1.0f), QVector3D(0.0f, 1.0f, 0.0f)),
@@ -29,17 +24,6 @@ void GLWidget::initializeGL() {
   initializeOpenGLFunctions();
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
           &GLWidget::Cleanup);
-
-  std::cout << tt[0].positionOffset() << std::endl;
-  std::cout << tt[0].colorOffset() << std::endl;
-  std::cout << tt[0].stride() << std::endl;
-  std::cout << sizeof(tt) / sizeof(tt[0]) << std::endl;
-
-  std::cout << std::endl;
-  std::cout << triangle[0].PositionOffset() << std::endl;
-  std::cout << triangle[0].ColorOffset() << std::endl;
-  std::cout << triangle[0].Stride() << std::endl;
-  std::cout << triangle.size() * sizeof(Vertex) << std::endl;
 
   // White background
   // glClearColor(255.f, 255.f, 255.f, 1.f);
