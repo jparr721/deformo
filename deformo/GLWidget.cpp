@@ -14,9 +14,9 @@
 #include "Simulation.h"
 
 static std::vector<Vertex> triangle = {
-    Vertex(QVector3D(0.00f, 0.75f, 1.0f), QVector3D(1.0f, 0.0f, 0.0f)),
-    Vertex(QVector3D(-0.75f, -0.75f, 1.0f), QVector3D(0.0f, 1.0f, 0.0f)),
-    Vertex(QVector3D(0.75f, -0.75f, 1.0f), QVector3D(0.0f, 0.0f, 1.0f))};
+    Vertex(QVector3D(0.00f, 0.75f, 0.f), QVector3D(1.0f, 0.0f, 0.f)),
+    Vertex(QVector3D(-0.75f, -0.75f, 0.f), QVector3D(0.0f, 1.0f, 0.f)),
+    Vertex(QVector3D(0.75f, -0.75f, 0.f), QVector3D(0.0f, 0.0f, 0.f))};
 
 void GLWidget::Cleanup() { delete program; }
 
@@ -26,8 +26,7 @@ void GLWidget::initializeGL() {
           &GLWidget::Cleanup);
 
   // White background
-  // glClearColor(255.f, 255.f, 255.f, 1.f);
-  glClearColor(0.f, 0.f, 0.f, 1.f);
+  glClearColor(255.f, 255.f, 255.f, 1.f);
 
   // Eigen::VectorXd displacements(12);
 
@@ -59,7 +58,7 @@ void GLWidget::initializeGL() {
   view_loc = program->uniformLocation("v");
   projection_loc = program->uniformLocation("p");
 
-  Perspective(projection, 45.f, 4.f / 3.f, 0.1f, 2000.f);
+  projection.perspective(45.f, 4.f / 3.f, 0.f, 2000.f);
 
   // Passthrough for data to GPU
   vbo.create();
@@ -83,15 +82,11 @@ void GLWidget::initializeGL() {
 }
 
 void GLWidget::paintGL() {
-  //QMatrix4x4 proj;
-  //proj.perspective(45.f, 4.f / 3.f, 0.1f, 2000.f);
-  //proj.translate(0, 0, 5);
-
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   program->bind();
 
-  //program->setUniformValue(projection_loc, proj);
+  program->setUniformValue(projection_loc, projection);
   // triangle[0]
   //    .position = (QVector3D(triangle[0].position.x() + 0.1,
   //    triangle[0].position.y(), triangle[0].position.z()));

@@ -36,9 +36,9 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   int projection_loc;
 
   // Camera Shader Values
-  Eigen::Matrix4d model;
-  Eigen::Matrix4d view;
-  Eigen::Matrix4d projection;
+  QMatrix4x4 model;
+  QMatrix4x4 view;
+  QMatrix4x4 projection;
 
   GLWidget(QWidget* parent = nullptr) : QOpenGLWidget(parent) {}
 
