@@ -1,20 +1,19 @@
 #pragma once
 
-#include <Eigen/Dense>
-#include <Eigen/Geometry>
-#include <Eigen/Core>
+#include <QMatrix4x4>
+#include <QVector3D>
 
 class Camera {
  public:
-  const Eigen::Vector3d kForward = Eigen::Vector3d(0., 0., -1.);
-  const Eigen::Vector3d kUp = Eigen::Vector3d(0., 1., 0.);
-  const Eigen::Vector3d kRight = Eigen::Vector3d(1., 0., 0.);
+  const QVector3D kForward = QVector3D(0., 0., -1.);
+  const QVector3D kUp = QVector3D(0., 1., 0.);
+  const QVector3D kRight = QVector3D(1., 0., 0.);
 
-  void Translate(Eigen::Ref<const Eigen::Vector3d> translation);
-  void Rotate(Eigen::Quaterniond& rotation);
+  void Translate(const QVector3D& translation);
+  void Rotate(const QQuaternion& rotation);
 
-  const Eigen::Matrix4d Matrix() const;
+  const QMatrix4x4 Matrix() const;
 
  private:
-  Eigen::Matrix4d world;
+  QMatrix4x4 world;
 };
