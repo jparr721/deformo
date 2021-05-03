@@ -9,6 +9,9 @@
 #include <QOpenGLWidget>
 #include <string>
 
+#include "Mesh.h"
+#include "Simulation.h"
+
 void Perspective(Eigen::Matrix4d& camera, float vertical_angle,
                  float aspect_ratio, float near_plane, float far_plane);
 
@@ -16,15 +19,6 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
-  // const std::vector<Eigen::Vector3f> triangle{
-  //    {Eigen::Vector3f(1.f, -1.f, 0.f)},  {Eigen::Vector3f(1.f, 0.f, 0.f)},
-  //    {Eigen::Vector3f(0.f, 1.f, 0.f)},   {Eigen::Vector3f(0.f, 1.f, 0.f)},
-  //    {Eigen::Vector3f(-1.f, -1.f, 0.f)}, {Eigen::Vector3f(0.f, 0.f, 1.f)},
-  //};
-
-  //const float triangle[18] = {1.f, -1.f, 0.f, 1.f,  0.f,  0.f, 0.f, 1.f, 0.f,
-  //                          0.f, 1.f,  0.f, -1.f, -1.f, 0.f, 0.f, 0.f, 1.f};
-
   // Global state vars
   QOpenGLBuffer vbo;
   QOpenGLVertexArrayObject vao;
@@ -39,6 +33,12 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   QMatrix4x4 model;
   QMatrix4x4 view;
   QMatrix4x4 projection;
+
+  // Mesh object for 3D geometry
+  std::shared_ptr<Mesh> mesh;
+
+  // Simulation Object
+  std::unique_ptr<Simulation> sim;
 
   GLWidget(QWidget* parent = nullptr) : QOpenGLWidget(parent) {}
 

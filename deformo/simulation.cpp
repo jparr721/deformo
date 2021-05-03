@@ -13,7 +13,7 @@
 #include "Integrators.h"
 
 Simulation::Simulation(
-    double mass_, double E_, double NU_, const std::shared_ptr<Mesh>& mesh_,
+    double mass_, double E_, double NU_, std::shared_ptr<Mesh>& mesh_,
     const std::vector<BoundaryCondition>& boundary_conditions_)
     : E(E_),
       NU(NU_),

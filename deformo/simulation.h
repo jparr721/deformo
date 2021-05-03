@@ -100,7 +100,7 @@ class Simulation {
 
   Simulation() = default;
   Simulation(double mass_, double E_, double NU_,
-             const std::shared_ptr<Mesh>& mesh_,
+             std::shared_ptr<Mesh>& mesh_,
              const std::vector<BoundaryCondition>& boundary_conditions_);
   void Update();
   void Integrate();
