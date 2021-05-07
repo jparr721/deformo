@@ -62,7 +62,7 @@ void Simulation::AssembleForces() {
 }
 
 /**
-@brief Assemble 6x6 element stiffness matrix. Given by [k] = V[B]^T[D][B]
+@brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
 where V is the volume of the element
 **/
 void Simulation::AssembleElementStiffness() {
@@ -106,51 +106,59 @@ void Simulation::AssembleElementStiffness() {
 }
 
 void Simulation::AssembleElementStresses(Eigen::VectorXd nodal_displacement) {
-  // TODO(@jparr721) - Turn the increment into a contexpr for when we move up to
-  // 3d.
-  for (std::size_t i = 0; i < mesh->rows(); i += 6) {
-    // Fetch at the 0-indexed value
-    const double xi = mesh->raw_positions(i);
-    const double yi = mesh->raw_positions(i + 1);
-    const double xj = mesh->raw_positions(i + 2);
-    const double yj = mesh->raw_positions(i + 3);
-    const double xm = mesh->raw_positions(i + 4);
-    const double ym = mesh->raw_positions(i + 5);
+  for (int i = 0; i < mesh->raw_positions.rows();
+       i += mesh->kNumDimensions * kTetrahedronElementCount) {
+    const double x1 = mesh->raw_positions(i);
+    const double y1 = mesh->raw_positions(i + 1);
+    const double z1 = mesh->raw_positions(i + 2);
 
-    AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
+    const double x2 = mesh->raw_positions(i + 3);
+    const double y2 = mesh->raw_positions(i + 4);
+    const double z2 = mesh->raw_positions(i + 5);
 
-    const Eigen::Vector3d sigma = D * B * nodal_displacement;
+    const double x3 = mesh->raw_positions(i + 6);
+    const double y3 = mesh->raw_positions(i + 7);
+    const double z3 = mesh->raw_positions(i + 8);
+
+    const double x4 = mesh->raw_positions(i + 9);
+    const double y4 = mesh->raw_positions(i + 10);
+    const double z4 = mesh->raw_positions(i + 11);
+
+    const Eigen::MatrixXd B = AssembleStrainRelationshipMatrix(
+        x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+
+    const Eigen::Matrix66d D = AssembleStressStrainMatrix();
+
+    const Eigen::Vector6d sigma = D * B * nodal_displacement;
+
+    // TODO(@jparr721) - Add node indexing here so we know where to apply
+    // sigmas.
     sigmas.emplace_back(sigma);
   }
 }
 
 void Simulation::AssembleElementPlaneStresses() {
   for (const auto& sigma : sigmas) {
-    const double sigma_x = sigma.x();
-    const double sigma_y = sigma.y();
-    const double tau_xy = sigma.z();
+    const double s1 = sigma.sum();
+    const double s2 =
+        (sigma(0) * sigma(1) + sigma(0) * sigma(2) + sigma(1) * sigma(2)) -
+        (sigma(3) * sigma(3) - sigma(4) * sigma(4) - sigma(5) * sigma(5));
 
-    const double R = (sigma_x + sigma_y) / 2;
+    Eigen::Matrix3d ms3;
+    ms3.row(0) << sigma(0), sigma(3), sigma(5);
+    ms3.row(1) << sigma(3), sigma(1), sigma(4);
+    ms3.row(2) << sigma(5), sigma(4), sigma(2);
 
-    const double sigma_diff = sigma_x - sigma_y;
+    const double s3 = ms3.determinant();
 
-    const double Q = std::pow(sigma_diff / 2, 2) + std::pow(tau_xy, 2);
-    const double M = 2 * tau_xy / sigma_diff;
-
-    const double s1 = R + std::sqrt(Q);
-    const double s2 = R - std::sqrt(Q);
-    const double theta = (std::atan(M) / 2) * 180 / M_PI;
-
-    Eigen::Vector3d p_stress;
-    p_stress << s1, s2, theta;
-
-    plane_stresses.emplace_back(p_stress);
+    const Eigen::Vector3d plane_stress(s1, s2, s3);
+    plane_stresses.emplace_back(plane_stress);
   }
 }
 
 void Simulation::AssembleGlobalStiffness() {
   // Allocate space in K for 3nx3n elements
-  const double K_rowsize = mesh->indices.size() * 3;
+  const double K_rowsize = mesh->indices.size() * mesh->kNumDimensions;
 
   K = Eigen::MatrixXd::Zero(K_rowsize, K_rowsize);
 

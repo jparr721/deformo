@@ -91,7 +91,7 @@ class Simulation {
   std::vector<ElementStiffness> k;
 
   // Element Stress vectors for each group of points
-  std::vector<Eigen::Vector3d> sigmas;
+  std::vector<Eigen::Vector6d> sigmas;
 
   // The Plane Stresses from each stress vector
   std::vector<Eigen::Vector3d> plane_stresses;
@@ -156,8 +156,6 @@ class Simulation {
                                          double p4, double p5, double p6);
 
  private:
-  // The number of points making up our tetrahedral.
-  static constexpr int kNTetrahedralPoints = 4;
 
   void InitializeVelocity();
   void InitializeAcceleration();
