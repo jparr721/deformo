@@ -20,13 +20,9 @@ Simulation::Simulation(
       mass(mass_),
       mesh(mesh_),
       boundary_conditions(boundary_conditions_) {
-  // Assert minimum size is at least 3 so we can do triangle calculations
-  assert(mesh->rows() >= 6);
+  // TODO(@jparr721) - This function should change to the integrators file once
+  // we do others.
   InitializeIntegrationConstants();
-
-  const double K_rowsize = mesh->indices.size() * 2;
-
-  K = Eigen::MatrixXd::Zero(K_rowsize, K_rowsize);
 
   // Assume no initial forces so U^-dt is always the same.
   last_displacement = mesh->raw_positions;
@@ -41,7 +37,8 @@ void Simulation::Update() {
   current_time += timestep_size;
 
   // R_hat = F_ext - (K - a2M)U - (M_hat)last_displacement
-  R_hat = F_ext - (K - a2 * M) * mesh->raw_positions - M_hat * last_displacement;
+  R_hat =
+      F_ext - (K - a2 * M) * mesh->raw_positions - M_hat * last_displacement;
 
   // Set U, U', and U''
   Integrate();
@@ -50,7 +47,8 @@ void Simulation::Update() {
 void Simulation::Integrate() {
   const auto current_displacement = mesh->raw_positions;
 
-  integrators::ExplicitCentralDifference(mesh->raw_positions, F_ext, M_hat_inverse);
+  integrators::ExplicitCentralDifference(mesh->raw_positions, F_ext,
+                                         M_hat_inverse);
 
   acceleration = a1 * (last_displacement + mesh->raw_positions);
   velocity =
@@ -64,42 +62,46 @@ void Simulation::AssembleForces() {
 }
 
 /**
-@brief Assemble 6x6 element stiffness matrix. Given by [k] = tA[B]^T[D][B]
+@brief Assemble 6x6 element stiffness matrix. Given by [k] = V[B]^T[D][B]
+where V is the volume of the element
 **/
 void Simulation::AssembleElementStiffness() {
-  // Clear all element stiffness values
-  k.clear();
+  for (int i = 0; i < mesh->raw_positions.rows();
+       i += mesh->kNumDimensions * kTetrahedronElementCount) {
+    const double x1 = mesh->raw_positions(i);
+    const double y1 = mesh->raw_positions(i + 1);
+    const double z1 = mesh->raw_positions(i + 2);
 
-  AssembleStressStrainMatrix();
+    const double x2 = mesh->raw_positions(i + 3);
+    const double y2 = mesh->raw_positions(i + 4);
+    const double z2 = mesh->raw_positions(i + 5);
 
-  // Iterate by groups of 3.
-  for (std::size_t i = 0; i < mesh->rows(); i += 6) {
-    const double xi = mesh->raw_positions(i);
-    const double yi = mesh->raw_positions(i + 1);
-    const double xj = mesh->raw_positions(i + 2);
-    const double yj = mesh->raw_positions(i + 3);
-    const double xm = mesh->raw_positions(i + 4);
-    const double ym = mesh->raw_positions(i + 5);
+    const double x3 = mesh->raw_positions(i + 6);
+    const double y3 = mesh->raw_positions(i + 7);
+    const double z3 = mesh->raw_positions(i + 8);
 
-    const double A = (xi * (yj - ym) + xj * (ym - yi) + xm * (yi - yj)) / 2.;
+    const double x4 = mesh->raw_positions(i + 9);
+    const double y4 = mesh->raw_positions(i + 10);
+    const double z4 = mesh->raw_positions(i + 11);
 
-    // Construct beta as a 3x6 matrix.
-    AssembleStrainRelationshipMatrix(xi, xj, xm, yi, yj, ym);
+    const Eigen::MatrixXd B = AssembleStrainRelationshipMatrix(
+        x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
 
-    const Eigen::Matrix66d kk = t * A * B.transpose() * D * B;
+    const Eigen::Matrix66d D = AssembleStressStrainMatrix();
+    const double V =
+        ComputeElementVolume(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
+    const Eigen::Matrix12d kk = V * B.transpose() * D * B;
 
-    // Nodes ordered in counter-clockwise fashion
-    const auto l_node_number = mesh->index(xi, yi);
-    const auto m_node_number = mesh->index(xj, yj);
-    const auto r_node_number = mesh->index(xm, ym);
+    const auto i_node_number = mesh->index(x1, y1, z1);
+    const auto j_node_number = mesh->index(x2, y2, z2);
+    const auto m_node_number = mesh->index(x3, y3, z3);
+    const auto n_node_number = mesh->index(x4, y4, z4);
 
-    const ElementStiffness stiffness_entry = {
-        kk,  // stiffness_matrix
-        std::vector<unsigned int>{l_node_number, m_node_number,
-                                  r_node_number}  // indices
-    };
+    const ElementStiffness element_stiffness = {
+        kk, std::vector<unsigned int>{i_node_number, j_node_number,
+                                      m_node_number, n_node_number}};
 
-    k.emplace_back(stiffness_entry);
+    k.emplace_back(element_stiffness);
   }
 }
 
@@ -143,6 +145,204 @@ void Simulation::AssembleElementPlaneStresses() {
     p_stress << s1, s2, theta;
 
     plane_stresses.emplace_back(p_stress);
+  }
+}
+
+void Simulation::AssembleGlobalStiffness() {
+  // Allocate space in K for 3nx3n elements
+  const double K_rowsize = mesh->indices.size() * 3;
+
+  K = Eigen::MatrixXd::Zero(K_rowsize, K_rowsize);
+
+  // Indices in the element stiffness matrix to collect
+  int kk_0 = -1;
+  int kk_1 = 0;
+
+  // Iterate through all points and element stiffness matrices, generating the
+  // output inside of the K matrix.
+  for (const auto& element_stiffness : k) {
+    const auto kk = element_stiffness.stiffness_matrix;
+    const auto pts = element_stiffness.indices;
+
+    for (const auto& pt : pts) {
+      for (int i = 2; i > -1; ++i) {
+        const int left_K_idx = 3 * pt - i;
+        kk_0 += 1;
+
+        for (const auto& ppt : pts) {
+          for (int j = 2; j > -1; ++j) {
+            // If our right-submatrix coordinate (y) > the cols of the
+            // submatrix, reset
+            if (kk_1 > kk.cols()) {
+              kk_1 = 0;
+            }
+
+            const int right_K_idx = 3 * ppt - j;
+
+            K(left_K_idx, right_K_idx) += kk(kk_0, kk_1);
+          }
+        }
+      }
+    }
+  }
+}
+
+Eigen::Matrix66d Simulation::AssembleStressStrainMatrix() {
+  Eigen::Matrix66d D;
+  D.row(0) << 1 - NU, NU, NU, 0, 0, 0;
+  D.row(1) << NU, 1 - NU, NU, 0, 0, 0;
+  D.row(2) << NU, NU, 1 - NU, 0, 0, 0;
+  D.row(3) << 0, 0, 0, (1 - 2 * NU) / 2, 0, 0;
+  D.row(4) << 0, 0, 0, 0, (1 - 2 * NU) / 2, 0;
+  D.row(5) << 0, 0, 0, 0, 0, (1 - 2 * NU) / 2;
+
+  D *= E / ((1 + NU) * (1 - 2 * NU));
+  return D;
+}
+
+Eigen::MatrixXd Simulation::AssembleStrainRelationshipMatrix(
+    double x1, double y1, double z1, double x2, double y2, double z2, double x3,
+    double y3, double z3, double x4, double y4, double z4) {
+  const double beta_1 =
+      -1 * ConstructShapeFunctionParameter(y2, z2, y3, z3, y4, z4);
+  const double beta_2 = ConstructShapeFunctionParameter(y1, z1, y3, z3, y4, z4);
+  const double beta_3 =
+      -1 * ConstructShapeFunctionParameter(y1, z1, y2, z2, y4, z4);
+  const double beta_4 = ConstructShapeFunctionParameter(y1, z1, y2, z2, y3, z3);
+
+  const double gamma_1 =
+      ConstructShapeFunctionParameter(x2, z2, x3, z3, x4, z4);
+  const double gamma_2 =
+      -1 * ConstructShapeFunctionParameter(x1, z1, x3, z3, x4, z4);
+  const double gamma_3 =
+      ConstructShapeFunctionParameter(x1, z1, x2, z2, x4, z4);
+  const double gamma_4 =
+      -1 * ConstructShapeFunctionParameter(x1, z1, x2, z2, x3, z3);
+
+  const double delta_1 =
+      -1 * ConstructShapeFunctionParameter(x2, y2, x3, y3, x4, y4);
+  const double delta_2 =
+      ConstructShapeFunctionParameter(x1, y1, x3, y3, x4, y4);
+  const double delta_3 =
+      -1 * ConstructShapeFunctionParameter(x1, y1, x2, y2, x4, y4);
+  const double delta_4 =
+      ConstructShapeFunctionParameter(x1, y1, x2, y2, x3, y3);
+
+  BetaSubmatrixd B1;
+  B1.row(0) << beta_1, 0, 0;
+  B1.row(1) << 0, gamma_1, 0;
+  B1.row(2) << 0, 0, delta_1;
+  B1.row(3) << gamma_1, beta_1, 0;
+  B1.row(4) << 0, delta_1, gamma_1;
+  B1.row(5) << delta_1, 0, beta_1;
+
+  BetaSubmatrixd B2;
+  B2.row(0) << beta_2, 0, 0;
+  B2.row(1) << 0, gamma_2, 0;
+  B2.row(2) << 0, 0, delta_2;
+  B2.row(3) << gamma_2, beta_2, 0;
+  B2.row(4) << 0, delta_2, gamma_2;
+  B2.row(5) << delta_2, 0, beta_2;
+
+  BetaSubmatrixd B3;
+  B3.row(0) << beta_3, 0, 0;
+  B3.row(1) << 0, gamma_3, 0;
+  B3.row(2) << 0, 0, delta_3;
+  B3.row(3) << gamma_3, beta_3, 0;
+  B3.row(4) << 0, delta_3, gamma_3;
+  B3.row(5) << delta_3, 0, beta_3;
+
+  BetaSubmatrixd B4;
+  B4.row(0) << beta_4, 0, 0;
+  B4.row(1) << 0, gamma_4, 0;
+  B4.row(2) << 0, 0, delta_4;
+  B4.row(3) << gamma_4, beta_4, 0;
+  B4.row(4) << 0, delta_4, gamma_4;
+  B4.row(5) << delta_4, 0, beta_4;
+
+  // Matrix is 6 x 12
+  Eigen::MatrixXd B(B1.rows(), B1.cols() * 4);
+  B << B1, B2, B3, B4;
+}
+
+double Simulation::ConstructShapeFunctionParameter(double p1, double p2,
+                                                   double p3, double p4,
+                                                   double p5, double p6) {
+  Eigen::Matrix3d parameter;
+  parameter.row(0) << 1, p1, p2;
+  parameter.row(1) << 1, p3, p4;
+  parameter.row(2) << 1, p5, p6;
+  return parameter.determinant();
+}
+
+void Simulation::InitializeVelocity() {
+  velocity = Eigen::VectorXd::Zero(mesh->rows());
+}
+
+void Simulation::InitializeAcceleration() {
+  acceleration = Eigen::VectorXd::Zero(mesh->rows());
+}
+
+void Simulation::AssembleMassMatrix() {
+  std::vector<Eigen::Triplet<double>> mass_entries;
+  mass_entries.reserve(mesh->rows());
+
+  M.resize(mesh->rows(), mesh->rows());
+
+  for (int i = 0; i < mesh->rows(); ++i) {
+    mass_entries.push_back(Eigen::Triplet<double>(i, i, mass));
+  }
+
+  M.setFromTriplets(mass_entries.begin(), mass_entries.end());
+
+  // Set effective mass matrix
+  M_hat = (a0 * M).eval();
+
+  // Triangularize M_hat
+  Eigen::SimplicialLDLT<Eigen::SparseMatrixXd> solver;
+  solver.compute(M_hat);
+
+  // If the solver fails for some reason, regularize the result and re-run
+  if (solver.info() != Eigen::Success) {
+    std::cout << "Failed to solve M_hat" << std::endl;
+  }
+
+  M_hat_inverse = solver.solve(M_hat);
+}
+
+void Simulation::InitializeIntegrationConstants() {
+  a0 = 1 / std::pow(timestep_size, 2);
+  a1 = 1 / (timestep_size * 2);
+  a2 = 2 * a0;
+  a3 = 1 / a2;
+}
+
+void Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
+                        Eigen::VectorXi indices) {
+  // Can't solve if we have a mismatch
+  assert(k.rows() == f.rows() && "K AND F DO NOT MATCH IN SIZE");
+
+  Eigen::VectorXd u;
+
+  // Indices is always # of nodes not including multi-coordinate layouts
+  u.resize(mesh->indices.size() * 2);
+
+  // Begin the process of initializing global displacement
+  U.setZero(u.rows());
+
+  // Full pivot LU factorization of k minimized as far as it can go,
+  // then we solve with respect to f, assigning to our global displacement
+  // vector.
+  u = k.fullPivLu().solve(f);
+
+  assert(indices.rows() == u.rows() && "INDEX AND U DIFFER");
+
+  // Sweep through indices, setting the segment value
+  for (int i = 0; i < u.rows(); ++i) {
+    const double val = u(i);
+    const unsigned int index = indices(i);
+
+    U.row(index) << val;
   }
 }
 
@@ -221,152 +421,15 @@ void Simulation::Solve() {
   }
 }
 
-void Simulation::AssembleGlobalStiffness() {
-  // Iterate through all points and element stiffness matrices, generating the
-  // output inside of the K matrix.
-  for (const auto& element_stiffness : k) {
-    const auto kk = element_stiffness.stiffness_matrix;
-    const auto pts = element_stiffness.indices;
+double Simulation::ComputeElementVolume(double x1, double y1, double z1,
+                                        double x2, double y2, double z2,
+                                        double x3, double y3, double z3,
+                                        double x4, double y4, double z4) {
+  Eigen::Matrix4d V;
+  V.row(0) << 1, x1, y1, z1;
+  V.row(1) << 1, x2, y2, z2;
+  V.row(2) << 1, x3, y3, z3;
+  V.row(3) << 1, x4, y4, z4;
 
-    const auto i = pts[0];
-    const auto j = pts[1];
-    const auto m = pts[2];
-
-    // oof.
-    K(2 * i - 2, 2 * i - 2) += kk(0, 0);
-    K(2 * i - 2, 2 * i - 1) += kk(0, 1);
-    K(2 * i - 2, 2 * j - 2) += kk(0, 2);
-    K(2 * i - 2, 2 * j - 1) += kk(0, 3);
-    K(2 * i - 2, 2 * m - 2) += kk(0, 4);
-    K(2 * i - 2, 2 * m - 1) += kk(0, 5);
-    K(2 * i - 1, 2 * i - 2) += kk(1, 0);
-    K(2 * i - 1, 2 * i - 1) += kk(1, 1);
-    K(2 * i - 1, 2 * j - 2) += kk(1, 2);
-    K(2 * i - 1, 2 * j - 1) += kk(1, 3);
-    K(2 * i - 1, 2 * m - 2) += kk(1, 4);
-    K(2 * i - 2, 2 * m - 1) += kk(1, 5);
-    K(2 * j - 2, 2 * i - 2) += kk(2, 0);
-    K(2 * j - 2, 2 * i - 1) += kk(2, 1);
-    K(2 * j - 2, 2 * j - 2) += kk(2, 2);
-    K(2 * j - 2, 2 * j - 1) += kk(2, 3);
-    K(2 * j - 2, 2 * m - 2) += kk(2, 4);
-    K(2 * j - 2, 2 * m - 1) += kk(2, 5);
-    K(2 * j - 1, 2 * i - 2) += kk(3, 0);
-    K(2 * j - 1, 2 * i - 1) += kk(3, 1);
-    K(2 * j - 1, 2 * j - 2) += kk(3, 2);
-    K(2 * j - 1, 2 * j - 1) += kk(3, 3);
-    K(2 * j - 1, 2 * m - 2) += kk(3, 4);
-    K(2 * j - 1, 2 * m - 1) += kk(3, 5);
-    K(2 * m - 2, 2 * i - 2) += kk(4, 0);
-    K(2 * m - 2, 2 * i - 1) += kk(4, 1);
-    K(2 * m - 2, 2 * j - 2) += kk(4, 2);
-    K(2 * m - 2, 2 * j - 1) += kk(4, 3);
-    K(2 * m - 2, 2 * m - 2) += kk(4, 4);
-    K(2 * m - 2, 2 * m - 1) += kk(4, 5);
-    K(2 * m - 1, 2 * i - 2) += kk(5, 0);
-    K(2 * m - 1, 2 * i - 1) += kk(5, 1);
-    K(2 * m - 1, 2 * j - 2) += kk(5, 2);
-    K(2 * m - 1, 2 * j - 1) += kk(5, 3);
-    K(2 * m - 1, 2 * m - 2) += kk(5, 4);
-    K(2 * m - 1, 2 * m - 1) += kk(5, 5);
-  }
-}
-
-void Simulation::AssembleStressStrainMatrix() {
-  // Plane stress calculation
-  D.row(0) << 1., NU, 0.;
-  D.row(1) << NU, 1, 0.;
-  D.row(2) << 0., 0., (1. - NU) / 2.;
-
-  // Plane stress calculation
-  D = E / (1. - std::pow(NU, 2)) * D;
-}
-
-void Simulation::AssembleStrainRelationshipMatrix(double xi, double xj,
-                                                  double xm, double yi,
-                                                  double yj, double ym) {
-  const double A = (xi * (yj - ym) + xj * (ym - yi) + xm * (yi - yj)) / 2.;
-  const double gammai = xm - xj;
-  const double gammaj = xi - xm;
-  const double gammam = xj - xi;
-
-  const double betai = yj - ym;
-  const double betaj = ym - yi;
-  const double betam = yi - yj;
-
-  B.row(0) << betai, 0., betaj, 0., betam, 0.;
-  B.row(1) << 0., gammai, 0., gammaj, 0., gammam;
-  B.row(2) << gammai, betai, gammaj, betaj, gammam, betam;
-  B /= (2. * A);
-}
-
-void Simulation::InitializeVelocity() {
-  velocity = Eigen::VectorXd::Zero(mesh->rows());
-}
-
-void Simulation::InitializeAcceleration() {
-  acceleration = Eigen::VectorXd::Zero(mesh->rows());
-}
-
-void Simulation::AssembleMassMatrix() {
-  std::vector<Eigen::Triplet<double>> mass_entries;
-  mass_entries.reserve(mesh->rows());
-
-  M.resize(mesh->rows(), mesh->rows());
-
-  for (int i = 0; i < mesh->rows(); ++i) {
-    mass_entries.push_back(Eigen::Triplet<double>(i, i, mass));
-  }
-
-  M.setFromTriplets(mass_entries.begin(), mass_entries.end());
-
-  // Set effective mass matrix
-  M_hat = (a0 * M).eval();
-
-  // Triangularize M_hat
-  Eigen::SimplicialLDLT<Eigen::SparseMatrixXd> solver;
-  solver.compute(M_hat);
-
-  // If the solver fails for some reason, regularize the result and re-run
-  if (solver.info() != Eigen::Success) {
-    std::cout << "Failed to solve M_hat" << std::endl;
-  }
-
-  M_hat_inverse = solver.solve(M_hat);
-}
-
-void Simulation::InitializeIntegrationConstants() {
-  a0 = 1 / std::pow(timestep_size, 2);
-  a1 = 1 / (timestep_size * 2);
-  a2 = 2 * a0;
-  a3 = 1 / a2;
-}
-
-void Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
-                        Eigen::VectorXi indices) {
-  // Can't solve if we have a mismatch
-  assert(k.rows() == f.rows() && "K AND F DO NOT MATCH IN SIZE");
-
-  Eigen::VectorXd u;
-
-  // Indices is always # of nodes not including multi-coordinate layouts
-  u.resize(mesh->indices.size() * 2);
-
-  // Begin the process of initializing global displacement
-  U.setZero(u.rows());
-
-  // Full pivot LU factorization of k minimized as far as it can go,
-  // then we solve with respect to f, assigning to our global displacement
-  // vector.
-  u = k.fullPivLu().solve(f);
-
-  assert(indices.rows() == u.rows() && "INDEX AND U DIFFER");
-
-  // Sweep through indices, setting the segment value
-  for (int i = 0; i < u.rows(); ++i) {
-    const double val = u(i);
-    const unsigned int index = indices(i);
-
-    U.row(index) << val;
-  }
+  return V.determinant() / 6;
 }

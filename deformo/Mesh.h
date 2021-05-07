@@ -2,25 +2,36 @@
 
 #include <Eigen/Dense>
 #include <QOpenGLBuffer>
-#include <QVector3D>
 #include <QOpenGLVertexArrayObject>
+#include <QVector3D>
+#include <optional>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-struct xy {
+constexpr unsigned int kTetrahedronElementCount = 4;
+
+struct xyz {
   double x;
   double y;
-  bool operator==(const xy& other) const {
-    return x == other.x && y == other.y;
+  double z;
+  bool operator==(const xyz& rhs) const {
+    return x == rhs.x && y == rhs.y && z == rhs.z;
   }
 };
 
-struct xy_hash {
-  std::size_t operator()(const xy& instance) const noexcept {
-    std::size_t x_hash = std::hash<double>{}(instance.x);
-    std::size_t y_hash = std::hash<double>{}(instance.y);
-    return x_hash ^ (y_hash << 1);
+struct xyz_hash {
+  std::size_t operator()(const xyz& self) const noexcept {
+    std::size_t seed = 3;
+
+    seed ^= static_cast<unsigned int>(self.x) + 0x9e779b9 + (seed << 6) +
+            (seed >> 2);
+    seed ^= static_cast<unsigned int>(self.y) + 0x9e779b9 + (seed << 6) +
+            (seed >> 2);
+    seed ^= static_cast<unsigned int>(self.z) + 0x9e779b9 + (seed << 6) +
+            (seed >> 2);
+
+    return seed;
   }
 };
 
@@ -42,22 +53,29 @@ struct Vertex {
 
 class Mesh {
  public:
-  Eigen::VectorXd raw_positions;
+  static constexpr unsigned int kNumDimensions = 3;
+
   std::vector<Vertex> positions;
-  // TODO(@jparr721) - Fix xy_hash and xy in general to support 3d.
-  std::unordered_map<xy, unsigned int, xy_hash> indices;
+  std::vector<QVector3D> colors;
 
-  Mesh(const Eigen::VectorXd& vertices, bool is_2d = false);
-  Mesh(const Eigen::VectorXd& vertices, const std::vector<QVector3D>& colors);
+  std::unordered_map<xyz, unsigned int, xyz_hash> indices;
 
-  void LoadVertices(const Eigen::VectorXd& vertices, bool is_2d);
-  void LoadVertices(const Eigen::VectorXd& vertices,
-                    const std::vector<QVector3D>& colors);
+  Eigen::VectorXd raw_positions;
 
-  void IndexDuplicateVertices();
+  Mesh(const Eigen::VectorXd& vertices, const std::vector<QVector3D>& colors_);
+
+  void UpdatePositions(Eigen::Ref<const Eigen::VectorXd> displacements);
   void Initialize(QOpenGLBuffer& vbo);
   void Render(QOpenGLBuffer& vbo, QOpenGLVertexArrayObject& vao);
 
   unsigned int rows() { return raw_positions.rows(); }
-  unsigned int index(double x, double y) { return indices.at(xy{x, y}); }
+  unsigned int index(double x, double y, double z) {
+    return indices.at(xyz{x, y, z});
+  }
+
+ private:
+  void LoadVertices();
+  void ReloadVertices();
+
+  void IndexDuplicateVertices();
 };

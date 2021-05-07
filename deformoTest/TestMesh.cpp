@@ -24,7 +24,7 @@ namespace SimulationTest
 
 		    const auto mesh = std::make_unique<Mesh>(vertices);
 
-			const int nrows = mesh->vertices.rows();
+			const int nrows = mesh->raw_positions.rows();
 			const int nmatches = mesh->indices.size();
 
 			Assert::AreEqual(nrows, 12);

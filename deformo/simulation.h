@@ -14,7 +14,7 @@ Static boundary condition for a given node
 */
 struct BoundaryCondition {
   unsigned int node;
-  xy force;
+  xyz force;
 };
 
 /**
@@ -22,8 +22,9 @@ This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class Simulation {
  private:
+  using BetaSubmatrixd = Eigen::Matrix<double, 6, 3>;
   struct ElementStiffness {
-    Eigen::Matrix66d stiffness_matrix;
+    Eigen::Matrix12d stiffness_matrix;
     std::vector<unsigned int> indices;
   };
 
@@ -99,8 +100,7 @@ class Simulation {
   std::vector<BoundaryCondition> boundary_conditions;
 
   Simulation() = default;
-  Simulation(double mass_, double E_, double NU_,
-             std::shared_ptr<Mesh>& mesh_,
+  Simulation(double mass_, double E_, double NU_, std::shared_ptr<Mesh>& mesh_,
              const std::vector<BoundaryCondition>& boundary_conditions_);
   void Update();
   void Integrate();
@@ -110,9 +110,10 @@ class Simulation {
 
   void AssembleGlobalStiffness();
 
-  void AssembleStressStrainMatrix();
-  void AssembleStrainRelationshipMatrix(double xi, double xj, double xm,
-                                        double yi, double yj, double ym);
+  Eigen::Matrix66d AssembleStressStrainMatrix();
+  Eigen::MatrixXd AssembleStrainRelationshipMatrix(
+      double x1, double y1, double z1, double x2, double y2, double z2,
+      double x3, double y3, double z3, double x4, double y4, double z4);
 
   /**
   @brief Calculates the per-element stiffness matrix
@@ -134,12 +135,29 @@ class Simulation {
   */
   void Solve();
 
- private:
-  // Strain Relationship Matrix
-  Eigen::Matrix36d B;
+  /*
+  @brief Compute the volume of the tetrahedral element.
+  */
+  double ComputeElementVolume(double x1, double y1, double z1, double x2,
+                              double y2, double z2, double x3, double y3,
+                              double z3, double x4, double y4, double z4);
 
-  // Stress-Strain Matrix
-  Eigen::Matrix3d D;
+  /*
+  @brief Construct the shape function parameter matrix determinant.
+  The parameters have pretty terrible naming, they are as follows
+  @param p1 Top row, value 1
+  @param p2 Top row, value 2
+  @param p3 Mid row, value 1
+  @param p4 Mid row, value 2
+  @param p5 Bot row, value 1
+  @param p6 Bot row, value 2
+  */
+  double ConstructShapeFunctionParameter(double p1, double p2, double p3,
+                                         double p4, double p5, double p6);
+
+ private:
+  // The number of points making up our tetrahedral.
+  static constexpr int kNTetrahedralPoints = 4;
 
   void InitializeVelocity();
   void InitializeAcceleration();
