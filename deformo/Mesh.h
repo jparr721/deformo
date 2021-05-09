@@ -36,6 +36,7 @@ struct xyz_hash {
 };
 
 struct Vertex {
+  int node_number;
   QVector3D position;
   QVector3D color;
 
@@ -58,8 +59,6 @@ class Mesh {
   std::vector<Vertex> positions;
   std::vector<QVector3D> colors;
 
-  std::unordered_map<xyz, unsigned int, xyz_hash> indices;
-
   Eigen::VectorXd raw_positions;
 
   Mesh(const Eigen::VectorXd& vertices, const std::vector<QVector3D>& colors_);
@@ -68,9 +67,10 @@ class Mesh {
   void Initialize(QOpenGLBuffer& vbo);
   void Render(QOpenGLBuffer& vbo, QOpenGLVertexArrayObject& vao);
 
-  unsigned int rows() { return raw_positions.rows(); }
-  unsigned int index(double x, double y, double z) {
-    return indices.at(xyz{x, y, z});
+  inline unsigned int rows() { return raw_positions.rows(); }
+  inline unsigned int node_number(int index) {
+    assert(index < positions.size() && "INVALID INDEX IN node_number");
+    return positions.at(index).node_number;
   }
 
  private:

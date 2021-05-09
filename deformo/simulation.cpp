@@ -66,8 +66,7 @@ void Simulation::AssembleForces() {
 where V is the volume of the element
 **/
 void Simulation::AssembleElementStiffness() {
-  for (int i = 0; i < mesh->raw_positions.rows();
-       i += mesh->kNumDimensions * kTetrahedronElementCount) {
+  for (int i = 0; i < mesh->rows(); i += stride) {
     const double x1 = mesh->raw_positions(i);
     const double y1 = mesh->raw_positions(i + 1);
     const double z1 = mesh->raw_positions(i + 2);
@@ -92,10 +91,13 @@ void Simulation::AssembleElementStiffness() {
         ComputeElementVolume(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4);
     const Eigen::Matrix12d kk = V * B.transpose() * D * B;
 
-    const auto i_node_number = mesh->index(x1, y1, z1);
-    const auto j_node_number = mesh->index(x2, y2, z2);
-    const auto m_node_number = mesh->index(x3, y3, z3);
-    const auto n_node_number = mesh->index(x4, y4, z4);
+    const auto i_node_number = mesh->node_number(i / mesh->kNumDimensions);
+    const auto j_node_number =
+        mesh->node_number((i + 3) / mesh->kNumDimensions);
+    const auto m_node_number =
+        mesh->node_number((i + 6) / mesh->kNumDimensions);
+    const auto n_node_number =
+        mesh->node_number((i + 9) / mesh->kNumDimensions);
 
     const ElementStiffness element_stiffness = {
         kk, std::vector<unsigned int>{i_node_number, j_node_number,
@@ -106,8 +108,7 @@ void Simulation::AssembleElementStiffness() {
 }
 
 void Simulation::AssembleElementStresses(Eigen::VectorXd nodal_displacement) {
-  for (int i = 0; i < mesh->raw_positions.rows();
-       i += mesh->kNumDimensions * kTetrahedronElementCount) {
+  for (int i = 0; i < mesh->rows(); i += stride) {
     const double x1 = mesh->raw_positions(i);
     const double y1 = mesh->raw_positions(i + 1);
     const double z1 = mesh->raw_positions(i + 2);
@@ -131,8 +132,6 @@ void Simulation::AssembleElementStresses(Eigen::VectorXd nodal_displacement) {
 
     const Eigen::Vector6d sigma = D * B * nodal_displacement;
 
-    // TODO(@jparr721) - Add node indexing here so we know where to apply
-    // sigmas.
     sigmas.emplace_back(sigma);
   }
 }
@@ -158,7 +157,7 @@ void Simulation::AssembleElementPlaneStresses() {
 
 void Simulation::AssembleGlobalStiffness() {
   // Allocate space in K for 3nx3n elements
-  const double K_rowsize = mesh->indices.size() * mesh->kNumDimensions;
+  const double K_rowsize = mesh->positions.size() * mesh->kNumDimensions;
 
   K = Eigen::MatrixXd::Zero(K_rowsize, K_rowsize);
 
@@ -167,21 +166,21 @@ void Simulation::AssembleGlobalStiffness() {
   int kk_1 = 0;
 
   // Iterate through all points and element stiffness matrices, generating the
-  // output inside of the K matrix.
+  // output inside of the K matrix. Lotta, shallow loops, O(144)
   for (const auto& element_stiffness : k) {
     const auto kk = element_stiffness.stiffness_matrix;
     const auto pts = element_stiffness.indices;
 
     for (const auto& pt : pts) {
-      for (int i = 2; i > -1; ++i) {
+      for (int i = 3; i > 0; --i) {
         const int left_K_idx = 3 * pt - i;
         kk_0 += 1;
 
         for (const auto& ppt : pts) {
-          for (int j = 2; j > -1; ++j) {
+          for (int j = 3; j > 0; --j) {
             // If our right-submatrix coordinate (y) > the cols of the
             // submatrix, reset
-            if (kk_1 > kk.cols()) {
+            if (kk_1 == kk.cols()) {
               kk_1 = 0;
             }
 
@@ -310,10 +309,7 @@ void Simulation::AssembleMassMatrix() {
   Eigen::SimplicialLDLT<Eigen::SparseMatrixXd> solver;
   solver.compute(M_hat);
 
-  // If the solver fails for some reason, regularize the result and re-run
-  if (solver.info() != Eigen::Success) {
-    std::cout << "Failed to solve M_hat" << std::endl;
-  }
+  assert(solver.info() == Eigen::Success && "SOLVER FAILED FOR M_HAT");
 
   M_hat_inverse = solver.solve(M_hat);
 }
@@ -325,15 +321,15 @@ void Simulation::InitializeIntegrationConstants() {
   a3 = 1 / a2;
 }
 
-void Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
-                        Eigen::VectorXi indices) {
-  // Can't solve if we have a mismatch
-  assert(k.rows() == f.rows() && "K AND F DO NOT MATCH IN SIZE");
+Eigen::VectorXd Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
+                                   Eigen::VectorXi indices) {
+  assert(k.rows() == f.rows() && "K AND F DO NOT MATCH IN NUMBER OF ROWS");
 
   Eigen::VectorXd u;
+  Eigen::VectorXd U;
 
   // Indices is always # of nodes not including multi-coordinate layouts
-  u.resize(mesh->indices.size() * 2);
+  u.resize(mesh->positions.size() * mesh->kNumDimensions);
 
   // Begin the process of initializing global displacement
   U.setZero(u.rows());
@@ -345,13 +341,14 @@ void Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
 
   assert(indices.rows() == u.rows() && "INDEX AND U DIFFER");
 
-  // Sweep through indices, setting the segment value
   for (int i = 0; i < u.rows(); ++i) {
     const double val = u(i);
     const unsigned int index = indices(i);
 
     U.row(index) << val;
   }
+
+  return U;
 }
 
 void Simulation::Solve() {
@@ -373,9 +370,9 @@ void Simulation::Solve() {
   // form U1 - U4 where we have 4 nodes, and 2 (U2, U3) are degrees of freedom,
   // we can make conditions as:
   //
-  // { node: 2, force(x, y), node: 2, force(x, y) }
+  // { node: 2, force(x, y, z), node: 3, force(x, y, z) }
   //
-  // Where x and y are the directions in which the force is applied. We can map
+  // Where x, y and z are the directions in which the force is applied. We can map
   // into the force vector at these coordinates
   int segment = 0;  // Keep track of kept indices as a 0-indexed vector
   for (const auto& boundary_condition : boundary_conditions) {
@@ -385,45 +382,72 @@ void Simulation::Solve() {
     // The row is the same as the index segment
     f.row(segment) << boundary_condition.force.x;
     f.row(segment + 1) << boundary_condition.force.y;
+    f.row(segment + 2) << boundary_condition.force.z;
 
-    const unsigned int k_col_x = node_number * 2 - 2;
-    const unsigned int k_col_y = node_number * 2 - 1;
-    kept_indices.segment(segment, 2) << k_col_x, k_col_y;
-    segment += 2;
+    const unsigned int k_col_x = node_number * 3 - 3;
+    const unsigned int k_col_y = node_number * 3 - 2;
+    const unsigned int k_col_z = node_number * 3 - 1;
+    kept_indices.segment(segment, 3) << k_col_x, k_col_y, k_col_z;
+    segment += 3;
   }
 
   igl::slice(K, kept_indices, kept_indices, kk);
 
-  SolveU(kk, f, kept_indices);
+  const Eigen::VectorXd U = SolveU(kk, f, kept_indices);
 
   // Set global force
   F_ext = K * U;
 
   // Calculate Element Stresses
-  for (std::size_t i = 0; i < mesh->rows(); i += 6) {
-    // Fetch at the 0-indexed value
-    const double xi = mesh->raw_positions(i);
-    const double yi = mesh->raw_positions(i + 1);
-    const double xj = mesh->raw_positions(i + 2);
-    const double yj = mesh->raw_positions(i + 3);
-    const double xm = mesh->raw_positions(i + 4);
-    const double ym = mesh->raw_positions(i + 5);
+  for (std::size_t i = 0; i < mesh->rows(); i += stride) {
+    const double x1 = mesh->raw_positions(i);
+    const double y1 = mesh->raw_positions(i + 1);
+    const double z1 = mesh->raw_positions(i + 2);
+
+    const double x2 = mesh->raw_positions(i + 3);
+    const double y2 = mesh->raw_positions(i + 4);
+    const double z2 = mesh->raw_positions(i + 5);
+
+    const double x3 = mesh->raw_positions(i + 6);
+    const double y3 = mesh->raw_positions(i + 7);
+    const double z3 = mesh->raw_positions(i + 8);
+
+    const double x4 = mesh->raw_positions(i + 9);
+    const double y4 = mesh->raw_positions(i + 10);
+    const double z4 = mesh->raw_positions(i + 11);
 
     // 2 * # of nodes in this segment
-    Eigen::Vector6d nodal_displacement = Eigen::Vector6d::Zero();
+    Eigen::Vector12d nodal_displacement = Eigen::Vector6d::Zero();
 
-    // Nodes are a bijection to the right-value of the index pair of U.
-    const unsigned int l_node = mesh->index(xi, yi);
+    const auto i_node_number = mesh->node_number(i / mesh->kNumDimensions);
+    const auto j_node_number =
+        mesh->node_number((i + 3) / mesh->kNumDimensions);
+    const auto m_node_number =
+        mesh->node_number((i + 6) / mesh->kNumDimensions);
+    const auto n_node_number =
+        mesh->node_number((i + 9) / mesh->kNumDimensions);
 
-    nodal_displacement.segment(0, 2) << l_node - 1, l_node;
+    // Corresponds to node index in the U vector
+    const unsigned int i_row_l = i_node_number * 3 - 3;
+    const unsigned int i_row_m = i_node_number * 3 - 2;
+    const unsigned int i_row_r = i_node_number * 3 - 1;
 
-    const unsigned int m_node = mesh->index(xj, yj);
+    const unsigned int j_row_l = j_node_number * 3 - 3;
+    const unsigned int j_row_m = j_node_number * 3 - 2;
+    const unsigned int j_row_r = j_node_number * 3 - 1;
 
-    nodal_displacement.segment(2, 2) << m_node - 1, m_node;
+    const unsigned int m_row_l = m_node_number * 3 - 3;
+    const unsigned int m_row_m = m_node_number * 3 - 2;
+    const unsigned int m_row_r = m_node_number * 3 - 1;
 
-    const unsigned int r_node = mesh->index(xm, ym);
+    const unsigned int n_row_l = n_node_number * 3 - 3;
+    const unsigned int n_row_m = n_node_number * 3 - 2;
+    const unsigned int n_row_r = n_node_number * 3 - 1;
 
-    nodal_displacement.segment(4, 2) << r_node - 1, r_node;
+    nodal_displacement.segment(0, 3) << i_row_l, i_row_m, i_row_r;
+    nodal_displacement.segment(3, 3) << j_row_l, j_row_m, j_row_r;
+    nodal_displacement.segment(6, 3) << m_row_l, m_row_m, m_row_r;
+    nodal_displacement.segment(9, 3) << n_row_l, n_row_m, n_row_r;
 
     AssembleElementStresses(nodal_displacement);
   }

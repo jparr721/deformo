@@ -33,7 +33,7 @@ void GLWidget::initializeGL() {
                                      std::vector<BoundaryCondition>{
                                          {
                                              2,
-                                             xy{9.375, 0},
+                                             xyz{9.375, 0},
                                          },
                                          {
                                              3,

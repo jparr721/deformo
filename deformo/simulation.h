@@ -84,9 +84,6 @@ class Simulation {
   // The global stiffness matrix
   Eigen::MatrixXd K;
 
-  // The global displacement vector
-  Eigen::VectorXd U;
-
   // Element stiffness matrices and mapped coordinates
   std::vector<ElementStiffness> k;
 
@@ -156,9 +153,11 @@ class Simulation {
                                          double p4, double p5, double p6);
 
  private:
+  constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
 
   void InitializeVelocity();
   void InitializeAcceleration();
   void InitializeIntegrationConstants();
-  void SolveU(Eigen::MatrixXd k, Eigen::VectorXd f, Eigen::VectorXi indices);
+  Eigen::VectorXd SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
+                         Eigen::VectorXi indices);
 };

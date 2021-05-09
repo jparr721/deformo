@@ -24,6 +24,8 @@ void Mesh::LoadVertices() {
 
 void Mesh::IndexDuplicateVertices() {
   unsigned int node_number = 1;
+  std::unordered_map<xyz, unsigned int, xyz_hash> indices;
+
   for (auto i = 0u; i < raw_positions.rows(); i += kNumDimensions) {
     const auto x = raw_positions(i);      // x
     const auto y = raw_positions(i + 1);  // y
@@ -34,6 +36,9 @@ void Mesh::IndexDuplicateVertices() {
 
     const unsigned int index = found ? indices.at(pos) : node_number;
     indices.insert({pos, index});
+
+    // Add node number to the vertex position
+    positions[i / kNumDimensions].node_number = node_number;
 
     if (!found) {
       ++node_number;

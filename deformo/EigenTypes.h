@@ -6,6 +6,7 @@
 namespace Eigen {
 	// Dense Vector Types
 	using Vector6d = Eigen::Matrix<double, 6, 1>;
+	using Vector12d = Eigen::Matrix<double, 12, 1>;
 
 	// Dense Matrix Types
 	using Matrix66d = Eigen::Matrix<double, 6, 6>;
