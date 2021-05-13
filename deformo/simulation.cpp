@@ -22,15 +22,15 @@ Simulation::Simulation(
       boundary_conditions(boundary_conditions_) {
   // TODO(@jparr721) - This function should change to the integrators file once
   // we do others.
-  InitializeIntegrationConstants();
+  //InitializeIntegrationConstants();
 
-  // Assume no initial forces so U^-dt is always the same.
-  last_displacement = mesh->raw_positions;
+  //// Assume no initial forces so U^-dt is always the same.
+  //last_displacement = mesh->raw_positions;
 
-  AssembleForces();
-  AssembleElementStiffness();
-  AssembleGlobalStiffness();
-  AssembleMassMatrix();
+  //AssembleForces();
+  //AssembleElementStiffness();
+  //AssembleGlobalStiffness();
+  //AssembleMassMatrix();
 }
 
 void Simulation::Update() {
@@ -61,10 +61,6 @@ void Simulation::AssembleForces() {
   F_ext = Eigen::VectorXd::Zero(mesh->rows());
 }
 
-/**
-@brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
-where V is the volume of the element
-**/
 void Simulation::AssembleElementStiffness() {
   for (int i = 0; i < mesh->rows(); i += stride) {
     const double x1 = mesh->raw_positions(i);
@@ -107,6 +103,7 @@ void Simulation::AssembleElementStiffness() {
   }
 }
 
+/*
 void Simulation::AssembleElementStresses(Eigen::VectorXd nodal_displacement) {
   for (int i = 0; i < mesh->rows(); i += stride) {
     const double x1 = mesh->raw_positions(i);
@@ -193,7 +190,7 @@ void Simulation::AssembleGlobalStiffness() {
     }
   }
 }
-
+*/
 Eigen::Matrix66d Simulation::AssembleStressStrainMatrix() {
   Eigen::Matrix66d D;
   D.row(0) << 1 - NU, NU, NU, 0, 0, 0;
@@ -270,6 +267,8 @@ Eigen::MatrixXd Simulation::AssembleStrainRelationshipMatrix(
   // Matrix is 6 x 12
   Eigen::MatrixXd B(B1.rows(), B1.cols() * 4);
   B << B1, B2, B3, B4;
+
+  return B;
 }
 
 double Simulation::ConstructShapeFunctionParameter(double p1, double p2,
@@ -350,7 +349,7 @@ Eigen::VectorXd Simulation::SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
 
   return U;
 }
-
+/*
 void Simulation::Solve() {
   // Per-element stiffness applied to our boundary conditions
   Eigen::MatrixXd kk;
@@ -452,6 +451,7 @@ void Simulation::Solve() {
     AssembleElementStresses(nodal_displacement);
   }
 }
+*/
 
 double Simulation::ComputeElementVolume(double x1, double y1, double z1,
                                         double x2, double y2, double z2,
@@ -465,3 +465,4 @@ double Simulation::ComputeElementVolume(double x1, double y1, double z1,
 
   return V.determinant() / 6;
 }
+

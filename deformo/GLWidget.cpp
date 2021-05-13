@@ -25,22 +25,6 @@ void GLWidget::initializeGL() {
   // White background
   glClearColor(255.f, 255.f, 255.f, 1.f);
 
-  Eigen::VectorXd displacements(12);
-   displacements << 0, 0, 0.5, 0, 0.5, 0.25, 0, 0, 0.5, 0.25, 0, 0.25;
-
-  mesh = std::make_shared<Mesh>(displacements, true);
-  sim = std::make_unique<Simulation>(1., 210e6, 0.3, mesh,
-                                     std::vector<BoundaryCondition>{
-                                         {
-                                             2,
-                                             xyz{9.375, 0},
-                                         },
-                                         {
-                                             3,
-                                             xy{9.375, 0},
-                                         },
-                                     });
-
   program = new QOpenGLShaderProgram(this);
 
   program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");

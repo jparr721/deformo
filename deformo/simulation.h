@@ -113,7 +113,8 @@ class Simulation {
       double x3, double y3, double z3, double x4, double y4, double z4);
 
   /**
-  @brief Calculates the per-element stiffness matrix
+  @brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
+  where V is the volume of the element
   **/
   void AssembleElementStiffness();
 
