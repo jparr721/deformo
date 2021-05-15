@@ -27,7 +27,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   QOpenGLBuffer vbo;
 
   // Index Buffer
-  QOpenGLBuffer ibo;
+  //QOpenGLBuffer ibo;
 
   // Vertex Array Object
   QOpenGLVertexArrayObject vao;

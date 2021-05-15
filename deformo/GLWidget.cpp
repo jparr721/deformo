@@ -20,13 +20,12 @@ GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
 void GLWidget::Cleanup() { delete shader_program; }
 
 void GLWidget::Update() {
-  std::cout << input->keys.size() << std::endl;
   if (input->KeyPressed(Qt::Key_W)) {
-    camera->Translate(camera->kForward);
+    projection.translate(camera->kForward);
   }
 
   if (input->KeyPressed(Qt::Key_S)) {
-    camera->Translate(-camera->kForward);
+    projection.translate(-camera->kForward);
   }
 }
 
@@ -72,15 +71,14 @@ void GLWidget::initializeGL() {
   vbo.create();
   vbo.bind();
   vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-  vbo.allocate(mesh->vertices.data(), mesh->size_bytes());
-  vbo.release();
+  vbo.allocate(mesh->data(), mesh->size_bytes());
 
-  ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-  ibo.create();
-  ibo.bind();
-  // Indices won't be changing
-  ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-  ibo.release();
+  //ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+  //ibo.create();
+  //ibo.bind();
+  //ibo.allocate(mesh->faces.data(), mesh->faces.size() * sizeof(float));
+  //// Indices won't be changing
+  //ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
 
   vao.create();
   vao.bind();
@@ -91,13 +89,14 @@ void GLWidget::initializeGL() {
   // Colors
   shader_program->enableAttributeArray(1);
 
-  // For now, colors are static and always black
-  shader_program->setAttributeArray(0, GL_FLOAT, mesh->vertices.data(), 3);
-  shader_program->setAttributeArray(1, GL_FLOAT, mesh->colors.data(), 3);
+  shader_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
+  shader_program->setAttributeBuffer(1, GL_FLOAT, offsetof(Vertex, color), 3, sizeof(Vertex));
+  //shader_program->setAttributeArray(0, GL_FLOAT, mesh->vertices.data(), 3);
+  //shader_program->setAttributeArray(1, GL_FLOAT, mesh->colors.data(), 3);
 
   vao.release();
   vbo.release();
-  ibo.release();
+  //ibo.release();
   shader_program->release();
 
   // Configure camera matrix positions
@@ -105,7 +104,7 @@ void GLWidget::initializeGL() {
   view_loc = shader_program->uniformLocation("v");
   projection_loc = shader_program->uniformLocation("p");
 
-  projection.perspective(45.f, 4.f / 3.f, 0.f, 2000.f);
+  projection.perspective(45.f, 4.f / 3.f, 1.f, 2000.f);
   projection.translate(QVector3D(0.f, 0.f, -5.f));
 }
 
@@ -120,25 +119,24 @@ void GLWidget::paintGL() {
 
   shader_program->bind();
 
-  shader_program->setUniformValue(view_loc, camera->Matrix());
+  //shader_program->setUniformValue(view_loc, camera->Matrix());
   shader_program->setUniformValue(projection_loc, projection);
 
   // Add updated vertex coordinates
   vbo.bind();
-  vbo.write(0, mesh->vertices.data(), mesh->size_bytes());
+  vbo.write(0, mesh->data(), mesh->size_bytes());
   vbo.release();
 
   // Render
   vao.bind();
-  glDrawElements(GL_TRIANGLES, mesh->size(), GL_FLOAT, 0);
-  //glDrawArrays(GL_TRIANGLES, 0, mesh->size());
+  //glDrawElements(GL_TRIANGLES, mesh->size(), GL_FLOAT, 0);
+  glDrawArrays(GL_TRIANGLES, 0, mesh->size());
   vao.release();
 
   shader_program->release();
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
-  std::cout << "Here" << event->key() << std::endl;
   input->RegisterKeyPress(event->key());
 }
 
