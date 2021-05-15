@@ -58,9 +58,9 @@ R"(2  4  0
 			ele_file_ptr << ele_data;
 			ele_file_ptr.close();
 
-			Eigen::MatrixXd V;
-			Eigen::MatrixXd F;
-			Eigen::MatrixXd T;
+			Eigen::MatrixXf V;
+			Eigen::MatrixXf F;
+			Eigen::MatrixXf T;
 
 			loader::ReadTetgenVertexFile(V, node_path.string());
 			loader::ReadTetgenFaceFile(F, face_path.string());
@@ -73,20 +73,20 @@ R"(2  4  0
 
 			Assert::AreEqual(static_cast<int>(V.rows()), 2);
 			Assert::AreEqual(static_cast<int>(V.cols()), 3);
-			Assert::AreEqual(V(1, 0), 1.);
+			Assert::AreEqual(V(1, 0), 1.f);
 
 			Assert::AreEqual(static_cast<int>(T.rows()), 2);
 			Assert::AreEqual(static_cast<int>(T.cols()), 4);
-			Assert::AreEqual(T(1, 0), 1.);
-			Assert::AreEqual(T(1, 1), 6.);
-			Assert::AreEqual(T(1, 2), 7.);
-			Assert::AreEqual(T(1, 3), 5.);
+			Assert::AreEqual(T(1, 0), 1.f);
+			Assert::AreEqual(T(1, 1), 6.f);
+			Assert::AreEqual(T(1, 2), 7.f);
+			Assert::AreEqual(T(1, 3), 5.f);
 
 			Assert::AreEqual(static_cast<int>(F.rows()), 2);
 			Assert::AreEqual(static_cast<int>(F.cols()), 3);
-			Assert::AreEqual(T(1, 0), 1.);
-			Assert::AreEqual(T(1, 1), 6.);
-			Assert::AreEqual(T(1, 2), 7.);
+			Assert::AreEqual(T(1, 0), 1.f);
+			Assert::AreEqual(T(1, 1), 6.f);
+			Assert::AreEqual(T(1, 2), 7.f);
 		}
 	};
 }

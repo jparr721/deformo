@@ -5,11 +5,14 @@
 #include <Eigen/Dense>
 #include <QVector3D>
 #include <cmath>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 
-void GLWidget::Cleanup() {}
+#include "Loader.h"
+
+void GLWidget::Cleanup() { delete shader_program;  }
 
 void GLWidget::initializeGL() {
   initializeOpenGLFunctions();
@@ -19,13 +22,52 @@ void GLWidget::initializeGL() {
   // White background
   glClearColor(255.f, 255.f, 255.f, 1.f);
 
-  shader_program = std::make_shared<QOpenGLShaderProgram>(this);
+  shader_program = new QOpenGLShaderProgram(this);
 
+  // Initialize Mesh ====================
+  Eigen::MatrixXf V;
+  Eigen::MatrixXf F;
+  Eigen::MatrixXf T;
+
+  const std::string cdir = std::filesystem::current_path().string();
+
+  const std::filesystem::path node_path =
+      std::filesystem::path(cdir + "/square.1.node");
+  const std::filesystem::path ele_path =
+      std::filesystem::path(cdir + "/square.1.ele");
+  const std::filesystem::path face_path =
+      std::filesystem::path(cdir + "/square.1.face");
+
+  loader::ReadTetgenVertexFile(V, node_path.string());
+  loader::ReadTetgenFaceFile(F, face_path.string());
+  loader::ReadTetgenEleFile(T, ele_path.string());
+
+  mesh = std::make_shared<Mesh>(V, F, T);
+
+  // ====================
   shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");
   shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment,
                                           "./core.frag");
   shader_program->link();
   shader_program->bind();
+
+  mesh->vao.create();
+  mesh->vao.bind();
+
+  // Vertices
+  shader_program->enableAttributeArray(0);
+
+  // Colors
+  shader_program->enableAttributeArray(1);
+
+  // For now, colors are static and always black
+  shader_program->setAttributeArray(0, GL_FLOAT, mesh->vertices.data(), 3);
+  shader_program->setAttributeArray(1, GL_FLOAT, mesh->colors.data(), 3);
+
+  mesh->vao.release();
+  mesh->vbo.release();
+  mesh->ibo.release();
+  shader_program->release();
 
   // Configure camera matrix positions
   model_loc = shader_program->uniformLocation("m");

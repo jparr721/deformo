@@ -2,10 +2,10 @@
 
 #include <Eigen/Core>
 
-Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
-           const Eigen::MatrixXf& T,
-           std::shared_ptr<QOpenGLShaderProgram> shader_program_)
-    : shader_program(shader_program_), faces(F), tetrahedrals(T) {
+Mesh::Mesh(const Eigen::MatrixXf& V,
+ const Eigen::MatrixXf& F,
+           const Eigen::MatrixXf& T)
+    : faces(F), tetrahedrals(T) {
   InitializeVertexPositions(V);
   vbo = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
   vbo.create();
@@ -20,24 +20,6 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
   // Indices won't be changing
   ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
   ibo.release();
-
-  vao.create();
-  vao.bind();
-
-  // Vertices
-  shader_program->enableAttributeArray(0);
-
-  // Colors
-  shader_program->enableAttributeArray(1);
-
-  // For now, colors are static and always black
-  shader_program->setAttributeArray(0, GL_FLOAT, vertices.data(), 3);
-  shader_program->setAttributeArray(1, GL_FLOAT, colors.data(), 3);
-
-  vao.release();
-  vbo.release();
-  ibo.release();
-  shader_program->release();
 };
 
 void Mesh::InitializeVertexPositions(const Eigen::MatrixXf& V) {

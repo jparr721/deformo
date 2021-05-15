@@ -20,7 +20,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
-  std::shared_ptr<QOpenGLShaderProgram> shader_program;
+  QOpenGLShaderProgram* shader_program;
   // Camera Shader Locations
   int model_loc = 0;
   int view_loc = 0;
