@@ -15,12 +15,27 @@ void Mesh::InitializeVertexPositions(const Eigen::MatrixXf& V) {
   vertices.resize(V.rows() * V.cols());
   Eigen::MatrixXf Vt = V.transpose();
   vertices = Eigen::Map<Eigen::VectorXf>(Vt.data(), Vt.rows() * Vt.cols());
+  indices = std::vector<float>(vertices.rows());
+  std::iota(indices.begin(), indices.end(), 0);
 
-  colors.resize(vertices.rows());
+  dirty = true;
+  Update();
+}
+
+void Mesh::Update() {
+  // Only update when something changes.
+  if (!dirty) {
+    return;
+  }
+
+  std::vector<Vertex> updated_positions;
+
   for (int i = 0; i < vertices.rows(); i += 3) {
-    colors.segment(i, 3) << 1.0f, 0.f, 0.f;
-    positions.push_back(
+    updated_positions.push_back(
         Vertex{QVector3D(vertices[i], vertices[i + 1], vertices[i + 2]),
                QVector3D(0.f, 0.f, 1.f)});
   }
+
+  positions = updated_positions;
+  dirty = false;
 }

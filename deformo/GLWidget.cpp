@@ -73,12 +73,12 @@ void GLWidget::initializeGL() {
   vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
   vbo.allocate(mesh->data(), mesh->size_bytes());
 
-  //ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-  //ibo.create();
-  //ibo.bind();
-  //ibo.allocate(mesh->faces.data(), mesh->faces.size() * sizeof(float));
-  //// Indices won't be changing
-  //ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+  ibo.create();
+  ibo.bind();
+  ibo.allocate(mesh->indices.data(), mesh->indices.size() * sizeof(float));
+  // Indices won't be changing
+  ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
 
   vao.create();
   vao.bind();
@@ -90,13 +90,12 @@ void GLWidget::initializeGL() {
   shader_program->enableAttributeArray(1);
 
   shader_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
-  shader_program->setAttributeBuffer(1, GL_FLOAT, offsetof(Vertex, color), 3, sizeof(Vertex));
-  //shader_program->setAttributeArray(0, GL_FLOAT, mesh->vertices.data(), 3);
-  //shader_program->setAttributeArray(1, GL_FLOAT, mesh->colors.data(), 3);
+  shader_program->setAttributeBuffer(1, GL_FLOAT, offsetof(Vertex, color), 3,
+                                     sizeof(Vertex));
 
   vao.release();
   vbo.release();
-  //ibo.release();
+  // ibo.release();
   shader_program->release();
 
   // Configure camera matrix positions
@@ -119,7 +118,7 @@ void GLWidget::paintGL() {
 
   shader_program->bind();
 
-  //shader_program->setUniformValue(view_loc, camera->Matrix());
+  // shader_program->setUniformValue(view_loc, camera->Matrix());
   shader_program->setUniformValue(projection_loc, projection);
 
   // Add updated vertex coordinates
@@ -129,7 +128,7 @@ void GLWidget::paintGL() {
 
   // Render
   vao.bind();
-  //glDrawElements(GL_TRIANGLES, mesh->size(), GL_FLOAT, 0);
+  // glDrawElements(GL_TRIANGLES, mesh->size(), GL_FLOAT, 0);
   glDrawArrays(GL_TRIANGLES, 0, mesh->size());
   vao.release();
 

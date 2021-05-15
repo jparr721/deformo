@@ -15,14 +15,18 @@ struct Vertex {
 
 class Mesh {
  public:
-  Eigen::VectorXf colors;
+  bool dirty = false;
+
   Eigen::VectorXf vertices;
   Eigen::MatrixXf faces;
   Eigen::MatrixXf tetrahedrals;
   std::vector<Vertex> positions;
+  std::vector<float> indices;
 
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
        const Eigen::MatrixXf& T);
+
+  void Update();
 
   /*
   \brief We want the vertex data to be vectorized so that way we can more
