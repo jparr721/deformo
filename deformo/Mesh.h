@@ -13,15 +13,6 @@ class Mesh {
   const Eigen::MatrixXf faces;
   const Eigen::MatrixXf tetrahedrals;
 
-  // Vertex Buffer
-  QOpenGLBuffer vbo;
-
-  // Index Buffer
-  QOpenGLBuffer ibo;
-
-  // Vertex Array Object
-  QOpenGLVertexArrayObject vao;
-
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
        const Eigen::MatrixXf& T);
 
@@ -32,9 +23,7 @@ class Mesh {
   We also set our static color for rendering.
   */
   void InitializeVertexPositions(const Eigen::MatrixXf& V);
-  void Render();
 
-  [[nodiscard]] int size_bytes() { return vertices.size() * sizeof(double); }
+  [[nodiscard]] int size_bytes() { return vertices.size() * sizeof(float); }
   [[nodiscard]] int size() { return vertices.size(); }
-
 };

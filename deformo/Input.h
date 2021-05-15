@@ -56,6 +56,14 @@ class Input {
   [[nodiscard]] QPoint MousePosition();
   [[nodiscard]] QPoint MouseDelta();
 
+  // Keyboard State Changes
+  void RegisterKeyPress(int key);
+  void RegisterKeyRelease(int key);
+
+  // Mouse State Changes
+  void RegisterMouseButtonPress(Qt::MouseButton button);
+  void RegisterMouseButtonRelease(Qt::MouseButton button);
+
   // State Handlers
   template <typename InputInstanceType>
   inline void UpdateInputState(InputInstanceType& instance) {
@@ -95,14 +103,6 @@ class Input {
  private:
   void Update();
   void Reset();
-
-  // Keyboard State Changes
-  void RegisterKeyPress(int key);
-  void RegisterKeyRelease(int key);
-
-  // Mouse State Changes
-  void RegisterMouseButtonPress(Qt::MouseButton button);
-  void RegisterMouseButtonRelease(Qt::MouseButton button);
 
   // Utilities for Key management
   [[nodiscard]] int KeyExists(Qt::Key key);

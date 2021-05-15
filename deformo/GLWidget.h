@@ -7,9 +7,12 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
+#include <QKeyEvent>
 #include <memory>
 #include <string>
 
+#include "Camera.h"
+#include "Input.h"
 #include "Mesh.h"
 #include "Simulation.h"
 
@@ -20,6 +23,15 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
+  // Vertex Buffer
+  QOpenGLBuffer vbo;
+
+  // Index Buffer
+  QOpenGLBuffer ibo;
+
+  // Vertex Array Object
+  QOpenGLVertexArrayObject vao;
+
   QOpenGLShaderProgram* shader_program;
   // Camera Shader Locations
   int model_loc = 0;
@@ -37,15 +49,23 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   // Simulation Object
   std::unique_ptr<Simulation> sim;
 
-  GLWidget() {}
-  GLWidget(QWidget* parent = nullptr) : QOpenGLWidget(parent) {}
+  GLWidget(QWidget* parent = nullptr);
 
   void resizeGL(int width, int height) override;
 
  public slots:
   void Cleanup();
+  void Update();
 
  protected:
   void initializeGL() override;
   void paintGL() override;
+
+  // Keyboard Shenanigans
+  void keyPressEvent(QKeyEvent* event) override;
+  void keyReleaseEvent(QKeyEvent* event) override;
+
+ private:
+  std::unique_ptr<Input> input;
+  std::unique_ptr<Camera> camera;
 };

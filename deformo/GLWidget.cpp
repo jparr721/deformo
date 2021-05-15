@@ -12,12 +12,29 @@
 
 #include "Loader.h"
 
-void GLWidget::Cleanup() { delete shader_program;  }
+GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
+  setFocusPolicy(Qt::ClickFocus);
+  input = std::make_unique<Input>();
+  camera = std::make_unique<Camera>();
+}
+void GLWidget::Cleanup() { delete shader_program; }
+
+void GLWidget::Update() {
+  std::cout << input->keys.size() << std::endl;
+  if (input->KeyPressed(Qt::Key_W)) {
+    camera->Translate(camera->kForward);
+  }
+
+  if (input->KeyPressed(Qt::Key_S)) {
+    camera->Translate(-camera->kForward);
+  }
+}
 
 void GLWidget::initializeGL() {
   initializeOpenGLFunctions();
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
           &GLWidget::Cleanup);
+  connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
 
   // White background
   glClearColor(255.f, 255.f, 255.f, 1.f);
@@ -51,8 +68,22 @@ void GLWidget::initializeGL() {
   shader_program->link();
   shader_program->bind();
 
-  mesh->vao.create();
-  mesh->vao.bind();
+  vbo = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+  vbo.create();
+  vbo.bind();
+  vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+  vbo.allocate(mesh->vertices.data(), mesh->size_bytes());
+  vbo.release();
+
+  ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+  ibo.create();
+  ibo.bind();
+  // Indices won't be changing
+  ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  ibo.release();
+
+  vao.create();
+  vao.bind();
 
   // Vertices
   shader_program->enableAttributeArray(0);
@@ -64,9 +95,9 @@ void GLWidget::initializeGL() {
   shader_program->setAttributeArray(0, GL_FLOAT, mesh->vertices.data(), 3);
   shader_program->setAttributeArray(1, GL_FLOAT, mesh->colors.data(), 3);
 
-  mesh->vao.release();
-  mesh->vbo.release();
-  mesh->ibo.release();
+  vao.release();
+  vbo.release();
+  ibo.release();
   shader_program->release();
 
   // Configure camera matrix positions
@@ -89,11 +120,30 @@ void GLWidget::paintGL() {
 
   shader_program->bind();
 
+  shader_program->setUniformValue(view_loc, camera->Matrix());
   shader_program->setUniformValue(projection_loc, projection);
 
-  mesh->Render();
+  // Add updated vertex coordinates
+  vbo.bind();
+  vbo.write(0, mesh->vertices.data(), mesh->size_bytes());
+  vbo.release();
+
+  // Render
+  vao.bind();
+  glDrawElements(GL_TRIANGLES, mesh->size(), GL_FLOAT, 0);
+  //glDrawArrays(GL_TRIANGLES, 0, mesh->size());
+  vao.release();
 
   shader_program->release();
+}
+
+void GLWidget::keyPressEvent(QKeyEvent* event) {
+  std::cout << "Here" << event->key() << std::endl;
+  input->RegisterKeyPress(event->key());
+}
+
+void GLWidget::keyReleaseEvent(QKeyEvent* event) {
+  input->RegisterKeyRelease(event->key());
 }
 
 void GLWidget::resizeGL(int width, int height) {}
