@@ -3,40 +3,20 @@
 #include <fstream>
 #include <iostream>
 
-void Loader::LoadTetgen(Eigen::MatrixXd& V, Eigen::MatrixXd& F,
-                        Eigen::MatrixXd& T, const std::string& node_file,
-                        const std::string& face_file,
-                        const std::string& ele_file) {
-  std::ifstream node_input;
-  std::ifstream face_input;
-  std::ifstream ele_input;
+namespace loader {
 
-  node_input.open(node_file);
-  face_input.open(face_file);
-  ele_input.open(ele_file);
+namespace {
+std::ifstream OpenFile(const std::string& filename) {
+  std::ifstream input;
+  input.open(filename);
+  assert(input.good());
 
-  if (!node_input.good()) {
-    std::cerr << "Cannot read from " << node_file << std::endl;
-    exit(1);
-  }
-
-  if (!face_input.good()) {
-    std::cerr << "Cannot read from " << face_file << std::endl;
-    exit(1);
-  }
-
-  if (!ele_input.good()) {
-    std::cerr << "Cannot read from " << node_file << std::endl;
-    exit(1);
-  }
-
-  ReadTetgenVertexFile(V, node_input);
-  ReadTetgenFaceFile(F, face_input);
-  ReadTetgenEleFile(T, ele_input);
+  return input;
 }
+}  // namespace
 
-void Loader::ReadTetgenVertexFile(Eigen::MatrixXd& V,
-                                  std::ifstream& node_input) {
+void ReadTetgenVertexFile(Eigen::MatrixXd& V, const std::string& node_file) {
+  auto node_input = OpenFile(node_file);
   int n_nodes;
   node_input >> n_nodes;
 
@@ -88,7 +68,8 @@ void Loader::ReadTetgenVertexFile(Eigen::MatrixXd& V,
   }
 }
 
-void Loader::ReadTetgenFaceFile(Eigen::MatrixXd& F, std::ifstream& face_input) {
+void ReadTetgenFaceFile(Eigen::MatrixXd& F, const std::string& face_file) {
+  auto face_input = OpenFile(face_file);
   int n_nodes = 0;
   int row = 0;
   std::string line;
@@ -136,7 +117,8 @@ void Loader::ReadTetgenFaceFile(Eigen::MatrixXd& F, std::ifstream& face_input) {
   }
 }
 
-void Loader::ReadTetgenEleFile(Eigen::MatrixXd& T, std::ifstream& ele_input) {
+void ReadTetgenEleFile(Eigen::MatrixXd& T, const std::string& ele_file) {
+  auto ele_input = OpenFile(ele_file);
   int n_nodes = 0;
   int n_vertices = 0;
   std::string line;
@@ -187,3 +169,4 @@ void Loader::ReadTetgenEleFile(Eigen::MatrixXd& T, std::ifstream& ele_input) {
     }
   }
 }
+}  // namespace loader

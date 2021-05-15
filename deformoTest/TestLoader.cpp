@@ -58,13 +58,13 @@ R"(2  4  0
 			ele_file_ptr << ele_data;
 			ele_file_ptr.close();
 
-			Loader loader;
-
 			Eigen::MatrixXd V;
 			Eigen::MatrixXd F;
 			Eigen::MatrixXd T;
 
-			loader.LoadTetgen(V, F, T, node_path.string(), face_path.string(), ele_path.string());
+			loader::ReadTetgenVertexFile(V, node_path.string());
+			loader::ReadTetgenFaceFile(F, face_path.string());
+			loader::ReadTetgenEleFile(T, ele_path.string());
 
 			// Clean up after the tests complete
 			std::filesystem::remove(node_path);
