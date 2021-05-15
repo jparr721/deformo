@@ -7,6 +7,7 @@
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
+#include <memory>
 #include <string>
 
 #include "Mesh.h"
@@ -19,15 +20,11 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
-  // Global state vars
-  QOpenGLBuffer vbo;
-  QOpenGLVertexArrayObject vao;
-  QOpenGLShaderProgram* program;
-
+  std::shared_ptr<QOpenGLShaderProgram> shader_program;
   // Camera Shader Locations
-  int model_loc;
-  int view_loc;
-  int projection_loc;
+  int model_loc = 0;
+  int view_loc = 0;
+  int projection_loc = 0;
 
   // Camera Shader Values
   QMatrix4x4 model;
@@ -40,7 +37,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   // Simulation Object
   std::unique_ptr<Simulation> sim;
 
-  GLWidget() noexcept {}
+  GLWidget() {}
   GLWidget(QWidget* parent = nullptr) : QOpenGLWidget(parent) {}
 
   void resizeGL(int width, int height) override;

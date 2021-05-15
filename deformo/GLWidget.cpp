@@ -7,15 +7,9 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
-#include <memory>
 #include <sstream>
 
-static std::vector<Vertex> triangle = {
-    Vertex(QVector3D(0.00f, 0.75f, 0.f), QVector3D(1.0f, 0.0f, 0.f)),
-    Vertex(QVector3D(-0.75f, -0.75f, 0.f), QVector3D(0.0f, 1.0f, 0.f)),
-    Vertex(QVector3D(0.75f, -0.75f, 0.f), QVector3D(0.0f, 0.0f, 0.f))};
-
-void GLWidget::Cleanup() { delete program; }
+void GLWidget::Cleanup() {}
 
 void GLWidget::initializeGL() {
   initializeOpenGLFunctions();
@@ -25,37 +19,21 @@ void GLWidget::initializeGL() {
   // White background
   glClearColor(255.f, 255.f, 255.f, 1.f);
 
-  program = new QOpenGLShaderProgram(this);
+  shader_program = std::make_shared<QOpenGLShaderProgram>(this);
 
-  program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");
-  program->addShaderFromSourceFile(QOpenGLShader::Fragment, "./core.frag");
-  program->link();
-  program->bind();
+  shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");
+  shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment,
+                                          "./core.frag");
+  shader_program->link();
+  shader_program->bind();
 
   // Configure camera matrix positions
-  model_loc = program->uniformLocation("m");
-  view_loc = program->uniformLocation("v");
-  projection_loc = program->uniformLocation("p");
+  model_loc = shader_program->uniformLocation("m");
+  view_loc = shader_program->uniformLocation("v");
+  projection_loc = shader_program->uniformLocation("p");
 
   projection.perspective(45.f, 4.f / 3.f, 0.f, 2000.f);
   projection.translate(QVector3D(0.f, 0.f, -5.f));
-
-  // Passthrough for data to GPU
-  mesh->Initialize(vbo);
-
-  // Create vao
-  vao.create();
-  vao.bind();
-  program->enableAttributeArray(0);  // Vertices
-  program->enableAttributeArray(1);  // Colors
-  program->setAttributeBuffer(0, GL_FLOAT, Vertex::PositionOffset(),
-                              Vertex::PositionSize(), Vertex::Stride());
-  program->setAttributeBuffer(1, GL_FLOAT, Vertex::ColorOffset(),
-                              Vertex::ColorSize(), Vertex::Stride());
-
-  vao.release();
-  vbo.release();
-  program->release();
 }
 
 void GLWidget::paintGL() {
@@ -67,13 +45,13 @@ void GLWidget::paintGL() {
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  program->bind();
+  shader_program->bind();
 
-  program->setUniformValue(projection_loc, projection);
+  shader_program->setUniformValue(projection_loc, projection);
 
-  mesh->Render(vbo, vao);
+  mesh->Render();
 
-  program->release();
+  shader_program->release();
 }
 
 void GLWidget::resizeGL(int width, int height) {}
