@@ -2,80 +2,44 @@
 
 #include <Eigen/Dense>
 #include <QOpenGLBuffer>
+#include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
-#include <QVector3D>
-#include <optional>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
-constexpr unsigned int kTetrahedronElementCount = 4;
-
-struct xyz {
-  double x;
-  double y;
-  double z;
-  bool operator==(const xyz& rhs) const {
-    return x == rhs.x && y == rhs.y && z == rhs.z;
-  }
-};
-
-struct xyz_hash {
-  std::size_t operator()(const xyz& self) const noexcept {
-    std::size_t seed = 3;
-
-    seed ^= static_cast<unsigned int>(self.x) + 0x9e779b9 + (seed << 6) +
-            (seed >> 2);
-    seed ^= static_cast<unsigned int>(self.y) + 0x9e779b9 + (seed << 6) +
-            (seed >> 2);
-    seed ^= static_cast<unsigned int>(self.z) + 0x9e779b9 + (seed << 6) +
-            (seed >> 2);
-
-    return seed;
-  }
-};
-
-struct Vertex {
-  int node_number;
-  QVector3D position;
-  QVector3D color;
-
-  Vertex(const QVector3D& vertex_)
-      : position(vertex_), color(QVector3D(1., 0., 0.)) {}
-  Vertex(const QVector3D& vertex_, const QVector3D& color_)
-      : position(vertex_), color(color_) {}
-
-  static int PositionOffset();
-  static int ColorOffset();
-  static int PositionSize();
-  static int ColorSize();
-  static int Stride();
-};
+#include <memory>
+#include <string>
 
 class Mesh {
  public:
-  static constexpr unsigned int kNumDimensions = 3;
+  // Vertex Buffer
+  QOpenGLBuffer vbo;
 
-  std::vector<Vertex> positions;
-  std::vector<QVector3D> colors;
+  // Index Buffer
+  QOpenGLBuffer ibo;
 
-  Eigen::VectorXd raw_positions;
+  // Vertex Array Object
+  QOpenGLVertexArrayObject vao;
 
-  Mesh(const Eigen::VectorXd& vertices, const std::vector<QVector3D>& colors_);
+  // Shader Program
+  std::shared_ptr<QOpenGLShaderProgram> shader_program;
 
-  void UpdatePositions(Eigen::Ref<const Eigen::VectorXd> displacements);
-  void Initialize(QOpenGLBuffer& vbo);
-  void Render(QOpenGLBuffer& vbo, QOpenGLVertexArrayObject& vao);
+  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
+       const Eigen::MatrixXf& T,
+       std::shared_ptr<QOpenGLShaderProgram> shader_program_);
 
-  inline unsigned int rows() { return raw_positions.rows(); }
-  inline unsigned int node_number(int index) {
-    assert(index < positions.size() && "INVALID INDEX IN node_number");
-    return positions.at(index).node_number;
-  }
+  /*
+  \brief We want the vertex data to be vectorized so that way we can more 
+  easily do operations on it.
+
+  We also set our static color for rendering.
+  */
+  void InitializeVertexPositions(const Eigen::MatrixXf& V);
+  void Render();
+
+  [[nodiscard]] int size_bytes() { return vertices.size() * sizeof(double); }
+  [[nodiscard]] int size() { return vertices.size(); }
 
  private:
-  void LoadVertices();
-  void ReloadVertices();
-
-  void IndexDuplicateVertices();
+  Eigen::VectorXf colors;
+  Eigen::VectorXf vertices;
+  const Eigen::MatrixXf faces;
+  const Eigen::MatrixXf tetrahedrals;
 };

@@ -40,6 +40,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   // Simulation Object
   std::unique_ptr<Simulation> sim;
 
+  GLWidget() noexcept {}
   GLWidget(QWidget* parent = nullptr) : QOpenGLWidget(parent) {}
 
   void resizeGL(int width, int height) override;

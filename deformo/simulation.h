@@ -14,7 +14,7 @@ Static boundary condition for a given node
 */
 struct BoundaryCondition {
   unsigned int node;
-  xyz force;
+  Eigen::Vector3d force;
 };
 
 /**
@@ -154,7 +154,7 @@ class Simulation {
                                          double p4, double p5, double p6);
 
  private:
-  constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
+  //constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
 
   void InitializeVelocity();
   void InitializeAcceleration();
