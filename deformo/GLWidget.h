@@ -68,4 +68,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
  private:
   std::unique_ptr<Input> input;
   std::unique_ptr<Camera> camera;
+
+  void LogErrors(const char* fn);
+  void BuildBuffers();
 };

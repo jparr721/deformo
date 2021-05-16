@@ -67,35 +67,7 @@ void GLWidget::initializeGL() {
   shader_program->link();
   shader_program->bind();
 
-  vbo = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-  vbo.create();
-  vbo.bind();
-  vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
-  vbo.allocate(mesh->data(), mesh->size_bytes());
-
-  ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-  ibo.create();
-  ibo.bind();
-  ibo.allocate(mesh->indices.data(), mesh->indices.size() * sizeof(float));
-  // Indices won't be changing
-  ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-
-  vao.create();
-  vao.bind();
-
-  // Vertices
-  shader_program->enableAttributeArray(0);
-
-  // Colors
-  shader_program->enableAttributeArray(1);
-
-  shader_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(Vertex));
-  shader_program->setAttributeBuffer(1, GL_FLOAT, offsetof(Vertex, color), 3,
-                                     sizeof(Vertex));
-
-  vao.release();
-  vbo.release();
-  // ibo.release();
+  BuildBuffers();
   shader_program->release();
 
   // Configure camera matrix positions
@@ -103,8 +75,9 @@ void GLWidget::initializeGL() {
   view_loc = shader_program->uniformLocation("v");
   projection_loc = shader_program->uniformLocation("p");
 
-  projection.perspective(45.f, 4.f / 3.f, 1.f, 2000.f);
+  projection.perspective(45.f, 4.f / 3.f, 0.f, 2000.f);
   projection.translate(QVector3D(0.f, 0.f, -5.f));
+  LogErrors("initializeGL");
 }
 
 void GLWidget::paintGL() {
@@ -114,7 +87,7 @@ void GLWidget::paintGL() {
   // Integrate vars to next step
   // sim->Integrate();
 
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT);
 
   shader_program->bind();
 
@@ -122,17 +95,44 @@ void GLWidget::paintGL() {
   shader_program->setUniformValue(projection_loc, projection);
 
   // Add updated vertex coordinates
-  vbo.bind();
-  vbo.write(0, mesh->data(), mesh->size_bytes());
-  vbo.release();
+  //vbo.bind();
+  //vbo.write(0, mesh->data(), mesh->size_bytes());
+  //vbo.release();
 
   // Render
   vao.bind();
-  // glDrawElements(GL_TRIANGLES, mesh->size(), GL_FLOAT, 0);
-  glDrawArrays(GL_TRIANGLES, 0, mesh->size());
+  glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_SHORT, 0);
+  // glDrawArrays(GL_TRIANGLES, 0, mesh->size());
   vao.release();
 
   shader_program->release();
+  LogErrors("paintGL");
+}
+
+void GLWidget::BuildBuffers() {
+  vao.create();
+  vao.bind();
+
+  vbo = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+  vbo.create();
+  vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  vbo.bind();
+  vbo.allocate(mesh->data(), mesh->size_bytes());
+
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
+
+  ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+  ibo.create();
+  ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+  ibo.bind();
+  ibo.allocate(mesh->indices.data(),
+               mesh->indices.size() * sizeof(unsigned short));
+  vao.release();
+  vbo.release();
+  ibo.release();
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
@@ -144,6 +144,19 @@ void GLWidget::keyReleaseEvent(QKeyEvent* event) {
 }
 
 void GLWidget::resizeGL(int width, int height) {}
+
+void GLWidget::LogErrors(const char* fn) {
+  GLenum err;
+  for (;;) {
+    err = glGetError();
+
+    if (err == GL_NO_ERROR) {
+      break;
+    }
+
+    std::cerr << "Error in fn: " << fn << ": " << err << std::endl;
+  }
+}
 
 void Perspective(Eigen::Matrix4d& camera, float vertical_angle,
                  float aspect_ratio, float near_plane, float far_plane) {

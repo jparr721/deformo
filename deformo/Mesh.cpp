@@ -12,11 +12,17 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
 };
 
 void Mesh::InitializeVertexPositions(const Eigen::MatrixXf& V) {
-  vertices.resize(V.rows() * V.cols());
+  positions.resize(V.rows() * V.cols());
   Eigen::MatrixXf Vt = V.transpose();
-  vertices = Eigen::Map<Eigen::VectorXf>(Vt.data(), Vt.rows() * Vt.cols());
-  indices = std::vector<float>(vertices.rows());
-  std::iota(indices.begin(), indices.end(), 0);
+  positions = Eigen::Map<Eigen::VectorXf>(Vt.data(), Vt.rows() * Vt.cols());
+
+  indices.reserve(faces.rows());
+  for (int i = 0; i < faces.rows(); ++i) {
+    const Eigen::Vector3f row = faces.row(i);
+    indices.push_back(row.x());
+    indices.push_back(row.y());
+    indices.push_back(row.z());
+  }
 
   dirty = true;
   Update();
@@ -30,12 +36,12 @@ void Mesh::Update() {
 
   std::vector<Vertex> updated_positions;
 
-  for (int i = 0; i < vertices.rows(); i += 3) {
+  for (int i = 0; i < positions.rows(); i += 3) {
     updated_positions.push_back(
-        Vertex{QVector3D(vertices[i], vertices[i + 1], vertices[i + 2]),
+        Vertex{QVector3D(positions[i], positions[i + 1], positions[i + 2]),
                QVector3D(0.f, 0.f, 1.f)});
   }
 
-  positions = updated_positions;
+  renderable_positions = updated_positions;
   dirty = false;
 }
