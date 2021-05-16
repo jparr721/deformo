@@ -71,4 +71,5 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
   void LogErrors(const char* fn);
   void BuildBuffers();
+  void BuildMesh();
 };

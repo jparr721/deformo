@@ -40,27 +40,8 @@ void GLWidget::initializeGL() {
 
   shader_program = new QOpenGLShaderProgram(this);
 
-  // Initialize Mesh ====================
-  Eigen::MatrixXf V;
-  Eigen::MatrixXf F;
-  Eigen::MatrixXf T;
+  BuildMesh();
 
-  const std::string cdir = std::filesystem::current_path().string();
-
-  const std::filesystem::path node_path =
-      std::filesystem::path(cdir + "/square.1.node");
-  const std::filesystem::path ele_path =
-      std::filesystem::path(cdir + "/square.1.ele");
-  const std::filesystem::path face_path =
-      std::filesystem::path(cdir + "/square.1.face");
-
-  loader::ReadTetgenVertexFile(V, node_path.string());
-  loader::ReadTetgenFaceFile(F, face_path.string());
-  loader::ReadTetgenEleFile(T, ele_path.string());
-
-  mesh = std::make_shared<Mesh>(V, F, T);
-
-  // ====================
   shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");
   shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment,
                                           "./core.frag");
@@ -95,9 +76,9 @@ void GLWidget::paintGL() {
   shader_program->setUniformValue(projection_loc, projection);
 
   // Add updated vertex coordinates
-  //vbo.bind();
-  //vbo.write(0, mesh->data(), mesh->size_bytes());
-  //vbo.release();
+  vbo.bind();
+  vbo.write(0, mesh->data(), mesh->size_bytes());
+  vbo.release();
 
   // Render
   vao.bind();
@@ -121,8 +102,10 @@ void GLWidget::BuildBuffers() {
 
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, position)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                        reinterpret_cast<void*>(offsetof(Vertex, color)));
 
   ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
   ibo.create();
@@ -133,6 +116,27 @@ void GLWidget::BuildBuffers() {
   vao.release();
   vbo.release();
   ibo.release();
+}
+
+void GLWidget::BuildMesh() {
+  Eigen::MatrixXf V;
+  Eigen::MatrixXf F;
+  Eigen::MatrixXf T;
+
+  const std::string cdir = std::filesystem::current_path().string();
+
+  const std::filesystem::path node_path =
+      std::filesystem::path(cdir + "/square.1.node");
+  const std::filesystem::path ele_path =
+      std::filesystem::path(cdir + "/square.1.ele");
+  const std::filesystem::path face_path =
+      std::filesystem::path(cdir + "/square.1.face");
+
+  loader::ReadTetgenVertexFile(V, node_path.string());
+  loader::ReadTetgenFaceFile(F, face_path.string());
+  loader::ReadTetgenEleFile(T, ele_path.string());
+
+  mesh = std::make_shared<Mesh>(V, F, T);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {

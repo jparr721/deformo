@@ -37,6 +37,4 @@ class Mesh {
   [[nodiscard]] const Vertex* data() { return renderable_positions.data(); }
   [[nodiscard]] int size_bytes() { return renderable_positions.size() * sizeof(Vertex); }
   [[nodiscard]] int size() { return renderable_positions.size(); }
-  //[[nodiscard]] int size_bytes() { return vertices.size() * sizeof(float); }
-  //[[nodiscard]] int size() { return vertices.size(); }
 };
