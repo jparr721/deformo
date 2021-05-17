@@ -1,13 +1,14 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <QKeyEvent>
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
-#include <QKeyEvent>
+#include <QTimer>
 #include <memory>
 #include <string>
 
@@ -50,6 +51,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   std::unique_ptr<Simulation> sim;
 
   GLWidget(QWidget* parent = nullptr);
+  ~GLWidget();
 
   void resizeGL(int width, int height) override;
 
@@ -66,6 +68,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void keyReleaseEvent(QKeyEvent* event) override;
 
  private:
+  QTimer* draw_timer;
   std::unique_ptr<Input> input;
   std::unique_ptr<Camera> camera;
 

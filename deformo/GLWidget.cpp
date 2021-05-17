@@ -3,7 +3,6 @@
 #include "GLWidget.h"
 
 #include <Eigen/Dense>
-#include <QVector3D>
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -14,18 +13,47 @@
 
 GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   setFocusPolicy(Qt::ClickFocus);
+
+  draw_timer = new QTimer(this);
+  connect(draw_timer, &QTimer::timeout, this,
+          QOverload<>::of(&GLWidget::update));
+  connect(draw_timer, &QTimer::timeout, this,
+          QOverload<>::of(&GLWidget::Update));
+  draw_timer->start(30);
+
   input = std::make_unique<Input>();
   camera = std::make_unique<Camera>();
 }
+
+GLWidget::~GLWidget() {
+  vbo.destroy();
+  ibo.destroy();
+  vao.destroy();
+
+  delete draw_timer;
+}
+
 void GLWidget::Cleanup() { delete shader_program; }
 
 void GLWidget::Update() {
   if (input->KeyPressed(Qt::Key_W)) {
-    projection.translate(camera->kForward);
+    camera->Translate(camera->kForward);
   }
 
   if (input->KeyPressed(Qt::Key_S)) {
-    projection.translate(-camera->kForward);
+    camera->Translate(-1 * camera->kForward);
+  }
+
+  if (input->KeyPressed(Qt::Key_A)) {
+    camera->Translate(-1 * camera->kRight);
+  }
+
+  if (input->KeyPressed(Qt::Key_D)) {
+    camera->Translate(camera->kRight);
+  }
+
+  if (input->KeyPressed(Qt::Key_Space)) {
+    camera->Reset();
   }
 }
 
@@ -34,6 +62,9 @@ void GLWidget::initializeGL() {
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
           &GLWidget::Cleanup);
   connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
+
+  // Face Culling
+  glEnable(GL_CULL_FACE);
 
   // White background
   glClearColor(255.f, 255.f, 255.f, 1.f);
@@ -56,12 +87,13 @@ void GLWidget::initializeGL() {
   view_loc = shader_program->uniformLocation("v");
   projection_loc = shader_program->uniformLocation("p");
 
-  projection.perspective(45.f, 4.f / 3.f, 0.f, 2000.f);
-  projection.translate(QVector3D(0.f, 0.f, -5.f));
   LogErrors("initializeGL");
 }
 
 void GLWidget::paintGL() {
+  // Wire
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
   // Solve at this timestep
   // sim->Solve();
 
@@ -72,8 +104,7 @@ void GLWidget::paintGL() {
 
   shader_program->bind();
 
-  // shader_program->setUniformValue(view_loc, camera->Matrix());
-  shader_program->setUniformValue(projection_loc, projection);
+  shader_program->setUniformValue(projection_loc, camera->Matrix());
 
   // Add updated vertex coordinates
   vbo.bind();
@@ -83,7 +114,6 @@ void GLWidget::paintGL() {
   // Render
   vao.bind();
   glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_SHORT, 0);
-  // glDrawArrays(GL_TRIANGLES, 0, mesh->size());
   vao.release();
 
   shader_program->release();
