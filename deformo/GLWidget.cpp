@@ -72,6 +72,14 @@ void GLWidget::Update() {
   if (input->KeyPressed(Qt::Key_Space)) {
     camera->Reset();
   }
+
+  if (input->KeyPressed(Qt::Key_M)) {
+    if (render_style == GL_LINE) {
+      render_style = GL_FILL;
+    } else {
+      render_style = GL_LINE;
+    }
+  }
 }
 
 void GLWidget::initializeGL() {
@@ -81,7 +89,8 @@ void GLWidget::initializeGL() {
   connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
 
   // Face Culling
-  glEnable(GL_CULL_FACE);
+  //glEnable(GL_CULL_FACE);
+  glEnable(GL_DEPTH);
 
   // White background
   glClearColor(255.f, 255.f, 255.f, 1.f);
@@ -109,7 +118,7 @@ void GLWidget::initializeGL() {
 
 void GLWidget::paintGL() {
   // Wire
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK, render_style);
 
   // Solve at this timestep
   // sim->Solve();

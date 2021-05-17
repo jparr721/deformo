@@ -1,14 +1,13 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <QVector3D>
 #include <vector>
 #include <memory>
 #include <string>
 
 struct Vertex {
-  QVector3D position;
-  QVector3D color;
+  Eigen::Vector3f position;
+  Eigen::Vector3f color;
 };
 
 class Mesh {

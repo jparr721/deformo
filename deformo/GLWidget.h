@@ -34,6 +34,10 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   QOpenGLVertexArrayObject vao;
 
   QOpenGLShaderProgram* shader_program;
+
+  // Toggleable Wire Mesh
+  GLenum render_style = GL_LINE;
+
   // Camera Shader Locations
   int model_loc = 0;
   int view_loc = 0;

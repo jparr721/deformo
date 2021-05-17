@@ -24,6 +24,16 @@ void Mesh::InitializeVertexPositions(const Eigen::MatrixXf& V) {
     indices.push_back(row.z());
   }
 
+  // TODO(@jparr721) - Add Permutations for Ele file
+
+  //Eigen::MatrixXf Tt = tetrahedrals.transpose();
+  //Eigen::VectorXf tp =
+  //    Eigen::Map<Eigen::VectorXf>(Tt.data(), Tt.rows() * Tt.cols());
+  //indices.reserve(tp.rows());
+  //for (int i = 0; i < tp.rows(); ++i) {
+  //  indices.push_back(tp(i));
+  //}
+
   dirty = true;
   Update();
 }
@@ -38,8 +48,8 @@ void Mesh::Update() {
 
   for (int i = 0; i < positions.rows(); i += 3) {
     updated_positions.push_back(
-        Vertex{QVector3D(positions[i], positions[i + 1], positions[i + 2]),
-               QVector3D(0.f, 0.f, 1.f)});
+        Vertex{Eigen::Vector3f(positions[i], positions[i + 1], positions[i + 2]),
+               Eigen::Vector3f(0.f, 0.f, 1.f)});
   }
 
   renderable_positions = updated_positions;
