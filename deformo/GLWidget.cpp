@@ -36,20 +36,37 @@ GLWidget::~GLWidget() {
 void GLWidget::Cleanup() { delete shader_program; }
 
 void GLWidget::Update() {
+  input->Update();
+
+  if (input->MouseButtonPressed(Qt::RightButton)) {
+    camera->Rotate(-1 * camera->kRotationSpeed * input->MouseDelta().x(),
+                   camera->kUp);
+    camera->Rotate(-1 * camera->kRotationSpeed * input->MouseDelta().y(),
+                   camera->rotation.rotatedVector(camera->kRight));
+  }
+
   if (input->KeyPressed(Qt::Key_W)) {
-    camera->Translate(camera->kForward);
+    camera->Forward();
   }
 
   if (input->KeyPressed(Qt::Key_S)) {
-    camera->Translate(-1 * camera->kForward);
+    camera->Backward();
   }
 
   if (input->KeyPressed(Qt::Key_A)) {
-    camera->Translate(-1 * camera->kRight);
+    camera->Left();
   }
 
   if (input->KeyPressed(Qt::Key_D)) {
-    camera->Translate(camera->kRight);
+    camera->Right();
+  }
+
+  if (input->KeyPressed(Qt::Key_Q)) {
+    camera->Up();
+  }
+
+  if (input->KeyPressed(Qt::Key_E)) {
+    camera->Down();
   }
 
   if (input->KeyPressed(Qt::Key_Space)) {
@@ -175,6 +192,14 @@ void GLWidget::keyPressEvent(QKeyEvent* event) {
 
 void GLWidget::keyReleaseEvent(QKeyEvent* event) {
   input->RegisterKeyRelease(event->key());
+}
+
+void GLWidget::mousePressEvent(QMouseEvent* event) {
+  input->RegisterMouseButtonPress(event->button());
+}
+
+void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
+  input->RegisterMouseButtonRelease(event->button());
 }
 
 void GLWidget::resizeGL(int width, int height) {}

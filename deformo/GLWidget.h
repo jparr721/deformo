@@ -67,6 +67,10 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   void keyPressEvent(QKeyEvent* event) override;
   void keyReleaseEvent(QKeyEvent* event) override;
 
+  // Mouse Shenanigans
+  void mousePressEvent(QMouseEvent* event) override;
+  void mouseReleaseEvent(QMouseEvent* event) override;
+
  private:
   QTimer* draw_timer;
   std::unique_ptr<Input> input;

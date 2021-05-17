@@ -18,6 +18,8 @@ class Input {
   std::unordered_map<Qt::Key, bool> keys;
   std::unordered_map<Qt::MouseButton, bool> mouse_buttons;
 
+  void Update();
+
   // State Checks
   [[nodiscard]] bool KeyPressed(Qt::Key key);
   [[nodiscard]] bool MouseButtonPressed(Qt::MouseButton button);
