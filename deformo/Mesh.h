@@ -25,7 +25,7 @@ class Mesh {
   [[nodiscard]] int colors_size() { return colors.size(); }
 
   [[nodiscard]] const int* faces_data() { return faces.data(); }
-  [[nodiscard]] int faces_size_bytes() { return faces.size() * sizeof(float); }
+  [[nodiscard]] int faces_size_bytes() { return faces.size() * sizeof(int); }
   [[nodiscard]] int faces_size() { return faces.size(); }
 
   private:
