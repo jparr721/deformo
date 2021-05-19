@@ -68,7 +68,7 @@ void ReadTetgenVertexFile(Eigen::MatrixXf& V, const std::string& node_file) {
   }
 }
 
-void ReadTetgenFaceFile(Eigen::MatrixXf& F, const std::string& face_file) {
+void ReadTetgenFaceFile(Eigen::MatrixXi& F, const std::string& face_file) {
   auto face_input = OpenFile(face_file);
   int n_nodes = 0;
   int row = 0;
@@ -117,7 +117,7 @@ void ReadTetgenFaceFile(Eigen::MatrixXf& F, const std::string& face_file) {
   }
 }
 
-void ReadTetgenEleFile(Eigen::MatrixXf& T, const std::string& ele_file) {
+void ReadTetgenEleFile(Eigen::MatrixXi& T, const std::string& ele_file) {
   auto ele_input = OpenFile(ele_file);
   int n_nodes = 0;
   int n_vertices = 0;

@@ -141,7 +141,7 @@ void GLWidget::paintGL() {
   // Render
   vao.bind();
 
-  glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, mesh->faces_size(), GL_UNSIGNED_INT, 0);
 
   vao.release();
 
@@ -170,14 +170,14 @@ void GLWidget::BuildBuffers() {
   glEnableVertexAttribArray(1);
 
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices.size() * sizeof(unsigned int),
-               mesh->indices.data(), GL_DYNAMIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->faces_size_bytes(),
+               mesh->faces_data(), GL_DYNAMIC_DRAW);
 }
 
 void GLWidget::BuildMesh() {
   Eigen::MatrixXf V;
-  Eigen::MatrixXf F;
-  Eigen::MatrixXf T;
+  Eigen::MatrixXi F;
+  Eigen::MatrixXi T;
 
   const std::string cdir = std::filesystem::current_path().string();
 
