@@ -26,8 +26,9 @@ GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
 }
 
 GLWidget::~GLWidget() {
-  vbo.destroy();
-  ibo.destroy();
+  glDeleteBuffers(1, &vbo);
+  glDeleteBuffers(1, &ibo);
+  glDeleteBuffers(1, &c_vbo);
   vao.destroy();
 
   delete draw_timer;
@@ -89,7 +90,7 @@ void GLWidget::initializeGL() {
   connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
 
   // Face Culling
-  //glEnable(GL_CULL_FACE);
+  // glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH);
 
   // White background
@@ -133,13 +134,15 @@ void GLWidget::paintGL() {
   shader_program->setUniformValue(projection_loc, camera->Matrix());
 
   // Add updated vertex coordinates
-  vbo.bind();
-  vbo.write(0, mesh->data(), mesh->size_bytes());
-  vbo.release();
+  //vbo.bind();
+  //vbo.write(0, mesh->data(), mesh->size_bytes());
+  //vbo.release();
 
   // Render
   vao.bind();
-  glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_SHORT, 0);
+
+  glDrawElements(GL_TRIANGLES, mesh->indices.size(), GL_UNSIGNED_INT, 0);
+
   vao.release();
 
   shader_program->release();
@@ -148,30 +151,27 @@ void GLWidget::paintGL() {
 
 void GLWidget::BuildBuffers() {
   vao.create();
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &c_vbo);
+  glGenBuffers(1, &ibo);
+
   vao.bind();
 
-  vbo = QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-  vbo.create();
-  vbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-  vbo.bind();
-  vbo.allocate(mesh->data(), mesh->size_bytes());
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, mesh->size_bytes(), mesh->data(),
+               GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
 
+  glBindBuffer(GL_ARRAY_BUFFER, c_vbo);
+  glBufferData(GL_ARRAY_BUFFER, mesh->colors_size_bytes(), mesh->colors_data(),
+               GL_DYNAMIC_DRAW);
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
   glEnableVertexAttribArray(0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void*>(offsetof(Vertex, position)));
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
-                        reinterpret_cast<void*>(offsetof(Vertex, color)));
 
-  ibo = QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-  ibo.create();
-  ibo.setUsagePattern(QOpenGLBuffer::StaticDraw);
-  ibo.bind();
-  ibo.allocate(mesh->indices.data(),
-               mesh->indices.size() * sizeof(unsigned short));
-  vao.release();
-  vbo.release();
-  ibo.release();
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->indices.size() * sizeof(unsigned int),
+               mesh->indices.data(), GL_DYNAMIC_DRAW);
 }
 
 void GLWidget::BuildMesh() {

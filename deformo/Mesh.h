@@ -1,24 +1,18 @@
 #pragma once
 
+#include "EigenTypes.h"
 #include <Eigen/Dense>
 #include <vector>
 #include <memory>
 #include <string>
 
-struct Vertex {
-  Eigen::Vector3f position;
-  Eigen::Vector3f color;
-};
-
 class Mesh {
  public:
-  bool dirty = false;
-
   Eigen::MatrixXf faces;
   Eigen::MatrixXf tetrahedrals;
-  Eigen::VectorXf positions;
-  std::vector<Vertex> renderable_positions;
-  std::vector<unsigned short> indices;
+  Eigen::RowMajorVectorXf positions;
+  Eigen::RowMajorVectorXf colors;
+  std::vector<unsigned int> indices;
 
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXf& F,
        const Eigen::MatrixXf& T);
@@ -33,7 +27,11 @@ class Mesh {
   */
   void InitializeVertexPositions(const Eigen::MatrixXf& V);
 
-  [[nodiscard]] const Vertex* data() { return renderable_positions.data(); }
-  [[nodiscard]] int size_bytes() { return renderable_positions.size() * sizeof(Vertex); }
-  [[nodiscard]] int size() { return renderable_positions.size(); }
+  [[nodiscard]] const float* data() { return positions.data(); }
+  [[nodiscard]] int size_bytes() { return positions.size() * sizeof(float); }
+  [[nodiscard]] int size() { return positions.size(); }
+
+  [[nodiscard]] const float* colors_data() { return colors.data(); }
+  [[nodiscard]] int colors_size_bytes() { return colors.size() * sizeof(float); }
+  [[nodiscard]] int colors_size() { return colors.size(); }
 };
