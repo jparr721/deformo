@@ -1,7 +1,31 @@
+#define TETLIBRARY
+
 #include "Mesh.h"
 
+#include <igl/readPLY.h>
+
 #include <Eigen/Core>
+#include <filesystem>
 #include <iostream>
+#include <numeric>
+#include <vector>
+
+#include "Utils.h"
+
+Mesh::Mesh(const std::string& ply_path) {
+  assert(std::filesystem::path(ply_path).extension() == ".ply" &&
+         "INVALID OBJECT FILE");
+  Eigen::MatrixXf V;
+  Eigen::MatrixXi F;
+  igl::readPLY(ply_path, V, F);
+  Mesh(V, F);
+}
+
+Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F) {
+  // Generate tetrahedrals from PLC mesh with max size 1e-2.
+  const std::string tetgen_flags = "zpqa1e-2";
+  Tetrahedralize(V, F, tetgen_flags);
+}
 
 Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
            const Eigen::MatrixXi& T) {
@@ -13,4 +37,121 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
   for (int i = 0; i < positions.size(); ++i) {
     colors(i) = i % 3 == 0 ? 1.f : 0.f;
   }
+}
+
+void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                          const std::string& flags) {
+  tetgenio in, out;
+  assert(MeshToTetgenio(V, F, in) && "FAILED TO CONVERT MESH TO TETGENIO");
+
+  char* t_flags = new char[flags.size() + 1];
+  try {
+	  std::strcpy(t_flags, flags.c_str());
+	  ::tetrahedralize(t_flags, &in, &out);
+  } catch (int e) {
+    std::cerr << __FUNCTION__ << ": Tetgen has crashed" << std::endl;
+  }
+
+  if (out.numberoftetrahedra == 0) {
+    std::cerr << __FUNCTION__ << ": Tetgen failed to create tets" << std::endl;
+  }
+
+  delete[] t_flags;
+
+  Eigen::MatrixXf TV;
+  Eigen::MatrixXi TF;
+  Eigen::MatrixXi TT;
+
+  assert(TetgenioToMesh(out, TV, TF, TT));
+}
+
+bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                          tetgenio& in) {
+  std::vector<std::vector<float>> v;
+  std::vector<std::vector<int>> f;
+
+  utils::MatrixToList(V, v);
+  utils::MatrixToList(F, f);
+
+  // Make sure everything loaded properly.
+  assert(v.size() > 0);
+  assert(f.size() > 0);
+
+  // All indices start from zero.
+  in.firstnumber = 0;
+  in.numberofpoints = v.size();
+  in.pointlist = new double[in.numberofpoints * 3];
+
+  // Configure points
+  for (int i = 0; i < v.size(); ++i) {
+    assert(v[i].size() == 3);
+    in.pointlist[i * 3 + 0] = v[i][0];
+    in.pointlist[i * 3 + 1] = v[i][1];
+    in.pointlist[i * 3 + 2] = v[i][2];
+  }
+
+  in.numberoffacets = F.size();
+  in.facetlist = new tetgenio::facet[in.numberoffacets];
+  in.facetmarkerlist = new int[in.numberoffacets];
+
+  // Configure faces
+  for (int i = 0; i < f.size(); ++i) {
+    in.facetmarkerlist[i] = i;
+
+    // Setup facet options
+    tetgenio::facet* facet = &in.facetlist[i];
+    facet->numberofpolygons = 1;
+    facet->polygonlist = new tetgenio::polygon[facet->numberofpolygons];
+    facet->numberofholes = 0;
+    facet->holelist = nullptr;
+    tetgenio::polygon* polygon = &facet->polygonlist[0];
+
+    // Setup polygon options
+    polygon->numberofvertices = f[i].size();
+    polygon->vertexlist = new int[polygon->numberofvertices];
+
+    for (int j = 0; j < f[i].size(); ++j) {
+      polygon->vertexlist[j] = f[i][j];
+    }
+  }
+
+  return true;
+}
+
+bool Mesh::TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
+                          Eigen::MatrixXi& F, Eigen::MatrixXi& T) {
+  return true;
+}
+
+void Mesh::GetTetrahedralCombinations(
+    std::vector<std::vector<int>>& combinations, const Eigen::VectorXi& tet) {
+  std::vector<std::vector<int>> combs;
+  std::vector<std::vector<int>> v;
+  std::vector<int> t;
+  v.push_back({});
+
+  for (int i = 0; i < tet.size(); ++i) {
+    int n = v.size();
+    for (int j = 0; j < n; ++j) {
+      t = v[j];
+      t.push_back(tet(i));
+      if (t.size() == 3) {
+        combs.push_back(t);
+      }
+      v.push_back(t);
+      t.clear();
+    }
+  }
+
+  for (const auto& comb : combs) {
+    combinations.push_back(comb);
+  }
+
+  tetgenio* in = new tetgenio();
+  tetgenio* out = new tetgenio();
+  char* switches = "zpqa1e-2";
+  tetrahedralize(switches, in, out);
+
+  delete in;
+  delete out;
 };

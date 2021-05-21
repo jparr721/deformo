@@ -78,7 +78,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <AdditionalIncludeDirectories>C:\Users\jparr\Code\tetgen1.6.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>C:\Users\jparr\Code\tetgen1.6.0\build\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>tet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -128,12 +133,14 @@
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Utils.h" />
     <QtMoc Include="GLWidget.h" />
     <ClInclude Include="Simulation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="core.frag" />
     <None Include="core.vs" />
+    <None Include="cube.ply" />
     <None Include="square.1.ele" />
     <None Include="square.1.face" />
     <None Include="square.1.node" />

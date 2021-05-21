@@ -93,6 +93,9 @@
     <ClInclude Include="Loader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="core.vs">
@@ -108,6 +111,9 @@
       <Filter>Assets</Filter>
     </None>
     <None Include="square.1.node">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="cube.ply">
       <Filter>Assets</Filter>
     </None>
   </ItemGroup>
