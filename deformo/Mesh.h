@@ -13,15 +13,16 @@ class Mesh {
   Eigen::RowMajorVectorXi faces;
   Eigen::RowMajorVectorXf positions;
   Eigen::RowMajorVectorXi tetrahedrals;
+  // For calculating cut-planes
+  Eigen::MatrixXf barycenters;
   Eigen::RowMajorVectorXf colors;
 
   Mesh(const std::string& ply_path);
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F);
-  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-       const Eigen::MatrixXi& T);
+  Mesh(Eigen::MatrixXf& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T);
 
   void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                      const std::string& flags);
+                      const std::string& flags, tetgenio& out);
 
   [[nodiscard]] const float* data() { return positions.data(); }
   [[nodiscard]] int size_bytes() { return positions.size() * sizeof(float); }
@@ -40,8 +41,7 @@ class Mesh {
  private:
   constexpr static int kMaxFaceSize = 3;
   constexpr static int kMaxNumCorners = 4;
-  constexpr static int kMinIndex = 1e7;
-  constexpr static int kMaxIndex = -1e7;
+  constexpr static double kNoCutPlane = 1.0;
 
   template <typename Map, typename In, typename Out>
   void Vectorize(Out& out, const In& in) {
@@ -50,8 +50,16 @@ class Mesh {
     out = Eigen::Map<Map>(in_t.data(), in_t.rows() * in_t.cols());
   }
 
-  void GetTetrahedralCombinations(std::vector<std::vector<int>>& combinations,
-                                  const Eigen::VectorXi& tet);
+  void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
+                                    const Eigen::MatrixXi& F,
+                                    const Eigen::MatrixXi& T);
+  void ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                     Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
+                     Eigen::MatrixXi& TT);
+
+  void CalculateTetrahedraCoordinatesWithCutPlane(
+      const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+      const Eigen::MatrixXi& T, double cut_plane = kNoCutPlane);
 
   bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                       tetgenio& in);

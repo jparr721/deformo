@@ -2,6 +2,7 @@
 
 #include "Mesh.h"
 
+#include <igl/barycenter.h>
 #include <igl/readPLY.h>
 
 #include <Eigen/Core>
@@ -18,30 +19,33 @@ Mesh::Mesh(const std::string& ply_path) {
   Eigen::MatrixXf V;
   Eigen::MatrixXi F;
   igl::readPLY(ply_path, V, F);
-  Mesh(V, F);
+
+  Eigen::MatrixXf TV;
+  Eigen::MatrixXi TF;
+  Eigen::MatrixXi TT;
+
+  ConstructMesh(V, F, TV, TF, TT);
+
+  InitializeRenderableSurfaces(TV, TF, TT);
 }
 
 Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F) {
-  // Generate tetrahedrals from PLC mesh with max size 1e-2.
-  const std::string tetgen_flags = "zpqa1e-2";
-  Tetrahedralize(V, F, tetgen_flags);
+  Eigen::MatrixXf TV;
+  Eigen::MatrixXi TF;
+  Eigen::MatrixXi TT;
+
+  ConstructMesh(V, F, TV, TF, TT);
+
+  InitializeRenderableSurfaces(TV, TF, TT);
 }
 
-Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-           const Eigen::MatrixXi& T) {
-  Vectorize<Eigen::VectorXf>(positions, V);
-  Vectorize<Eigen::VectorXi>(faces, F);
-  Vectorize<Eigen::VectorXi>(tetrahedrals, T);
-
-  colors.resize(positions.rows(), positions.cols());
-  for (int i = 0; i < positions.size(); ++i) {
-    colors(i) = i % 3 == 0 ? 1.f : 0.f;
-  }
+Mesh::Mesh(Eigen::MatrixXf& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T) {
+  InitializeRenderableSurfaces(V, F, T);
 }
 
 void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                          const std::string& flags) {
-  tetgenio in, out;
+                          const std::string& flags, tetgenio& out) {
+  tetgenio in;
   assert(MeshToTetgenio(V, F, in) && "FAILED TO CONVERT MESH TO TETGENIO");
 
   char* t_flags = new char[flags.size() + 1];
@@ -57,14 +61,69 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
   }
 
   delete[] t_flags;
+}
 
-  Eigen::MatrixXf TV;
-  Eigen::MatrixXi TF;
-  Eigen::MatrixXi TT;
+void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
+                                        const Eigen::MatrixXi& F,
+                                        const Eigen::MatrixXi& T) {
+  igl::barycenter(V, T, barycenters);
 
+  CalculateTetrahedraCoordinatesWithCutPlane(V, F, T);
+
+  colors.resize(positions.rows(), positions.cols());
+  for (int i = 0; i < positions.size(); ++i) {
+    colors(i) = i % 3 == 0 ? 1.f : 0.f;
+  }
+}
+
+void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                         Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
+                         Eigen::MatrixXi& TT) {
+  tetgenio out;
+
+  // Generate tetrahedrals from PLC mesh with max size 1e-2.
+  const std::string tetgen_flags = "zpqa1e-2";
+  Tetrahedralize(V, F, tetgen_flags, out);
   assert(TetgenioToMesh(out, TV, TF, TT));
+}
 
-  Mesh(TV, TF, TT);
+void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
+                                                      const Eigen::MatrixXi& F,
+                                                      const Eigen::MatrixXi& T,
+                                                      double cut_plane) {
+  assert(cut_plane <= 1 && cut_plane >= 0);
+
+  Eigen::VectorXf v =
+      barycenters.col(2).array() - barycenters.col(2).minCoeff();
+  v /= v.col(0).maxCoeff();
+
+  std::vector<int> s;
+
+  for (int i = 0; i < v.size(); ++i) {
+    if (v(i) < cut_plane) {
+      s.push_back(i);
+    }
+  }
+
+  const int rows = s.size() * 4;
+  constexpr int cols = 3;
+
+  Eigen::MatrixXf V_placeholder(rows, cols);
+  Eigen::MatrixXi F_placeholder(rows, cols);
+
+  for (int i = 0; i < s.size(); ++i) {
+    V_placeholder.row(i * 4 + 0) = V.row(T(s[i], 0));
+    V_placeholder.row(i * 4 + 1) = V.row(T(s[i], 1));
+    V_placeholder.row(i * 4 + 2) = V.row(T(s[i], 2));
+    V_placeholder.row(i * 4 + 3) = V.row(T(s[i], 3));
+    F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 1, (i * 4) + 3;
+    F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 2, (i * 4) + 1;
+    F_placeholder.row(i * 4 + 0) << (i * 4) + 2, (i * 4) + 2, (i * 4) + 0;
+    F_placeholder.row(i * 4 + 0) << (i * 4) + 1, (i * 4) + 2, (i * 4) + 3;
+  }
+
+  Vectorize<Eigen::VectorXf>(positions, V_placeholder);
+  Vectorize<Eigen::VectorXi>(faces, F_placeholder);
 }
 
 bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
@@ -85,19 +144,19 @@ bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
   in.pointlist = new double[in.numberofpoints * 3];
 
   // Configure points
-  for (int i = 0; i < v.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(v.size()); ++i) {
     assert(v[i].size() == 3);
     in.pointlist[i * 3 + 0] = v[i][0];
     in.pointlist[i * 3 + 1] = v[i][1];
     in.pointlist[i * 3 + 2] = v[i][2];
   }
 
-  in.numberoffacets = F.size();
+  in.numberoffacets = f.size();
   in.facetlist = new tetgenio::facet[in.numberoffacets];
   in.facetmarkerlist = new int[in.numberoffacets];
 
   // Configure faces
-  for (int i = 0; i < f.size(); ++i) {
+  for (int i = 0; i < static_cast<int>(f.size()); ++i) {
     in.facetmarkerlist[i] = i;
 
     // Setup facet options
@@ -105,14 +164,14 @@ bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     facet->numberofpolygons = 1;
     facet->polygonlist = new tetgenio::polygon[facet->numberofpolygons];
     facet->numberofholes = 0;
-    facet->holelist = nullptr;
+    facet->holelist = NULL;
     tetgenio::polygon* polygon = &facet->polygonlist[0];
 
     // Setup polygon options
     polygon->numberofvertices = f[i].size();
     polygon->vertexlist = new int[polygon->numberofvertices];
 
-    for (int j = 0; j < f[i].size(); ++j) {
+    for (int j = 0; j < static_cast<int>(f[i].size()); ++j) {
       polygon->vertexlist[j] = f[i][j];
     }
   }
@@ -144,8 +203,8 @@ bool Mesh::TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
   t.resize(out.numberoftetrahedra, std::vector<int>(out.numberofcorners));
 
   // Track out indexes to make it easier to determine if our vertex nodes match.
-  int min_index = kMinIndex;
-  int max_index = kMaxIndex;
+  int min_index = 1e7;
+  int max_index = -1e7;
   for (int row = 0; row < out.numberoftetrahedra; ++row) {
     for (int col = 0; col < out.numberofcorners; ++col) {
       // Index is the value representing the vertex node, with a stride of 4
@@ -160,7 +219,7 @@ bool Mesh::TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
 
   assert(min_index >= 0);
   assert(max_index >= 0);
-  assert(max_index < static_cast<int>(V.size()));
+  assert(max_index < static_cast<int>(v.size()));
 
   for (int row = 0; row < out.numberoftrifaces; ++row) {
     if (out.trifacemarkerlist && out.trifacemarkerlist[row] >= 0) {
@@ -178,36 +237,3 @@ bool Mesh::TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
 
   return true;
 }
-
-void Mesh::GetTetrahedralCombinations(
-    std::vector<std::vector<int>>& combinations, const Eigen::VectorXi& tet) {
-  std::vector<std::vector<int>> combs;
-  std::vector<std::vector<int>> v;
-  std::vector<int> t;
-  v.push_back({});
-
-  for (int i = 0; i < tet.size(); ++i) {
-    int n = v.size();
-    for (int j = 0; j < n; ++j) {
-      t = v[j];
-      t.push_back(tet(i));
-      if (t.size() == 3) {
-        combs.push_back(t);
-      }
-      v.push_back(t);
-      t.clear();
-    }
-  }
-
-  for (const auto& comb : combs) {
-    combinations.push_back(comb);
-  }
-
-  tetgenio* in = new tetgenio();
-  tetgenio* out = new tetgenio();
-  char* switches = "zpqa1e-2";
-  tetrahedralize(switches, in, out);
-
-  delete in;
-  delete out;
-};

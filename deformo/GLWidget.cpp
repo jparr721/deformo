@@ -181,6 +181,19 @@ void GLWidget::BuildMesh() {
 
   const std::string cdir = std::filesystem::current_path().string();
 
+  const std::filesystem::path ply_path =
+      std::filesystem::path(cdir + "/cube.ply");
+
+  mesh = std::make_shared<Mesh>(ply_path.string());
+}
+
+void GLWidget::BuildMeshFromRawFiles() {
+  Eigen::MatrixXf V;
+  Eigen::MatrixXi F;
+  Eigen::MatrixXi T;
+
+  const std::string cdir = std::filesystem::current_path().string();
+
   const std::filesystem::path node_path =
       std::filesystem::path(cdir + "/square.1.node");
   const std::filesystem::path ele_path =
