@@ -46,8 +46,8 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 
   char* t_flags = new char[flags.size() + 1];
   try {
-	  std::strcpy(t_flags, flags.c_str());
-	  ::tetrahedralize(t_flags, &in, &out);
+    std::strcpy(t_flags, flags.c_str());
+    ::tetrahedralize(t_flags, &in, &out);
   } catch (int e) {
     std::cerr << __FUNCTION__ << ": Tetgen has crashed" << std::endl;
   }
@@ -63,6 +63,8 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
   Eigen::MatrixXi TT;
 
   assert(TetgenioToMesh(out, TV, TF, TT));
+
+  Mesh(TV, TF, TT);
 }
 
 bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
@@ -120,6 +122,60 @@ bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 
 bool Mesh::TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
                           Eigen::MatrixXi& F, Eigen::MatrixXi& T) {
+  std::vector<std::vector<float>> v;
+  std::vector<std::vector<int>> f;
+  std::vector<std::vector<int>> t;
+
+  // Process Points
+  // Crash if we don't have any points
+  assert(out.pointlist != nullptr && "TETGENIO OUTPUT BUFFER EMPTY");
+  v.resize(out.numberofpoints, std::vector<float>(3));
+  for (int i = 0; i < out.numberofpoints; ++i) {
+    v[i][0] = out.pointlist[i * 3 + 0];
+    v[i][1] = out.pointlist[i * 3 + 1];
+    v[i][2] = out.pointlist[i * 3 + 2];
+  }
+
+  // Process Tetrahedron
+  // Crash if we don't have any tetrahedron
+  assert(out.tetrahedronlist != nullptr && "TETGENIO TET OUTPUT BUFFER EMPTY");
+  assert(out.numberofcorners == kMaxNumCorners &&
+         "WTF: INVALID NUMBER OF TETRAHEDRAL CORNERS");
+  t.resize(out.numberoftetrahedra, std::vector<int>(out.numberofcorners));
+
+  // Track out indexes to make it easier to determine if our vertex nodes match.
+  int min_index = kMinIndex;
+  int max_index = kMaxIndex;
+  for (int row = 0; row < out.numberoftetrahedra; ++row) {
+    for (int col = 0; col < out.numberofcorners; ++col) {
+      // Index is the value representing the vertex node, with a stride of 4
+      // (num corners)
+      int index = out.tetrahedronlist[row * out.numberofcorners + col];
+      // Set the tetrahedron value
+      t[row][col] = index;
+      min_index = (min_index > index ? index : min_index);
+      max_index = (max_index < index ? index : max_index);
+    }
+  }
+
+  assert(min_index >= 0);
+  assert(max_index >= 0);
+  assert(max_index < static_cast<int>(V.size()));
+
+  for (int row = 0; row < out.numberoftrifaces; ++row) {
+    if (out.trifacemarkerlist && out.trifacemarkerlist[row] >= 0) {
+      std::vector<int> face(kMaxFaceSize);
+      for (int col = 0; col < kMaxFaceSize; ++col) {
+        face[col] = out.trifacelist[row * kMaxFaceSize + col];
+      }
+      f.push_back(face);
+    }
+  }
+
+  utils::ListToMatrix(v, V);
+  utils::ListToMatrix(f, F);
+  utils::ListToMatrix(t, T);
+
   return true;
 }
 

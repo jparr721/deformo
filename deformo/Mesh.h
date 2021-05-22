@@ -38,6 +38,11 @@ class Mesh {
   [[nodiscard]] int faces_size() { return faces.size(); }
 
  private:
+  constexpr static int kMaxFaceSize = 3;
+  constexpr static int kMaxNumCorners = 4;
+  constexpr static int kMinIndex = 1e7;
+  constexpr static int kMaxIndex = -1e7;
+
   template <typename Map, typename In, typename Out>
   void Vectorize(Out& out, const In& in) {
     out.resize(in.rows() * in.cols(), 1);
