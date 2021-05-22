@@ -41,7 +41,7 @@ class Mesh {
  private:
   constexpr static int kMaxFaceSize = 3;
   constexpr static int kMaxNumCorners = 4;
-  constexpr static double kNoCutPlane = 1.0;
+  constexpr static double kNoCutPlane = 2;
 
   template <typename Map, typename In, typename Out>
   void Vectorize(Out& out, const In& in) {

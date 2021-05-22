@@ -91,7 +91,7 @@ void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
                                                       const Eigen::MatrixXi& F,
                                                       const Eigen::MatrixXi& T,
                                                       double cut_plane) {
-  assert(cut_plane <= 1 && cut_plane >= 0);
+  assert(cut_plane <= kNoCutPlane && cut_plane >= 0);
 
   Eigen::VectorXf v =
       barycenters.col(2).array() - barycenters.col(2).minCoeff();
