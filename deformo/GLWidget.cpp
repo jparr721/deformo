@@ -83,6 +83,11 @@ void GLWidget::Update() {
   }
 }
 
+void GLWidget::SetCutPlane(float value) {
+  std::cout << "VALUE: " << value << std::endl;
+  emit OnCutPlaneChange(value);
+}
+
 void GLWidget::initializeGL() {
   initializeOpenGLFunctions();
   connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
@@ -90,7 +95,6 @@ void GLWidget::initializeGL() {
   connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
 
   // Face Culling
-  // glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH);
 
   // White background
@@ -134,9 +138,9 @@ void GLWidget::paintGL() {
   shader_program->setUniformValue(projection_loc, camera->Matrix());
 
   // Add updated vertex coordinates
-  //vbo.bind();
-  //vbo.write(0, mesh->data(), mesh->size_bytes());
-  //vbo.release();
+  // vbo.bind();
+  // vbo.write(0, mesh->data(), mesh->size_bytes());
+  // vbo.release();
 
   // Render
   vao.bind();

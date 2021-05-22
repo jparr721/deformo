@@ -8,9 +8,6 @@ namespace Eigen {
 	using Vector6d = Eigen::Matrix<double, 6, 1>;
 	using Vector12d = Eigen::Matrix<double, 12, 1>;
 
-	typedef Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorVectorXf;
-	typedef Eigen::Matrix<int, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor> RowMajorVectorXi;
-
 	// Dense Matrix Types
 	using Matrix66d = Eigen::Matrix<double, 6, 6>;
 	using Matrix36d = Eigen::Matrix<double, 3, 6>;

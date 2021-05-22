@@ -92,7 +92,6 @@ void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
                                                       const Eigen::MatrixXi& T,
                                                       double cut_plane) {
   assert(cut_plane <= kNoCutPlane && cut_plane >= 0);
-
   Eigen::VectorXf v =
       barycenters.col(2).array() - barycenters.col(2).minCoeff();
   v /= v.col(0).maxCoeff();
@@ -112,18 +111,18 @@ void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
   Eigen::MatrixXi F_placeholder(rows, cols);
 
   for (int i = 0; i < s.size(); ++i) {
-    V_placeholder.row(i * 4 + 0) = V.row(T(s[i], 0));
-    V_placeholder.row(i * 4 + 1) = V.row(T(s[i], 1));
-    V_placeholder.row(i * 4 + 2) = V.row(T(s[i], 2));
-    V_placeholder.row(i * 4 + 3) = V.row(T(s[i], 3));
+    V_placeholder.row(i * 4 + 0) = V.row(T(s.at(i), 0));
+    V_placeholder.row(i * 4 + 1) = V.row(T(s.at(i), 1));
+    V_placeholder.row(i * 4 + 2) = V.row(T(s.at(i), 2));
+    V_placeholder.row(i * 4 + 3) = V.row(T(s.at(i), 3));
     F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 1, (i * 4) + 3;
     F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 2, (i * 4) + 1;
     F_placeholder.row(i * 4 + 0) << (i * 4) + 2, (i * 4) + 2, (i * 4) + 0;
     F_placeholder.row(i * 4 + 0) << (i * 4) + 1, (i * 4) + 2, (i * 4) + 3;
   }
 
-  Vectorize<Eigen::VectorXf>(positions, V_placeholder);
-  Vectorize<Eigen::VectorXi>(faces, F_placeholder);
+  Vectorize(positions, V_placeholder);
+  Vectorize(faces, F_placeholder);
 }
 
 bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,

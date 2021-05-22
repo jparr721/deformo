@@ -24,8 +24,8 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   Q_OBJECT
 
  public:
-  unsigned int vbo; 
-  unsigned int c_vbo; 
+  unsigned int vbo;
+  unsigned int c_vbo;
   unsigned int ibo;
 
   // Vertex Array Object
@@ -60,6 +60,11 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
  public slots:
   void Cleanup();
   void Update();
+
+  void SetCutPlane(float value);
+
+ signals:
+  void OnCutPlaneChange(float value);
 
  protected:
   void initializeGL() override;

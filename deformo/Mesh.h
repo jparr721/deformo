@@ -10,12 +10,12 @@
 
 class Mesh {
  public:
-  Eigen::RowMajorVectorXi faces;
-  Eigen::RowMajorVectorXf positions;
-  Eigen::RowMajorVectorXi tetrahedrals;
+  Eigen::VectorXi faces;
+  Eigen::VectorXf positions;
+  Eigen::VectorXi tetrahedrals;
   // For calculating cut-planes
   Eigen::MatrixXf barycenters;
-  Eigen::RowMajorVectorXf colors;
+  Eigen::VectorXf colors;
 
   Mesh(const std::string& ply_path);
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F);
@@ -43,11 +43,11 @@ class Mesh {
   constexpr static int kMaxNumCorners = 4;
   constexpr static double kNoCutPlane = 2;
 
-  template <typename Map, typename In, typename Out>
+  template <typename In, typename Out>
   void Vectorize(Out& out, const In& in) {
     out.resize(in.rows() * in.cols(), 1);
     In in_t = in.transpose();
-    out = Eigen::Map<Map>(in_t.data(), in_t.rows() * in_t.cols());
+    out = Eigen::Map<Out>(in_t.data(), in_t.rows() * in_t.cols());
   }
 
   void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
