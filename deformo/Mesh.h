@@ -10,6 +10,8 @@
 
 class Mesh {
  public:
+  float cut_plane = kNoCutPlane;
+
   Eigen::VectorXi faces;
   Eigen::VectorXf positions;
   Eigen::VectorXi tetrahedrals;
@@ -19,8 +21,11 @@ class Mesh {
 
   Mesh(const std::string& ply_path);
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F);
-  Mesh(Eigen::MatrixXf& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T);
+  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+       const Eigen::MatrixXi& T, float cut_plane = kNoCutPlane);
 
+  void Update(const Eigen::VectorXf& positions_);
+  void SetCutPlane(float cut_plane);
   void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                       const std::string& flags, tetgenio& out);
 
@@ -57,14 +62,13 @@ class Mesh {
                      Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
                      Eigen::MatrixXi& TT);
 
-  void CalculateTetrahedraCoordinatesWithCutPlane(
-      const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-      const Eigen::MatrixXi& T, double cut_plane = kNoCutPlane);
+  void CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
+                                                  const Eigen::MatrixXi& F,
+                                                  const Eigen::MatrixXi& T);
 
   bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                       tetgenio& in);
 
   bool TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
                       Eigen::MatrixXi& F, Eigen::MatrixXi& T);
-  // void CheckWinding
 };

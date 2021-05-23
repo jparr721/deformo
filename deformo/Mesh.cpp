@@ -39,9 +39,17 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F) {
   InitializeRenderableSurfaces(TV, TF, TT);
 }
 
-Mesh::Mesh(Eigen::MatrixXf& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T) {
+Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+           const Eigen::MatrixXi& T, float cut_plane)
+    : cut_plane(cut_plane) {
   InitializeRenderableSurfaces(V, F, T);
 }
+
+void Mesh::Update(const Eigen::VectorXf& positions_) {
+  positions += positions_;
+}
+
+void Mesh::SetCutPlane(float cut_plane) {}
 
 void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                           const std::string& flags, tetgenio& out) {
@@ -87,10 +95,9 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
   assert(TetgenioToMesh(out, TV, TF, TT));
 }
 
-void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
-                                                      const Eigen::MatrixXi& F,
-                                                      const Eigen::MatrixXi& T,
-                                                      double cut_plane) {
+void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(
+    const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+    const Eigen::MatrixXi& T) {
   assert(cut_plane <= kNoCutPlane && cut_plane >= 0);
   Eigen::VectorXf v =
       barycenters.col(2).array() - barycenters.col(2).minCoeff();
@@ -116,9 +123,9 @@ void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
     V_placeholder.row(i * 4 + 2) = V.row(T(s.at(i), 2));
     V_placeholder.row(i * 4 + 3) = V.row(T(s.at(i), 3));
     F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 1, (i * 4) + 3;
-    F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 2, (i * 4) + 1;
-    F_placeholder.row(i * 4 + 0) << (i * 4) + 2, (i * 4) + 2, (i * 4) + 0;
-    F_placeholder.row(i * 4 + 0) << (i * 4) + 1, (i * 4) + 2, (i * 4) + 3;
+    F_placeholder.row(i * 4 + 1) << (i * 4) + 0, (i * 4) + 2, (i * 4) + 1;
+    F_placeholder.row(i * 4 + 2) << (i * 4) + 2, (i * 4) + 2, (i * 4) + 0;
+    F_placeholder.row(i * 4 + 3) << (i * 4) + 1, (i * 4) + 2, (i * 4) + 3;
   }
 
   Vectorize(positions, V_placeholder);

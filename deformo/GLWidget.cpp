@@ -138,9 +138,9 @@ void GLWidget::paintGL() {
   shader_program->setUniformValue(projection_loc, camera->Matrix());
 
   // Add updated vertex coordinates
-  // vbo.bind();
-  // vbo.write(0, mesh->data(), mesh->size_bytes());
-  // vbo.release();
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, mesh->size_bytes(), mesh->data(),
+               GL_DYNAMIC_DRAW);
 
   // Render
   vao.bind();
