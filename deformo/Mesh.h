@@ -10,19 +10,20 @@
 
 class Mesh {
  public:
+  constexpr static double kNoCutPlane = 1.01;
   float cut_plane = kNoCutPlane;
 
   Eigen::VectorXi faces;
   Eigen::VectorXf positions;
-  Eigen::VectorXi tetrahedrals;
   // For calculating cut-planes
   Eigen::MatrixXf barycenters;
   Eigen::VectorXf colors;
 
   Mesh(const std::string& ply_path);
   Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F);
-  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-       const Eigen::MatrixXi& T, float cut_plane = kNoCutPlane);
+  Mesh(const Eigen::MatrixXf& V,
+ const Eigen::MatrixXi& T,
+       float cut_plane = kNoCutPlane);
 
   void Update(const Eigen::VectorXf& positions_);
   void SetCutPlane(float cut_plane);
@@ -46,7 +47,6 @@ class Mesh {
  private:
   constexpr static int kMaxFaceSize = 3;
   constexpr static int kMaxNumCorners = 4;
-  constexpr static double kNoCutPlane = 2;
 
   template <typename In, typename Out>
   void Vectorize(Out& out, const In& in) {
@@ -56,14 +56,12 @@ class Mesh {
   }
 
   void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
-                                    const Eigen::MatrixXi& F,
                                     const Eigen::MatrixXi& T);
   void ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                      Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
                      Eigen::MatrixXi& TT);
 
   void CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
-                                                  const Eigen::MatrixXi& F,
                                                   const Eigen::MatrixXi& T);
 
   bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,

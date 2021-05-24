@@ -179,10 +179,6 @@ void GLWidget::BuildBuffers() {
 }
 
 void GLWidget::BuildMesh() {
-  Eigen::MatrixXf V;
-  Eigen::MatrixXi F;
-  Eigen::MatrixXi T;
-
   const std::string cdir = std::filesystem::current_path().string();
 
   const std::filesystem::path ply_path =
@@ -193,7 +189,6 @@ void GLWidget::BuildMesh() {
 
 void GLWidget::BuildMeshFromRawFiles() {
   Eigen::MatrixXf V;
-  Eigen::MatrixXi F;
   Eigen::MatrixXi T;
 
   const std::string cdir = std::filesystem::current_path().string();
@@ -202,14 +197,11 @@ void GLWidget::BuildMeshFromRawFiles() {
       std::filesystem::path(cdir + "/square.1.node");
   const std::filesystem::path ele_path =
       std::filesystem::path(cdir + "/square.1.ele");
-  const std::filesystem::path face_path =
-      std::filesystem::path(cdir + "/square.1.face");
 
   loader::ReadTetgenVertexFile(V, node_path.string());
-  loader::ReadTetgenFaceFile(F, face_path.string());
   loader::ReadTetgenEleFile(T, ele_path.string());
 
-  mesh = std::make_shared<Mesh>(V, F, T);
+  mesh = std::make_shared<Mesh>(V, T, Mesh::kNoCutPlane);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {

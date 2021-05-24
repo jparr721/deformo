@@ -26,7 +26,7 @@ Mesh::Mesh(const std::string& ply_path) {
 
   ConstructMesh(V, F, TV, TF, TT);
 
-  InitializeRenderableSurfaces(TV, TF, TT);
+  InitializeRenderableSurfaces(TV, TT);
 }
 
 Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F) {
@@ -36,13 +36,14 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F) {
 
   ConstructMesh(V, F, TV, TF, TT);
 
-  InitializeRenderableSurfaces(TV, TF, TT);
+  InitializeRenderableSurfaces(TV, TT);
 }
 
-Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-           const Eigen::MatrixXi& T, float cut_plane)
+Mesh::Mesh(const Eigen::MatrixXf& V,
+ const Eigen::MatrixXi& T,
+           float cut_plane)
     : cut_plane(cut_plane) {
-  InitializeRenderableSurfaces(V, F, T);
+  InitializeRenderableSurfaces(V, T);
 }
 
 void Mesh::Update(const Eigen::VectorXf& positions_) {
@@ -72,11 +73,10 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 }
 
 void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
-                                        const Eigen::MatrixXi& F,
                                         const Eigen::MatrixXi& T) {
   igl::barycenter(V, T, barycenters);
 
-  CalculateTetrahedraCoordinatesWithCutPlane(V, F, T);
+  CalculateTetrahedraCoordinatesWithCutPlane(V, T);
 
   colors.resize(positions.rows(), positions.cols());
   for (int i = 0; i < positions.size(); ++i) {
@@ -96,8 +96,7 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 }
 
 void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(
-    const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-    const Eigen::MatrixXi& T) {
+    const Eigen::MatrixXf& V, const Eigen::MatrixXi& T) {
   assert(cut_plane <= kNoCutPlane && cut_plane >= 0);
   Eigen::VectorXf v =
       barycenters.col(2).array() - barycenters.col(2).minCoeff();
