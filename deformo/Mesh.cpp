@@ -13,7 +13,8 @@
 
 #include "Utils.h"
 
-Mesh::Mesh(const std::string& ply_path) {
+Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
+    : cut_plane(cut_plane) {
   assert(std::filesystem::path(ply_path).extension() == ".ply" &&
          "INVALID OBJECT FILE");
   Eigen::MatrixXf V;
@@ -29,19 +30,7 @@ Mesh::Mesh(const std::string& ply_path) {
   InitializeRenderableSurfaces(TV, TT);
 }
 
-Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F) {
-  Eigen::MatrixXf TV;
-  Eigen::MatrixXi TF;
-  Eigen::MatrixXi TT;
-
-  ConstructMesh(V, F, TV, TF, TT);
-
-  InitializeRenderableSurfaces(TV, TT);
-}
-
-Mesh::Mesh(const Eigen::MatrixXf& V,
- const Eigen::MatrixXi& T,
-           float cut_plane)
+Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
     : cut_plane(cut_plane) {
   InitializeRenderableSurfaces(V, T);
 }

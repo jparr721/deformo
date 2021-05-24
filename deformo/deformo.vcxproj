@@ -141,9 +141,6 @@
     <None Include="core.frag" />
     <None Include="core.vs" />
     <None Include="cube.ply" />
-    <None Include="square.1.ele" />
-    <None Include="square.1.face" />
-    <None Include="square.1.node" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="deformo.rc" />

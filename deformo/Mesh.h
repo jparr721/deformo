@@ -19,10 +19,8 @@ class Mesh {
   Eigen::MatrixXf barycenters;
   Eigen::VectorXf colors;
 
-  Mesh(const std::string& ply_path);
-  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F);
-  Mesh(const Eigen::MatrixXf& V,
- const Eigen::MatrixXi& T,
+  Mesh(const std::string& ply_path, const float cut_plane);
+  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T,
        float cut_plane = kNoCutPlane);
 
   void Update(const Eigen::VectorXf& positions_);

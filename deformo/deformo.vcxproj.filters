@@ -104,15 +104,6 @@
     <None Include="core.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="square.1.ele">
-      <Filter>Assets</Filter>
-    </None>
-    <None Include="square.1.face">
-      <Filter>Assets</Filter>
-    </None>
-    <None Include="square.1.node">
-      <Filter>Assets</Filter>
-    </None>
     <None Include="cube.ply">
       <Filter>Assets</Filter>
     </None>

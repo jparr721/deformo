@@ -85,6 +85,5 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
   void LogErrors(const char* fn);
   void BuildBuffers();
-  void BuildMesh();
-  void BuildMeshFromRawFiles();
+  void BuildMesh(float cut_plane = Mesh::kNoCutPlane);
 };

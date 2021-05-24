@@ -84,7 +84,7 @@ void GLWidget::Update() {
 }
 
 void GLWidget::SetCutPlane(float value) {
-  std::cout << "VALUE: " << value << std::endl;
+  BuildMesh(value / 100.f);
   emit OnCutPlaneChange(value);
 }
 
@@ -178,30 +178,13 @@ void GLWidget::BuildBuffers() {
                mesh->faces_data(), GL_DYNAMIC_DRAW);
 }
 
-void GLWidget::BuildMesh() {
+void GLWidget::BuildMesh(const float cut_plane) {
   const std::string cdir = std::filesystem::current_path().string();
 
   const std::filesystem::path ply_path =
       std::filesystem::path(cdir + "/cube.ply");
 
-  mesh = std::make_shared<Mesh>(ply_path.string());
-}
-
-void GLWidget::BuildMeshFromRawFiles() {
-  Eigen::MatrixXf V;
-  Eigen::MatrixXi T;
-
-  const std::string cdir = std::filesystem::current_path().string();
-
-  const std::filesystem::path node_path =
-      std::filesystem::path(cdir + "/square.1.node");
-  const std::filesystem::path ele_path =
-      std::filesystem::path(cdir + "/square.1.ele");
-
-  loader::ReadTetgenVertexFile(V, node_path.string());
-  loader::ReadTetgenEleFile(T, ele_path.string());
-
-  mesh = std::make_shared<Mesh>(V, T, Mesh::kNoCutPlane);
+  mesh = std::make_shared<Mesh>(ply_path.string(), cut_plane);
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
