@@ -8,19 +8,12 @@
 
 #include "EigenTypes.h"
 #include "Mesh.h"
-
-/*
-Static boundary condition for a given node
-*/
-struct BoundaryCondition {
-  unsigned int node;
-  Eigen::Vector3d force;
-};
+#include "BoundaryCondition.h"
 
 /**
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
-class Simulation {
+class LinearTetrahedral {
  private:
   using BetaSubmatrixd = Eigen::Matrix<double, 6, 3>;
   struct ElementStiffness {
@@ -31,6 +24,7 @@ class Simulation {
  public:
   constexpr static int PLANE_STRESS = 1;
   constexpr static int PLANE_STRAIN = 2;
+  constexpr static int kStride = 12;
 
   // Timestep constants
   double current_time = 0.;
@@ -73,13 +67,10 @@ class Simulation {
   Eigen::VectorXd velocity;
 
   // The Mass Matrix
-  Eigen::SparseMatrixXd M;
+  Eigen::SparseMatrixXf M;
 
   // The Effective Mass Matrix
-  Eigen::SparseMatrixXd M_hat;
-
-  // The solved version of M_hat
-  Eigen::SparseMatrixXd M_hat_inverse;
+  Eigen::SparseMatrixXf M_hat;
 
   // The global stiffness matrix
   Eigen::MatrixXd K;
@@ -96,8 +87,8 @@ class Simulation {
   // Boundary conditions on nodes in the mesh
   std::vector<BoundaryCondition> boundary_conditions;
 
-  Simulation() = default;
-  Simulation(double mass_, double E_, double NU_, std::shared_ptr<Mesh>& mesh_,
+  LinearTetrahedral() = default;
+  LinearTetrahedral(double mass_, double E_, double NU_, std::shared_ptr<Mesh>& mesh_,
              const std::vector<BoundaryCondition>& boundary_conditions_);
   void Update();
   void Integrate();

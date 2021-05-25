@@ -13,7 +13,7 @@ given the local position and velocity vectors.
 @param forces The generalized stacked force vector
 @param masses The generalized triangular mass matrix
 **/
-void ExplicitCentralDifference(Eigen::VectorXd& displacement,
-                               Eigen::Ref<const Eigen::VectorXd> forces,
-                               Eigen::Ref<const Eigen::SparseMatrixXd> M_hat);
+void ExplicitCentralDifference(Eigen::VectorXf& displacement,
+                               Eigen::Ref<const Eigen::VectorXf> forces,
+                               Eigen::Ref<const Eigen::SparseMatrixXf> M_hat);
 }  // namespace integrators

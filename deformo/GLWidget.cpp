@@ -84,7 +84,7 @@ void GLWidget::Update() {
 }
 
 void GLWidget::SetCutPlane(float value) {
-  BuildMesh(value / 100.f);
+  mesh->SetCutPlane(value / 100.f);
   emit OnCutPlaneChange(value);
 }
 
@@ -140,6 +140,11 @@ void GLWidget::paintGL() {
   // Add updated vertex coordinates
   glBindBuffer(GL_ARRAY_BUFFER, vbo);
   glBufferData(GL_ARRAY_BUFFER, mesh->size_bytes(), mesh->data(),
+               GL_DYNAMIC_DRAW);
+
+  // Add updated colors
+  glBindBuffer(GL_ARRAY_BUFFER, c_vbo);
+  glBufferData(GL_ARRAY_BUFFER, mesh->colors_size_bytes(), mesh->colors_data(),
                GL_DYNAMIC_DRAW);
 
   // Render

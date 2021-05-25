@@ -116,9 +116,9 @@
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="Integrators.cpp" />
+    <ClCompile Include="LinearTetrahedral.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="Simulation.cpp" />
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
     <QtMoc Include="Window.h" />
@@ -126,16 +126,17 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="EigenTypes.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="Integrators.h" />
+    <ClInclude Include="LinearTetrahedral.h" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils.h" />
     <QtMoc Include="GLWidget.h" />
-    <ClInclude Include="Simulation.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="core.frag" />

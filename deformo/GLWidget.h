@@ -15,7 +15,7 @@
 #include "Camera.h"
 #include "Input.h"
 #include "Mesh.h"
-#include "Simulation.h"
+#include "LinearTetrahedral.h"
 
 void Perspective(Eigen::Matrix4d& camera, float vertical_angle,
                  float aspect_ratio, float near_plane, float far_plane);
@@ -49,8 +49,8 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   // Mesh object for 3D geometry
   std::shared_ptr<Mesh> mesh;
 
-  // Simulation Object
-  std::unique_ptr<Simulation> sim;
+  // LinearTetrahedral Object
+  std::unique_ptr<LinearTetrahedral> sim;
 
   GLWidget(QWidget* parent = nullptr);
   ~GLWidget();

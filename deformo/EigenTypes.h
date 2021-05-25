@@ -14,5 +14,5 @@ namespace Eigen {
 	using Matrix12d = Eigen::Matrix<double, 12, 12>;
 
 	// Sparse Matrix Types
-	using SparseMatrixXd = Eigen::SparseMatrix<double>;
+	using SparseMatrixXf = Eigen::SparseMatrix<float>;
 } // namespace Eigen

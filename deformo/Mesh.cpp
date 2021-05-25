@@ -39,7 +39,17 @@ void Mesh::Update(const Eigen::VectorXf& positions_) {
   positions += positions_;
 }
 
-void Mesh::SetCutPlane(float cut_plane) {}
+void Mesh::SetCutPlane(float cut_plane) {
+  const int visible_elements = ceil(positions.size() * cut_plane);
+
+  for (int i = 0; i < colors.size(); i += 3) {
+    if (i < visible_elements) {
+      colors.segment(i, 3) << 1.f, 0.f, 0.f;
+    } else {
+      colors.segment(i, 3) << 1.f, 1.f, 1.f; 
+    }
+  }
+}
 
 void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                           const std::string& flags, tetgenio& out) {
@@ -66,11 +76,6 @@ void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
   igl::barycenter(V, T, barycenters);
 
   CalculateTetrahedraCoordinatesWithCutPlane(V, T);
-
-  colors.resize(positions.rows(), positions.cols());
-  for (int i = 0; i < positions.size(); ++i) {
-    colors(i) = i % 3 == 0 ? 1.f : 0.f;
-  }
 }
 
 void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
@@ -103,6 +108,7 @@ void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(
   constexpr int cols = 3;
 
   Eigen::MatrixXf V_placeholder(rows, cols);
+  Eigen::MatrixXf colors_placeholder(rows, cols);
   Eigen::MatrixXi F_placeholder(rows, cols);
 
   for (int i = 0; i < s.size(); ++i) {
@@ -110,14 +116,22 @@ void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(
     V_placeholder.row(i * 4 + 1) = V.row(T(s.at(i), 1));
     V_placeholder.row(i * 4 + 2) = V.row(T(s.at(i), 2));
     V_placeholder.row(i * 4 + 3) = V.row(T(s.at(i), 3));
+
     F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 1, (i * 4) + 3;
     F_placeholder.row(i * 4 + 1) << (i * 4) + 0, (i * 4) + 2, (i * 4) + 1;
     F_placeholder.row(i * 4 + 2) << (i * 4) + 2, (i * 4) + 2, (i * 4) + 0;
     F_placeholder.row(i * 4 + 3) << (i * 4) + 1, (i * 4) + 2, (i * 4) + 3;
+
+    // Color each face
+    colors_placeholder.row(i * 4 + 0) << 1.f, 0.f, 0.f;
+    colors_placeholder.row(i * 4 + 1) << 1.f, 0.f, 0.f;
+    colors_placeholder.row(i * 4 + 2) << 1.f, 0.f, 0.f;
+    colors_placeholder.row(i * 4 + 3) << 1.f, 0.f, 0.f;
   }
 
   Vectorize(positions, V_placeholder);
   Vectorize(faces, F_placeholder);
+  Vectorize(colors, colors_placeholder);
 }
 
 bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
