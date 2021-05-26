@@ -6,65 +6,66 @@
 #include <utility>
 #include <vector>
 
+#include "BoundaryCondition.h"
 #include "EigenTypes.h"
 #include "Mesh.h"
-#include "BoundaryCondition.h"
 
 /**
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class LinearTetrahedral {
  private:
-  using BetaSubmatrixd = Eigen::Matrix<double, 6, 3>;
+  using BetaSubmatrixf = Eigen::Matrix<float, 6, 3>;
   struct ElementStiffness {
-    Eigen::Matrix12d stiffness_matrix;
-    std::vector<unsigned int> indices;
+    Eigen::Matrix12f stiffness_matrix;
+    std::vector<int> indices;
   };
 
  public:
   constexpr static int PLANE_STRESS = 1;
   constexpr static int PLANE_STRAIN = 2;
   constexpr static int kStride = 12;
+  constexpr static int kFaceStride = 4;
 
   // Timestep constants
-  double current_time = 0.;
-  double timestep_size = 0.005;
+  float current_time = 0.;
+  float timestep_size = 0.005;
 
   // Modulus of Elasticity
-  double E;
+  float E;
 
   // Poisson's Ratio
-  double NU;
+  float NU;
 
   // Thickness
-  double t = 2.5e-2;
+  float t = 2.5e-2;
 
   // Point mass
-  double mass = 1.;
+  float mass = 1.;
 
   // Integration constants
-  double a0 = 1e-10;
-  double a1 = 1e-10;
-  double a2 = 1e-10;
-  double a3 = 1e-10;
+  float a0 = 1e-10;
+  float a1 = 1e-10;
+  float a2 = 1e-10;
+  float a3 = 1e-10;
 
   // The Global Force Vector (Interaction Forces)
-  Eigen::VectorXd F_ext;
+  Eigen::VectorXf F_ext;
 
   // The Global Load Vector (at current_time)
-  Eigen::VectorXd R_hat;
+  Eigen::VectorXf R_hat;
 
   // Global stacked vertex vector from the last timestep
-  Eigen::VectorXd last_displacement;
+  Eigen::VectorXf last_displacement;
 
   // Global stacked vertex vector (xy) with index mapping of node orientations
   std::shared_ptr<Mesh> mesh;
 
   // Global stacked acceleration vector
-  Eigen::VectorXd acceleration;
+  Eigen::VectorXf acceleration;
 
   // Global stacked velocity vector
-  Eigen::VectorXd velocity;
+  Eigen::VectorXf velocity;
 
   // The Mass Matrix
   Eigen::SparseMatrixXf M;
@@ -73,23 +74,24 @@ class LinearTetrahedral {
   Eigen::SparseMatrixXf M_hat;
 
   // The global stiffness matrix
-  Eigen::MatrixXd K;
+  Eigen::MatrixXf K;
 
   // Element stiffness matrices and mapped coordinates
   std::vector<ElementStiffness> k;
 
   // Element Stress vectors for each group of points
-  std::vector<Eigen::Vector6d> sigmas;
+  std::vector<Eigen::Vector6f> sigmas;
 
   // The Plane Stresses from each stress vector
-  std::vector<Eigen::Vector3d> plane_stresses;
+  std::vector<Eigen::Vector3f> plane_stresses;
 
   // Boundary conditions on nodes in the mesh
   std::vector<BoundaryCondition> boundary_conditions;
 
   LinearTetrahedral() = default;
-  LinearTetrahedral(double mass_, double E_, double NU_, std::shared_ptr<Mesh>& mesh_,
-             const std::vector<BoundaryCondition>& boundary_conditions_);
+  LinearTetrahedral(float mass_, float E_, float NU_,
+                    std::shared_ptr<Mesh>& mesh_,
+                    const std::vector<BoundaryCondition>& boundary_conditions_);
   void Update();
   void Integrate();
 
@@ -98,10 +100,12 @@ class LinearTetrahedral {
 
   void AssembleGlobalStiffness();
 
-  Eigen::Matrix66d AssembleStressStrainMatrix();
-  Eigen::MatrixXd AssembleStrainRelationshipMatrix(
-      double x1, double y1, double z1, double x2, double y2, double z2,
-      double x3, double y3, double z3, double x4, double y4, double z4);
+  void AssembleStressStrainMatrix(Eigen::Matrix66f& D);
+  void AssembleStrainRelationshipMatrix(Eigen::MatrixXf& strain_relationship,
+                                        const Eigen::Vector3f& shape_one,
+                                        const Eigen::Vector3f& shape_two,
+                                        const Eigen::Vector3f& shape_three,
+                                        const Eigen::Vector3f& shape_four);
 
   /**
   @brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
@@ -109,10 +113,16 @@ class LinearTetrahedral {
   **/
   void AssembleElementStiffness();
 
+  void ComputeElementStiffness(Eigen::Matrix12f& element_stiffness,
+                               const Eigen::Vector3f& shape_one,
+                               const Eigen::Vector3f& shape_two,
+                               const Eigen::Vector3f& shape_three,
+                               const Eigen::Vector3f& shape_four);
+
   /*
   @brief Calculates the per-element stresses using our tensile parameters
   */
-  void AssembleElementStresses(Eigen::VectorXd nodal_displacement);
+  void AssembleElementStresses(Eigen::VectorXf nodal_displacement);
 
   /*
   @bried Calculates the element principal stresses
@@ -127,9 +137,10 @@ class LinearTetrahedral {
   /*
   @brief Compute the volume of the tetrahedral element.
   */
-  double ComputeElementVolume(double x1, double y1, double z1, double x2,
-                              double y2, double z2, double x3, double y3,
-                              double z3, double x4, double y4, double z4);
+  float ComputeElementVolume(const Eigen::Vector3f& shape_one,
+                             const Eigen::Vector3f& shape_two,
+                             const Eigen::Vector3f& shape_three,
+                             const Eigen::Vector3f& shape_four);
 
   /*
   @brief Construct the shape function parameter matrix determinant.
@@ -141,15 +152,15 @@ class LinearTetrahedral {
   @param p5 Bot row, value 1
   @param p6 Bot row, value 2
   */
-  double ConstructShapeFunctionParameter(double p1, double p2, double p3,
-                                         double p4, double p5, double p6);
+  float ConstructShapeFunctionParameter(float p1, float p2, float p3, float p4,
+                                        float p5, float p6);
 
  private:
-  //constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
+  // constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
 
   void InitializeVelocity();
   void InitializeAcceleration();
   void InitializeIntegrationConstants();
-  Eigen::VectorXd SolveU(Eigen::MatrixXd k, Eigen::VectorXd f,
+  Eigen::VectorXf SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
                          Eigen::VectorXi indices);
 };
