@@ -14,6 +14,6 @@ given the local position and velocity vectors.
 @param masses The generalized triangular mass matrix
 **/
 void ExplicitCentralDifference(Eigen::VectorXf& displacement,
-                               Eigen::Ref<const Eigen::VectorXf> forces,
-                               Eigen::Ref<const Eigen::SparseMatrixXf> M_hat);
+                               const Eigen::VectorXf& forces,
+                               const Eigen::FullPivLU<Eigen::MatrixXf>& M_hat);
 }  // namespace integrators

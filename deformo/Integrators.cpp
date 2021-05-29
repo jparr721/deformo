@@ -1,8 +1,8 @@
 #include "Integrators.h"
 
 void integrators::ExplicitCentralDifference(
-    Eigen::VectorXf& displacement, Eigen::Ref<const Eigen::VectorXf> forces,
-    Eigen::Ref<const Eigen::SparseMatrixXf> M_hat) {
-  // M_hat is already the inverse here so this goes smoothly.
-  displacement = forces * M_hat;
+    Eigen::VectorXf& displacement, const Eigen::VectorXf& forces,
+    const Eigen::FullPivLU<Eigen::MatrixXf>& M_hat) {
+  // M_hat is already in triangular form, we just need to solve
+  displacement = M_hat.solve(forces);
 }

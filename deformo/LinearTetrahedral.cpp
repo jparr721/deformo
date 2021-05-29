@@ -13,11 +13,11 @@
 #include "Integrators.h"
 
 LinearTetrahedral::LinearTetrahedral(
-    float mass_, float E_, float NU_, std::shared_ptr<Mesh>& mesh_,
+    float point_mass_, float E_, float NU_, std::shared_ptr<Mesh>& mesh_,
     const std::vector<BoundaryCondition>& boundary_conditions_)
     : E(E_),
       NU(NU_),
-      mass(mass_),
+      point_mass(point_mass_),
       mesh(mesh_),
       boundary_conditions(boundary_conditions_) {
   // TODO(@jparr721) - This function should change to the integrators file once
@@ -54,7 +54,7 @@ void LinearTetrahedral::ComputeElementStiffness(
 
   const float V =
       ComputeElementVolume(shape_one, shape_two, shape_three, shape_four);
-   element_stiffness = V * B.transpose() * D * B;
+  element_stiffness = V * B.transpose() * D * B;
 }
 
 void LinearTetrahedral::AssembleElementStiffness() {
@@ -83,49 +83,24 @@ void LinearTetrahedral::AssembleElementStiffness() {
         Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
                         mesh->positions(index + 2));
 
-    // Eigen::Matrix12f element_stiffness_matrix;
-    // ComputeElementStiffness(element_stiffness_matrix, shape_one, shape_two,
-    //                        shape_three, shape_four);
+    Eigen::Matrix12f element_stiffness_matrix;
+    ComputeElementStiffness(element_stiffness_matrix, shape_one, shape_two,
+                            shape_three, shape_four);
 
-    // const ElementStiffness element_stiffness = {element_stiffness_matrix,
-    //                                            stiffness_coordinates};
+    const ElementStiffness element_stiffness = {element_stiffness_matrix,
+                                                stiffness_coordinates};
 
-    // k.emplace_back(element_stiffness);
+    k.emplace_back(element_stiffness);
   }
 }
 
-void LinearTetrahedral::AssembleElementStresses(
-    Eigen::VectorXf nodal_displacement) {
-  for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
-    // Get the index face value
-    int index = mesh->faces(i);
-    const Eigen::Vector3f shape_one =
-        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                        mesh->positions(index + 2));
-    index = mesh->faces(i + 1);
-    const Eigen::Vector3f shape_two =
-        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                        mesh->positions(index + 2));
-    index = mesh->faces(i + 2);
-    const Eigen::Vector3f shape_three =
-        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                        mesh->positions(index + 2));
-    index = mesh->faces(i + 3);
-    const Eigen::Vector3f shape_four =
-        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                        mesh->positions(index + 2));
-
-    Eigen::MatrixXf B;
-    AssembleStrainRelationshipMatrix(B, shape_one, shape_two, shape_three,
-                                     shape_four);
-
+void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u, const Eigen::MatrixXf& B) {
     Eigen::Matrix66f D;
     AssembleStressStrainMatrix(D);
 
-    const Eigen::Vector6f sigma = D * B * nodal_displacement;
+    const Eigen::Vector6f sigma = D * B * u;
 
     sigmas.emplace_back(sigma);
-  }
 }
 
 void LinearTetrahedral::AssembleElementPlaneStresses() {
@@ -278,27 +253,22 @@ void LinearTetrahedral::InitializeAcceleration() {
 }
 
 void LinearTetrahedral::AssembleMassMatrix() {
-  // std::vector<Eigen::Triplet<float>> mass_entries;
-  // mass_entries.reserve(mesh->size());
+  std::vector<Eigen::Triplet<float>> mass_entries;
+  mass_entries.reserve(mesh->size());
 
-  // M.resize(mesh->size(), mesh->size());
+  mass.resize(mesh->size(), mesh->size());
 
-  // for (int i = 0; i < mesh->size(); ++i) {
-  //  mass_entries.push_back(Eigen::Triplet<float>(i, i, mass));
-  //}
+  for (int i = 0; i < mesh->size(); ++i) {
+    mass_entries.push_back(Eigen::Triplet<float>(i, i, point_mass));
+  }
 
-  // M.setFromTriplets(mass_entries.begin(), mass_entries.end());
+  mass.setFromTriplets(mass_entries.begin(), mass_entries.end());
 
-  //// Set effective mass matrix
-  // M_hat = (a0 * M).eval();
+  // Set effective mass matrix
+  const Eigen::MatrixXf em = (a0 * mass).eval();
 
-  //// Triangularize M_hat
-  // Eigen::SimplicialLDLT<Eigen::SparseMatrixXf> solver;
-  // solver.compute(M_hat);
-
-  // assert(solver.info() == Eigen::Success && "SOLVER FAILED FOR M_HAT");
-
-  // M_hat_inverse = solver.solve(M_hat);
+  // Now, compute the LU decomposition matrix
+  effective_mass = em.fullPivLu();
 }
 
 void LinearTetrahedral::InitializeIntegrationConstants() {
@@ -337,19 +307,18 @@ Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
 
   return U;
 }
-/*
 void LinearTetrahedral::Solve() {
   // Per-element stiffness applied to our boundary conditions
   Eigen::MatrixXf kk;
 
   // Our local force vector
   Eigen::VectorXf f;
-  // Resize the force vector to the # of boundary conditions * 2;
-  f.resize(boundary_conditions.size() * 2);
+  // Resize the force vector to the # of boundary conditions * 3;
+  f.resize(boundary_conditions.size() * 3);
 
-  // Stacked vector of xy columns/rows to slice.
+  // Stacked vector of xyz columns/rows to slice.
   Eigen::VectorXi kept_indices;
-  kept_indices.resize(boundary_conditions.size() * 2);
+  kept_indices.resize(boundary_conditions.size() * 3);
 
   // So we have a key difference from literature. Our boundary conditions
   // specify external forces as opposed to specifying which nodes are fixed, we
@@ -360,17 +329,14 @@ void LinearTetrahedral::Solve() {
   // { node: 2, force(x, y, z), node: 3, force(x, y, z) }
   //
   // Where x, y and z are the directions in which the force is applied. We can
-map
-  // into the force vector at these coordinates
+  // map into the force vector at these coordinates
   int segment = 0;  // Keep track of kept indices as a 0-indexed vector
   for (const auto& boundary_condition : boundary_conditions) {
     // Get the node number so we can begin indexing
     const unsigned int node_number = boundary_condition.node;
 
     // The row is the same as the index segment
-    f.row(segment) << boundary_condition.force.x;
-    f.row(segment + 1) << boundary_condition.force.y;
-    f.row(segment + 2) << boundary_condition.force.z;
+    f.segment(segment, 3) << boundary_condition.force;
 
     const unsigned int k_col_x = node_number * 3 - 3;
     const unsigned int k_col_y = node_number * 3 - 2;
@@ -381,66 +347,41 @@ map
 
   igl::slice(K, kept_indices, kept_indices, kk);
 
+  // Solve for our global displacement
   const Eigen::VectorXf U = SolveU(kk, f, kept_indices);
 
   // Set global force
   F_ext = K * U;
 
-  // Calculate Element Stresses
-  for (std::size_t i = 0; i < mesh->size(); i += kStride) {
-    const float x1 = mesh->positions(i);
-    const float y1 = mesh->positions(i + 1);
-    const float z1 = mesh->positions(i + 2);
+  for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
+    // Get the index face value
+    int index = mesh->faces(i);
+    const Eigen::Vector3f shape_one =
+        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
+                        mesh->positions(index + 2));
+    index = mesh->faces(i + 1);
+    const Eigen::Vector3f shape_two =
+        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
+                        mesh->positions(index + 2));
+    index = mesh->faces(i + 2);
+    const Eigen::Vector3f shape_three =
+        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
+                        mesh->positions(index + 2));
+    index = mesh->faces(i + 3);
+    const Eigen::Vector3f shape_four =
+        Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
+                        mesh->positions(index + 2));
 
-    const float x2 = mesh->positions(i + 3);
-    const float y2 = mesh->positions(i + 4);
-    const float z2 = mesh->positions(i + 5);
+    Eigen::MatrixXf B;
+    AssembleStrainRelationshipMatrix(B, shape_one, shape_two, shape_three,
+                                     shape_four);
 
-    const float x3 = mesh->positions(i + 6);
-    const float y3 = mesh->positions(i + 7);
-    const float z3 = mesh->positions(i + 8);
-
-    const float x4 = mesh->positions(i + 9);
-    const float y4 = mesh->positions(i + 10);
-    const float z4 = mesh->positions(i + 11);
-
-    // 2 * # of nodes in this segment
-    Eigen::Vector12f nodal_displacement = Eigen::Vector6f::Zero();
-
-    const auto i_node_number = mesh->node_number(i / mesh->kNumDimensions);
-    const auto j_node_number =
-        mesh->node_number((i + 3) / mesh->kNumDimensions);
-    const auto m_node_number =
-        mesh->node_number((i + 6) / mesh->kNumDimensions);
-    const auto n_node_number =
-        mesh->node_number((i + 9) / mesh->kNumDimensions);
-
-    // Corresponds to node index in the U vector
-    const unsigned int i_row_l = i_node_number * 3 - 3;
-    const unsigned int i_row_m = i_node_number * 3 - 2;
-    const unsigned int i_row_r = i_node_number * 3 - 1;
-
-    const unsigned int j_row_l = j_node_number * 3 - 3;
-    const unsigned int j_row_m = j_node_number * 3 - 2;
-    const unsigned int j_row_r = j_node_number * 3 - 1;
-
-    const unsigned int m_row_l = m_node_number * 3 - 3;
-    const unsigned int m_row_m = m_node_number * 3 - 2;
-    const unsigned int m_row_r = m_node_number * 3 - 1;
-
-    const unsigned int n_row_l = n_node_number * 3 - 3;
-    const unsigned int n_row_m = n_node_number * 3 - 2;
-    const unsigned int n_row_r = n_node_number * 3 - 1;
-
-    nodal_displacement.segment(0, 3) << i_row_l, i_row_m, i_row_r;
-    nodal_displacement.segment(3, 3) << j_row_l, j_row_m, j_row_r;
-    nodal_displacement.segment(6, 3) << m_row_l, m_row_m, m_row_r;
-    nodal_displacement.segment(9, 3) << n_row_l, n_row_m, n_row_r;
-
-    AssembleElementStresses(nodal_displacement);
+    
+    Eigen::VectorXf u(12);
+    u << shape_one, shape_two, shape_three, shape_four;
+    AssembleElementStresses(u, B);
   }
 }
-*/
 
 float LinearTetrahedral::ComputeElementVolume(
     const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,

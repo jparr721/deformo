@@ -41,7 +41,7 @@ class LinearTetrahedral {
   float t = 2.5e-2;
 
   // Point mass
-  float mass = 1.;
+  float point_mass = 1.;
 
   // Integration constants
   float a0 = 1e-10;
@@ -68,10 +68,10 @@ class LinearTetrahedral {
   Eigen::VectorXf velocity;
 
   // The Mass Matrix
-  Eigen::SparseMatrixXf M;
+  Eigen::SparseMatrixXf mass;
 
   // The Effective Mass Matrix
-  Eigen::SparseMatrixXf M_hat;
+  Eigen::FullPivLU<Eigen::MatrixXf> effective_mass;
 
   // The global stiffness matrix
   Eigen::MatrixXf K;
@@ -89,7 +89,7 @@ class LinearTetrahedral {
   std::vector<BoundaryCondition> boundary_conditions;
 
   LinearTetrahedral() = default;
-  LinearTetrahedral(float mass_, float E_, float NU_,
+  LinearTetrahedral(float point_mass_, float E_, float NU_,
                     std::shared_ptr<Mesh>& mesh_,
                     const std::vector<BoundaryCondition>& boundary_conditions_);
   void Update();
@@ -122,7 +122,7 @@ class LinearTetrahedral {
   /*
   @brief Calculates the per-element stresses using our tensile parameters
   */
-  void AssembleElementStresses(Eigen::VectorXf nodal_displacement);
+  void AssembleElementStresses(const Eigen::VectorXf& u, const Eigen::MatrixXf& B);
 
   /*
   @bried Calculates the element principal stresses
