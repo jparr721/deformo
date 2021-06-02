@@ -79,7 +79,7 @@ class LinearTetrahedral {
     std::unique_ptr<ExplicitCentralDifferenceMethod> integrator;
 
     LinearTetrahedral(const float modulus_of_elasticity,
-                      const float poissons_ratio,
+                      const float poissons_ratio, const float point_mass,
                       std::shared_ptr<Mesh> mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
     void Update();

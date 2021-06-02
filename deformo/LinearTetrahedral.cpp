@@ -13,7 +13,7 @@
 
 LinearTetrahedral::LinearTetrahedral(
     const float modulus_of_elasticity, const float poissons_ratio,
-    std::shared_ptr<Mesh> mesh,
+    const float point_mass, std::shared_ptr<Mesh> mesh,
     std::vector<BoundaryCondition> boundary_conditions)
     : kModulusOfElasticity(modulus_of_elasticity),
       kPoissonsRatio(poissons_ratio), mesh(std::move(mesh)),
@@ -22,8 +22,10 @@ LinearTetrahedral::LinearTetrahedral(
 
     AssembleForces();
     AssembleElementStiffness();
-    // AssembleGlobalStiffness();
-    // AssembleMassMatrix();
+    AssembleGlobalStiffness();
+    AssembleMassMatrix(point_mass);
+
+    InitializeIntegrator();
 }
 
 void LinearTetrahedral::Update() {
