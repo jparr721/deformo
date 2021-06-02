@@ -2,8 +2,6 @@
 
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
-#include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "BoundaryCondition.h"

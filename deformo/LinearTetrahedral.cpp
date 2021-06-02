@@ -94,13 +94,14 @@ void LinearTetrahedral::AssembleElementStiffness() {
   }
 }
 
-void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u, const Eigen::MatrixXf& B) {
-    Eigen::Matrix66f D;
-    AssembleStressStrainMatrix(D);
+void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u,
+                                                const Eigen::MatrixXf& B) {
+  Eigen::Matrix66f D;
+  AssembleStressStrainMatrix(D);
 
-    const Eigen::Vector6f sigma = D * B * u;
+  const Eigen::Vector6f sigma = D * B * u;
 
-    sigmas.emplace_back(sigma);
+  sigmas.emplace_back(sigma);
 }
 
 void LinearTetrahedral::AssembleElementPlaneStresses() {
@@ -259,7 +260,7 @@ void LinearTetrahedral::AssembleMassMatrix() {
   mass.resize(mesh->size(), mesh->size());
 
   for (int i = 0; i < mesh->size(); ++i) {
-    mass_entries.push_back(Eigen::Triplet<float>(i, i, point_mass));
+    mass_entries.emplace_back(i, i, point_mass);
   }
 
   mass.setFromTriplets(mass_entries.begin(), mass_entries.end());
@@ -376,7 +377,6 @@ void LinearTetrahedral::Solve() {
     AssembleStrainRelationshipMatrix(B, shape_one, shape_two, shape_three,
                                      shape_four);
 
-    
     Eigen::VectorXf u(12);
     u << shape_one, shape_two, shape_three, shape_four;
     AssembleElementStresses(u, B);
@@ -386,21 +386,21 @@ void LinearTetrahedral::Solve() {
 float LinearTetrahedral::ComputeElementVolume(
     const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
     const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four) {
-  float x1 = shape_one.x();
-  float y1 = shape_one.y();
-  float z1 = shape_one.z();
+  const float x1 = shape_one.x();
+  const float y1 = shape_one.y();
+  const float z1 = shape_one.z();
 
-  float x2 = shape_two.x();
-  float y2 = shape_two.y();
-  float z2 = shape_two.z();
+  const float x2 = shape_two.x();
+  const float y2 = shape_two.y();
+  const float z2 = shape_two.z();
 
-  float x3 = shape_three.x();
-  float y3 = shape_three.y();
-  float z3 = shape_three.z();
+  const float x3 = shape_three.x();
+  const float y3 = shape_three.y();
+  const float z3 = shape_three.z();
 
-  float x4 = shape_four.x();
-  float y4 = shape_four.y();
-  float z4 = shape_four.z();
+  const float x4 = shape_four.x();
+  const float y4 = shape_four.y();
+  const float z4 = shape_four.z();
 
   Eigen::Matrix4f V;
   V.row(0) << 1, x1, y1, z1;

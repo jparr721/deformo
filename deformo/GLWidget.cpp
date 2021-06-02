@@ -7,9 +7,6 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <sstream>
-
-#include "Loader.h"
 
 GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
   setFocusPolicy(Qt::ClickFocus);
