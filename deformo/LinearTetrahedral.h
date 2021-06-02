@@ -1,164 +1,159 @@
 #pragma once
 
-#include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <vector>
 
 #include "BoundaryCondition.h"
 #include "EigenTypes.h"
+#include "Integrators.h"
 #include "Mesh.h"
 
 /**
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class LinearTetrahedral {
- private:
-  using BetaSubmatrixf = Eigen::Matrix<float, 6, 3>;
-  struct ElementStiffness {
-    Eigen::Matrix12f stiffness_matrix;
-    std::vector<int> indices;
-  };
+  private:
+    using BetaSubmatrixf = Eigen::Matrix<float, 6, 3>;
+    struct ElementStiffness {
+        Eigen::Matrix12f stiffness_matrix;
+        std::vector<int> indices;
+    };
 
- public:
-  constexpr static int PLANE_STRESS = 1;
-  constexpr static int PLANE_STRAIN = 2;
-  constexpr static int kStride = 12;
-  constexpr static int kFaceStride = 4;
+  public:
+    constexpr static int kStride = 12;
+    constexpr static int kFaceStride = 4;
 
-  // Timestep constants
-  float current_time = 0.;
-  float timestep_size = 0.005;
+    // \brief Thickness
+    constexpr static float kThickness = 2.5e-2f;
 
-  // Modulus of Elasticity
-  float E;
+    // Timestep constants
+    float current_time = 0.f;
+    float timestep_size = 0.005f;
 
-  // Poisson's Ratio
-  float NU;
+    // Modulus of Elasticity
+    const float kModulusOfElasticity;
 
-  // Thickness
-  float t = 2.5e-2;
+    // Poisson's Ratio
+    const float kPoissonsRatio;
 
-  // Point mass
-  float point_mass = 1.;
+    // Integration constants
+    float a0 = 1e-10f;
+    float a1 = 1e-10f;
+    float a2 = 1e-10f;
+    float a3 = 1e-10f;
 
-  // Integration constants
-  float a0 = 1e-10;
-  float a1 = 1e-10;
-  float a2 = 1e-10;
-  float a3 = 1e-10;
+    // The Global Force Vector (Interaction Forces)
+    Eigen::VectorXf global_force;
 
-  // The Global Force Vector (Interaction Forces)
-  Eigen::VectorXf F_ext;
+    // Global stacked vertex vector (xy) with index mapping of node orientations
+    std::shared_ptr<Mesh> mesh;
 
-  // The Global Load Vector (at current_time)
-  Eigen::VectorXf R_hat;
+    // Global stacked acceleration vector
+    Eigen::VectorXf acceleration;
 
-  // Global stacked vertex vector from the last timestep
-  Eigen::VectorXf last_displacement;
+    // Global stacked velocity vector
+    Eigen::VectorXf velocity;
 
-  // Global stacked vertex vector (xy) with index mapping of node orientations
-  std::shared_ptr<Mesh> mesh;
+    // The Mass Matrix
+    Eigen::SparseMatrixXf mass;
 
-  // Global stacked acceleration vector
-  Eigen::VectorXf acceleration;
+    // The Effective Mass Matrix
+    Eigen::FullPivLU<Eigen::MatrixXf> effective_mass;
 
-  // Global stacked velocity vector
-  Eigen::VectorXf velocity;
+    // The global stiffness matrix
+    Eigen::MatrixXf global_stiffness;
 
-  // The Mass Matrix
-  Eigen::SparseMatrixXf mass;
+    // Element stiffness matrices and mapped coordinates
+    std::vector<ElementStiffness> element_stiffnesses;
 
-  // The Effective Mass Matrix
-  Eigen::FullPivLU<Eigen::MatrixXf> effective_mass;
+    // Element Stress vectors for each group of points
+    std::vector<Eigen::Vector6f> sigmas;
 
-  // The global stiffness matrix
-  Eigen::MatrixXf K;
+    // The Element Stresses from each stress vector
+    std::vector<Eigen::Vector3f> element_stresses;
 
-  // Element stiffness matrices and mapped coordinates
-  std::vector<ElementStiffness> k;
+    // Boundary conditions on nodes in the mesh
+    std::vector<BoundaryCondition> boundary_conditions;
 
-  // Element Stress vectors for each group of points
-  std::vector<Eigen::Vector6f> sigmas;
+    // The integrator for our sim
+    std::unique_ptr<ExplicitCentralDifferenceMethod> integrator;
 
-  // The Plane Stresses from each stress vector
-  std::vector<Eigen::Vector3f> plane_stresses;
+    LinearTetrahedral(const float modulus_of_elasticity,
+                      const float poissons_ratio,
+                      std::shared_ptr<Mesh> mesh,
+                      std::vector<BoundaryCondition> boundary_conditions);
+    void Update();
+    void Integrate();
 
-  // Boundary conditions on nodes in the mesh
-  std::vector<BoundaryCondition> boundary_conditions;
+    void AssembleForces();
+    void AssembleMassMatrix(const float point_mass);
 
-  LinearTetrahedral() = default;
-  LinearTetrahedral(float point_mass_, float E_, float NU_,
-                    std::shared_ptr<Mesh>& mesh_,
-                    const std::vector<BoundaryCondition>& boundary_conditions_);
-  void Update();
-  void Integrate();
+    void AssembleGlobalStiffness();
 
-  void AssembleForces();
-  void AssembleMassMatrix();
+    void AssembleStressStrainMatrix(Eigen::Matrix66f& D);
+    void AssembleStrainRelationshipMatrix(Eigen::MatrixXf& strain_relationship,
+                                          const Eigen::Vector3f& shape_one,
+                                          const Eigen::Vector3f& shape_two,
+                                          const Eigen::Vector3f& shape_three,
+                                          const Eigen::Vector3f& shape_four);
 
-  void AssembleGlobalStiffness();
+    /**
+    @brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
+    where V is the volume of the element
+    **/
+    void AssembleElementStiffness();
 
-  void AssembleStressStrainMatrix(Eigen::Matrix66f& D);
-  void AssembleStrainRelationshipMatrix(Eigen::MatrixXf& strain_relationship,
-                                        const Eigen::Vector3f& shape_one,
-                                        const Eigen::Vector3f& shape_two,
-                                        const Eigen::Vector3f& shape_three,
-                                        const Eigen::Vector3f& shape_four);
+    void ComputeElementStiffness(Eigen::Matrix12f& element_stiffness,
+                                 const Eigen::Vector3f& shape_one,
+                                 const Eigen::Vector3f& shape_two,
+                                 const Eigen::Vector3f& shape_three,
+                                 const Eigen::Vector3f& shape_four);
 
-  /**
-  @brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
-  where V is the volume of the element
-  **/
-  void AssembleElementStiffness();
+    /*
+    @brief Calculates the per-element stresses using our tensile parameters
+    */
+    void AssembleElementStresses(const Eigen::VectorXf& u,
+                                 const Eigen::MatrixXf& B);
 
-  void ComputeElementStiffness(Eigen::Matrix12f& element_stiffness,
-                               const Eigen::Vector3f& shape_one,
+    /*
+    @bried Calculates the element principal stresses
+    */
+    void AssembleElementPlaneStresses();
+
+    /*
+    @brief Applies the vector of boundary conditions to the nodes and solves
+    */
+    void Solve();
+
+    /*
+    @brief Compute the volume of the tetrahedral element.
+    */
+    float ComputeElementVolume(const Eigen::Vector3f& shape_one,
                                const Eigen::Vector3f& shape_two,
                                const Eigen::Vector3f& shape_three,
                                const Eigen::Vector3f& shape_four);
 
-  /*
-  @brief Calculates the per-element stresses using our tensile parameters
-  */
-  void AssembleElementStresses(const Eigen::VectorXf& u, const Eigen::MatrixXf& B);
+    /*
+    @brief Construct the shape function parameter matrix determinant.
+    The parameters have pretty terrible naming, they are as follows
+    @param p1 Top row, value 1
+    @param p2 Top row, value 2
+    @param p3 Mid row, value 1
+    @param p4 Mid row, value 2
+    @param p5 Bot row, value 1
+    @param p6 Bot row, value 2
+    */
+    float ConstructShapeFunctionParameter(float p1, float p2, float p3,
+                                          float p4, float p5, float p6);
 
-  /*
-  @bried Calculates the element principal stresses
-  */
-  void AssembleElementPlaneStresses();
+    void InitializeIntegrator();
 
-  /*
-  @brief Applies the vector of boundary conditions to the nodes and solves
-  */
-  void Solve();
+  private:
+    // constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
 
-  /*
-  @brief Compute the volume of the tetrahedral element.
-  */
-  float ComputeElementVolume(const Eigen::Vector3f& shape_one,
-                             const Eigen::Vector3f& shape_two,
-                             const Eigen::Vector3f& shape_three,
-                             const Eigen::Vector3f& shape_four);
-
-  /*
-  @brief Construct the shape function parameter matrix determinant.
-  The parameters have pretty terrible naming, they are as follows
-  @param p1 Top row, value 1
-  @param p2 Top row, value 2
-  @param p3 Mid row, value 1
-  @param p4 Mid row, value 2
-  @param p5 Bot row, value 1
-  @param p6 Bot row, value 2
-  */
-  float ConstructShapeFunctionParameter(float p1, float p2, float p3, float p4,
-                                        float p5, float p6);
-
- private:
-  // constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
-
-  void InitializeVelocity();
-  void InitializeAcceleration();
-  void InitializeIntegrationConstants();
-  Eigen::VectorXf SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
-                         Eigen::VectorXi indices);
+    void InitializeVelocity();
+    void InitializeAcceleration();
+    void InitializeIntegrationConstants();
+    Eigen::VectorXf SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
+                           Eigen::VectorXi indices);
 };
