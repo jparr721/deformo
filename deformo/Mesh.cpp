@@ -32,7 +32,12 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
 
 Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
     : cut_plane(cut_plane) {
-    InitializeRenderableSurfaces(V, T);
+    Vectorize(positions, V);
+    Vectorize(faces, T);
+    colors.resize(positions.rows());
+    for (int i = 0; i < positions.rows(); i += 3) {
+        colors.segment(i, 3) << 1.f, 0.f, 0.f;
+    }
 }
 
 void Mesh::Update(const Eigen::VectorXf& positions_) {
@@ -74,9 +79,6 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 
 void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
                                         const Eigen::MatrixXi& T) {
-    std::cout << V.row(0) << std::endl;
-    std::cout << std::endl;
-    std::cout << T.row(0) << std::endl;
     igl::barycenter(V, T, barycenters);
 
     CalculateTetrahedraCoordinatesWithCutPlane(V, T);

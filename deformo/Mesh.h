@@ -7,7 +7,7 @@
 
 class Mesh {
  public:
-  constexpr static double kNoCutPlane = 1.01;
+  constexpr static float kNoCutPlane = 1.01f;
   float cut_plane = kNoCutPlane;
 
   Eigen::VectorXi faces;

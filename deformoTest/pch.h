@@ -5,4 +5,6 @@
 
 #pragma once
 
+#define TETLIBRARY
+
 #include "gtest/gtest.h"

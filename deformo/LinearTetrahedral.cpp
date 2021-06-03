@@ -129,38 +129,171 @@ void LinearTetrahedral::AssembleGlobalStiffness() {
 
     global_stiffness = Eigen::MatrixXf::Zero(K_rowsize, K_rowsize);
 
-    // Indices in the element stiffness matrix to collect
-    int kk_0 = -1;
-    int kk_1 = 0;
-
-    // Iterate through all points and element stiffness matrices, generating the
-    // output inside of the global_stiffness matrix. Lotta, shallow
-    // loops, O(144)
     for (const auto& element_stiffness : element_stiffnesses) {
-        const auto kk = element_stiffness.stiffness_matrix;
-        const auto pts = element_stiffness.indices;
+        const Eigen::Matrix12f k = element_stiffness.stiffness_matrix;
+        const auto i = element_stiffness.indices.at(0);
+        const auto j = element_stiffness.indices.at(1);
+        const auto m = element_stiffness.indices.at(2);
+        const auto n = element_stiffness.indices.at(3);
 
-        for (const auto& pt : pts) {
-            for (int i = 3; i > 0; --i) {
-                const int left_K_idx = 3 * pt - i;
-                kk_0 += 1;
+        global_stiffness(3 * i, 3 * i) += k(0, 0);
+        global_stiffness(3 * i, 3 * i + 1) += k(0, 1);
+        global_stiffness(3 * i, 3 * i + 2) += k(0, 2);
+        global_stiffness(3 * i, 3 * j) += k(0, 3);
+        global_stiffness(3 * i, 3 * j + 1) += k(0, 4);
+        global_stiffness(3 * i, 3 * j + 2) += k(0, 5);
+        global_stiffness(3 * i, 3 * m) += k(0, 6);
+        global_stiffness(3 * i, 3 * m + 1) += k(0, 7);
+        global_stiffness(3 * i, 3 * m + 2) += k(0, 8);
+        global_stiffness(3 * i, 3 * n) += k(0, 9);
+        global_stiffness(3 * i, 3 * n + 1) += k(0, 10);
+        global_stiffness(3 * i, 3 * n + 2) += k(0, 11);
 
-                for (const auto& ppt : pts) {
-                    for (int j = 3; j > 0; --j) {
-                        // If our right-submatrix coordinate (y) > the cols of
-                        // the submatrix, reset
-                        if (kk_1 == kk.cols()) {
-                            kk_1 = 0;
-                        }
+        global_stiffness(3 * i + 1, 3 * i) += k(1, 0);
+        global_stiffness(3 * i + 1, 3 * i + 1) += k(1, 1);
+        global_stiffness(3 * i + 1, 3 * i + 2) += k(1, 2);
+        global_stiffness(3 * i + 1, 3 * j) += k(1, 3);
+        global_stiffness(3 * i + 1, 3 * j + 1) += k(1, 4);
+        global_stiffness(3 * i + 1, 3 * j + 2) += k(1, 5);
+        global_stiffness(3 * i + 1, 3 * m) += k(1, 6);
+        global_stiffness(3 * i + 1, 3 * m + 1) += k(1, 7);
+        global_stiffness(3 * i + 1, 3 * m + 2) += k(1, 8);
+        global_stiffness(3 * i + 1, 3 * n) += k(1, 9);
+        global_stiffness(3 * i + 1, 3 * n + 1) += k(1, 10);
+        global_stiffness(3 * i + 1, 3 * n + 2) += k(1, 11);
 
-                        const int right_K_idx = 3 * ppt - j;
+        global_stiffness(3 * i + 2, 3 * i) += k(2, 0);
+        global_stiffness(3 * i + 2, 3 * i + 1) += k(2, 1);
+        global_stiffness(3 * i + 2, 3 * i + 2) += k(2, 2);
+        global_stiffness(3 * i + 2, 3 * j) += k(2, 3);
+        global_stiffness(3 * i + 2, 3 * j + 1) += k(2, 4);
+        global_stiffness(3 * i + 2, 3 * j + 2) += k(2, 5);
+        global_stiffness(3 * i + 2, 3 * m) += k(2, 6);
+        global_stiffness(3 * i + 2, 3 * m + 1) += k(2, 7);
+        global_stiffness(3 * i + 2, 3 * m + 2) += k(2, 8);
+        global_stiffness(3 * i + 2, 3 * n) += k(2, 9);
+        global_stiffness(3 * i + 2, 3 * n + 1) += k(2, 10);
+        global_stiffness(3 * i + 2, 3 * n + 2) += k(2, 11);
 
-                        global_stiffness(left_K_idx, right_K_idx) +=
-                            kk(kk_0, kk_1);
-                    }
-                }
-            }
-        }
+        // j
+        global_stiffness(3 * j, 3 * i) += k(3, 0);
+        global_stiffness(3 * j, 3 * i + 1) += k(3, 1);
+        global_stiffness(3 * j, 3 * i + 2) += k(3, 2);
+        global_stiffness(3 * j, 3 * j) += k(3, 3);
+        global_stiffness(3 * j, 3 * j + 1) += k(3, 4);
+        global_stiffness(3 * j, 3 * j + 2) += k(3, 5);
+        global_stiffness(3 * j, 3 * m) += k(3, 6);
+        global_stiffness(3 * j, 3 * m + 1) += k(3, 7);
+        global_stiffness(3 * j, 3 * m + 2) += k(3, 8);
+        global_stiffness(3 * j, 3 * n) += k(3, 9);
+        global_stiffness(3 * j, 3 * n + 1) += k(3, 10);
+        global_stiffness(3 * j, 3 * n + 2) += k(3, 11);
+
+        global_stiffness(3 * j + 1, 3 * i) += k(4, 0);
+        global_stiffness(3 * j + 1, 3 * i + 1) += k(4, 1);
+        global_stiffness(3 * j + 1, 3 * i + 2) += k(4, 2);
+        global_stiffness(3 * j + 1, 3 * j) += k(4, 3);
+        global_stiffness(3 * j + 1, 3 * j + 1) += k(4, 4);
+        global_stiffness(3 * j + 1, 3 * j + 2) += k(4, 5);
+        global_stiffness(3 * j + 1, 3 * m) += k(4, 6);
+        global_stiffness(3 * j + 1, 3 * m + 1) += k(4, 7);
+        global_stiffness(3 * j + 1, 3 * m + 2) += k(4, 8);
+        global_stiffness(3 * j + 1, 3 * n) += k(4, 9);
+        global_stiffness(3 * j + 1, 3 * n + 1) += k(4, 10);
+        global_stiffness(3 * j + 1, 3 * n + 2) += k(4, 11);
+
+        global_stiffness(3 * j + 2, 3 * i) += k(5, 0);
+        global_stiffness(3 * j + 2, 3 * i + 1) += k(5, 1);
+        global_stiffness(3 * j + 2, 3 * i + 2) += k(5, 2);
+        global_stiffness(3 * j + 2, 3 * j) += k(5, 3);
+        global_stiffness(3 * j + 2, 3 * j + 1) += k(5, 4);
+        global_stiffness(3 * j + 2, 3 * j + 2) += k(5, 5);
+        global_stiffness(3 * j + 2, 3 * m) += k(5, 6);
+        global_stiffness(3 * j + 2, 3 * m + 1) += k(5, 7);
+        global_stiffness(3 * j + 2, 3 * m + 2) += k(5, 8);
+        global_stiffness(3 * j + 2, 3 * n) += k(5, 9);
+        global_stiffness(3 * j + 2, 3 * n + 1) += k(5, 10);
+        global_stiffness(3 * j + 2, 3 * n + 2) += k(5, 11);
+
+        // m
+        global_stiffness(3 * m, 3 * i) += k(6, 0);
+        global_stiffness(3 * m, 3 * i + 1) += k(6, 1);
+        global_stiffness(3 * m, 3 * i + 2) += k(6, 2);
+        global_stiffness(3 * m, 3 * j) += k(6, 3);
+        global_stiffness(3 * m, 3 * j + 1) += k(6, 4);
+        global_stiffness(3 * m, 3 * j + 2) += k(6, 5);
+        global_stiffness(3 * m, 3 * m) += k(6, 6);
+        global_stiffness(3 * m, 3 * m + 1) += k(6, 7);
+        global_stiffness(3 * m, 3 * m + 2) += k(6, 8);
+        global_stiffness(3 * m, 3 * n) += k(6, 9);
+        global_stiffness(3 * m, 3 * n + 1) += k(6, 10);
+        global_stiffness(3 * m, 3 * n + 2) += k(6, 11);
+
+        global_stiffness(3 * m + 1, 3 * i) += k(7, 0);
+        global_stiffness(3 * m + 1, 3 * i + 1) += k(7, 1);
+        global_stiffness(3 * m + 1, 3 * i + 2) += k(7, 2);
+        global_stiffness(3 * m + 1, 3 * j) += k(7, 3);
+        global_stiffness(3 * m + 1, 3 * j + 1) += k(7, 4);
+        global_stiffness(3 * m + 1, 3 * j + 2) += k(7, 5);
+        global_stiffness(3 * m + 1, 3 * m) += k(7, 6);
+        global_stiffness(3 * m + 1, 3 * m + 1) += k(7, 7);
+        global_stiffness(3 * m + 1, 3 * m + 2) += k(7, 8);
+        global_stiffness(3 * m + 1, 3 * n) += k(7, 9);
+        global_stiffness(3 * m + 1, 3 * n + 1) += k(7, 10);
+        global_stiffness(3 * m + 1, 3 * n + 2) += k(7, 11);
+
+        global_stiffness(3 * m + 2, 3 * i) += k(8, 0);
+        global_stiffness(3 * m + 2, 3 * i + 1) += k(8, 1);
+        global_stiffness(3 * m + 2, 3 * i + 2) += k(8, 2);
+        global_stiffness(3 * m + 2, 3 * j) += k(8, 3);
+        global_stiffness(3 * m + 2, 3 * j + 1) += k(8, 4);
+        global_stiffness(3 * m + 2, 3 * j + 2) += k(8, 5);
+        global_stiffness(3 * m + 2, 3 * m) += k(8, 6);
+        global_stiffness(3 * m + 2, 3 * m + 1) += k(8, 7);
+        global_stiffness(3 * m + 2, 3 * m + 2) += k(8, 8);
+        global_stiffness(3 * m + 2, 3 * n) += k(8, 9);
+        global_stiffness(3 * m + 2, 3 * n + 1) += k(8, 10);
+        global_stiffness(3 * m + 2, 3 * n + 2) += k(8, 11);
+
+        // n
+        global_stiffness(3 * n, 3 * i) += k(9, 0);
+        global_stiffness(3 * n, 3 * i + 1) += k(9, 1);
+        global_stiffness(3 * n, 3 * i + 2) += k(9, 2);
+        global_stiffness(3 * n, 3 * j) += k(9, 3);
+        global_stiffness(3 * n, 3 * j + 1) += k(9, 4);
+        global_stiffness(3 * n, 3 * j + 2) += k(9, 5);
+        global_stiffness(3 * n, 3 * m) += k(9, 6);
+        global_stiffness(3 * n, 3 * m + 1) += k(9, 7);
+        global_stiffness(3 * n, 3 * m + 2) += k(9, 8);
+        global_stiffness(3 * n, 3 * n) += k(9, 9);
+        global_stiffness(3 * n, 3 * n + 1) += k(9, 10);
+        global_stiffness(3 * n, 3 * n + 2) += k(9, 11);
+
+        global_stiffness(3 * n + 1, 3 * i) += k(10, 0);
+        global_stiffness(3 * n + 1, 3 * i + 1) += k(10, 1);
+        global_stiffness(3 * n + 1, 3 * i + 2) += k(10, 2);
+        global_stiffness(3 * n + 1, 3 * j) += k(10, 3);
+        global_stiffness(3 * n + 1, 3 * j + 1) += k(10, 4);
+        global_stiffness(3 * n + 1, 3 * j + 2) += k(10, 5);
+        global_stiffness(3 * n + 1, 3 * m) += k(10, 6);
+        global_stiffness(3 * n + 1, 3 * m + 1) += k(10, 7);
+        global_stiffness(3 * n + 1, 3 * m + 2) += k(10, 8);
+        global_stiffness(3 * n + 1, 3 * n) += k(10, 9);
+        global_stiffness(3 * n + 1, 3 * n + 1) += k(10, 10);
+        global_stiffness(3 * n + 1, 3 * n + 2) += k(10, 11);
+
+        global_stiffness(3 * n + 2, 3 * i) += k(11, 0);
+        global_stiffness(3 * n + 2, 3 * i + 1) += k(11, 1);
+        global_stiffness(3 * n + 2, 3 * i + 2) += k(11, 2);
+        global_stiffness(3 * n + 2, 3 * j) += k(11, 3);
+        global_stiffness(3 * n + 2, 3 * j + 1) += k(11, 4);
+        global_stiffness(3 * n + 2, 3 * j + 2) += k(11, 5);
+        global_stiffness(3 * n + 2, 3 * m) += k(11, 6);
+        global_stiffness(3 * n + 2, 3 * m + 1) += k(11, 7);
+        global_stiffness(3 * n + 2, 3 * m + 2) += k(11, 8);
+        global_stiffness(3 * n + 2, 3 * n) += k(11, 9);
+        global_stiffness(3 * n + 2, 3 * n + 1) += k(11, 10);
+        global_stiffness(3 * n + 2, 3 * n + 2) += k(11, 11);
     }
 }
 
@@ -240,7 +373,7 @@ void LinearTetrahedral::AssembleStrainRelationshipMatrix(
     const BetaSubmatrixf B4 = create_beta_submatrix(beta_4, gamma_4, delta_4);
 
     // Matrix is 6 x 12
-    strain_relationship.resize(B1.size(), B1.cols() * 4);
+    strain_relationship.resize(B1.rows(), B1.cols() * 4);
     strain_relationship << B1, B2, B3, B4;
 }
 
