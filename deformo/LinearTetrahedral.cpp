@@ -7,9 +7,11 @@
 #include <Eigen/Core>
 #include <Eigen/SparseCholesky>
 #include <cmath>
+#include <iostream>
 #include <utility>
 
 #include "Integrators.h"
+#include "Utils.h"
 
 LinearTetrahedral::LinearTetrahedral(
     const float modulus_of_elasticity, const float poissons_ratio,
@@ -61,27 +63,25 @@ void LinearTetrahedral::AssembleElementStiffness() {
     for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
-        int index = mesh->faces(i);
+        int index = mesh->GetPositionIndex(i);
         stiffness_coordinates.push_back(index);
-        const auto shape_one =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
-        index = mesh->faces(i + 1);
-        stiffness_coordinates.push_back(index);
-        const auto shape_two =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
+        Eigen::VectorXf shape_one;
+        utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
 
-        index = mesh->faces(i + 2);
+        index = mesh->GetPositionIndex(i + 1);
         stiffness_coordinates.push_back(index);
-        const auto shape_three =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
-        index = mesh->faces(i + 3);
+        Eigen::VectorXf shape_two;
+        utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
+
+        index = mesh->GetPositionIndex(i + 2);
         stiffness_coordinates.push_back(index);
-        const auto shape_four =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
+        Eigen::VectorXf shape_three;
+        utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
+
+        index = mesh->GetPositionIndex(i + 3);
+        stiffness_coordinates.push_back(index);
+        Eigen::VectorXf shape_four;
+        utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
 
         Eigen::Matrix12f element_stiffness_matrix;
         ComputeElementStiffness(element_stiffness_matrix, shape_one, shape_two,
@@ -131,6 +131,7 @@ void LinearTetrahedral::AssembleGlobalStiffness() {
 
     for (const auto& element_stiffness : element_stiffnesses) {
         const Eigen::Matrix12f k = element_stiffness.stiffness_matrix;
+        std::cerr << k << std::endl;
         const auto i = element_stiffness.indices.at(0);
         const auto j = element_stiffness.indices.at(1);
         const auto m = element_stiffness.indices.at(2);
@@ -312,6 +313,8 @@ void LinearTetrahedral::AssembleStrainRelationshipMatrix(
     Eigen::MatrixXf& strain_relationship, const Eigen::Vector3f& shape_one,
     const Eigen::Vector3f& shape_two, const Eigen::Vector3f& shape_three,
     const Eigen::Vector3f& shape_four) {
+    const float V =
+        ComputeElementVolume(shape_one, shape_two, shape_three, shape_four);
     const auto create_beta_submatrix = [](float beta, float gamma,
                                           float delta) -> BetaSubmatrixf {
         BetaSubmatrixf B;
@@ -375,12 +378,13 @@ void LinearTetrahedral::AssembleStrainRelationshipMatrix(
     // Matrix is 6 x 12
     strain_relationship.resize(B1.rows(), B1.cols() * 4);
     strain_relationship << B1, B2, B3, B4;
+    strain_relationship /= (6 * V);
 }
 
 float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
                                                          float p3, float p4,
                                                          float p5, float p6) {
-    Eigen::Matrix3d parameter;
+    Eigen::Matrix3f parameter;
     parameter.row(0) << 1, p1, p2;
     parameter.row(1) << 1, p3, p4;
     parameter.row(2) << 1, p5, p6;
@@ -423,7 +427,7 @@ void LinearTetrahedral::InitializeIntegrationConstants() {
 
 Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
                                           Eigen::VectorXi indices) {
-    assert(k.size() == f.size() &&
+    assert(k.rows() == f.rows() &&
            "global_stiffness AND F DO NOT MATCH IN NUMBER OF ROWS");
 
     Eigen::VectorXf u;
@@ -440,6 +444,7 @@ Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
     // can go, then we solve with respect to f, assigning to our global
     // displacement vector.
     u = k.fullPivLu().solve(f);
+    std::cerr << u << std::endl;
 
     assert(indices.size() == u.size() && "INDEX AND U DIFFER");
 
@@ -454,6 +459,8 @@ Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
 }
 
 void LinearTetrahedral::Solve() {
+    assert(!boundary_conditions.empty() && "NO CONDITIONS TO SOLVE FOR");
+
     // Per-element stiffness applied to our boundary conditions
     Eigen::MatrixXf kk;
 
@@ -526,6 +533,8 @@ void LinearTetrahedral::Solve() {
         u << shape_one, shape_two, shape_three, shape_four;
         AssembleElementStresses(u, B);
     }
+
+    Update();
 }
 
 float LinearTetrahedral::ComputeElementVolume(

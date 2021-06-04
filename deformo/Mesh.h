@@ -24,6 +24,7 @@ class Mesh {
   void SetCutPlane(float cut_plane);
   void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                       const std::string& flags, tetgenio& out);
+  [[nodiscard]] int GetPositionIndex(const int face_index) const;
 
   [[nodiscard]] const float* data() { return positions.data(); }
   [[nodiscard]] int size_bytes() { return positions.size() * sizeof(float); }
