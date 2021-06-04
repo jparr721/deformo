@@ -77,7 +77,7 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     delete[] t_flags;
 }
 
-int Mesh::GetPositionIndex(const int face_index) const { return faces(face_index) * 3; }
+int Mesh::GetPositionAtFaceIndex(const int face_index) const { return faces(face_index) * 3; }
 
 
 void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,

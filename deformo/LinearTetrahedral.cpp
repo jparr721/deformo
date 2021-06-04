@@ -63,22 +63,22 @@ void LinearTetrahedral::AssembleElementStiffness() {
     for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
-        int index = mesh->GetPositionIndex(i);
+        int index = mesh->GetPositionAtFaceIndex(i);
         stiffness_coordinates.push_back(index);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
 
-        index = mesh->GetPositionIndex(i + 1);
+        index = mesh->GetPositionAtFaceIndex(i + 1);
         stiffness_coordinates.push_back(index);
         Eigen::VectorXf shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
 
-        index = mesh->GetPositionIndex(i + 2);
+        index = mesh->GetPositionAtFaceIndex(i + 2);
         stiffness_coordinates.push_back(index);
         Eigen::VectorXf shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
 
-        index = mesh->GetPositionIndex(i + 3);
+        index = mesh->GetPositionAtFaceIndex(i + 3);
         stiffness_coordinates.push_back(index);
         Eigen::VectorXf shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
