@@ -131,7 +131,6 @@ void LinearTetrahedral::AssembleGlobalStiffness() {
 
     for (const auto& element_stiffness : element_stiffnesses) {
         const Eigen::Matrix12f k = element_stiffness.stiffness_matrix;
-        std::cerr << k << std::endl;
         const auto i = element_stiffness.indices.at(0);
         const auto j = element_stiffness.indices.at(1);
         const auto m = element_stiffness.indices.at(2);
@@ -444,7 +443,6 @@ Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
     // can go, then we solve with respect to f, assigning to our global
     // displacement vector.
     u = k.fullPivLu().solve(f);
-    std::cerr << u << std::endl;
 
     assert(indices.size() == u.size() && "INDEX AND U DIFFER");
 
