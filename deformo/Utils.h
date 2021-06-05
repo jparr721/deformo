@@ -44,8 +44,8 @@ void ListToMatrix(const std::vector<std::vector<T>>& V,
 
 template <typename T>
 void SliceEigenVector(Eigen::PlainObjectBase<T>& out,
-                      const Eigen::DenseBase<T>& in,
-                      const int start, const int end) {
+                      const Eigen::DenseBase<T>& in, const int start,
+                      const int end) {
     assert(start < end && "YOU PROVIDED AN INVALID SLICE RANGE");
     assert(start != end && "START AND END ARE THE SAME");
     assert(start < in.rows() && "START VALUE TOO LARGE");
@@ -81,4 +81,7 @@ void SliceByIndices(Eigen::PlainObjectBase<Out>& out,
 template <typename T> void GTestDebugPrint(T value) {
     std::cerr << value << std::endl;
 }
+
+void FindMaxVertices(std::vector<unsigned int>& indices,
+                     const Eigen::VectorXf& positions);
 } // namespace utils

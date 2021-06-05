@@ -122,6 +122,7 @@
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
     <QtMoc Include="Window.h" />
+    <ClCompile Include="Utils.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
