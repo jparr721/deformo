@@ -24,6 +24,8 @@ LinearTetrahedral::LinearTetrahedral(
     AssembleGlobalStiffness();
     AssembleMassMatrix(point_mass);
 
+    InitializeVelocity();
+    InitializeAcceleration();
     InitializeIntegrator();
 }
 
@@ -570,6 +572,9 @@ float LinearTetrahedral::ComputeElementVolume(
 }
 
 void LinearTetrahedral::InitializeIntegrator() {
+    const Eigen::VectorXf last_displacement =
+        mesh->positions - (timestep_size * velocity) +
+        ((std::pow(timestep_size, 2) / 2) * acceleration);
     integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        a0, a1, a2, mesh->positions, global_stiffness, mass, effective_mass);
+        a0, a1, a2, last_displacement, global_stiffness, mass, effective_mass);
 }

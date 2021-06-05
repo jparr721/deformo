@@ -60,6 +60,6 @@ class ExplicitCentralDifferenceMethod {
 
   private:
     const Eigen::MatrixXf& stiffness_;
-    const Eigen::MatrixXf& mass_matrix_;
+    const Eigen::SparseMatrixXf& mass_matrix_;
     const Eigen::FullPivLU<Eigen::MatrixXf>& effective_mass_matrix_;
 };
