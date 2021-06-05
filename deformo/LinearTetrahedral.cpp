@@ -534,10 +534,10 @@ void LinearTetrahedral::Solve() {
         Eigen::VectorXf u(12);
         u << displacement_one, displacement_two, displacement_three,
             displacement_four;
-        utils::GTestDebugPrint(u);
         AssembleElementStresses(u, B);
     }
 
+    AssembleElementPlaneStresses();
     Update();
 }
 
