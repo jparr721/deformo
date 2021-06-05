@@ -501,33 +501,40 @@ void LinearTetrahedral::Solve() {
 
     // Set global force
     global_force = global_stiffness * U;
-    utils::GTestDebugPrint(global_force);
 
     for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
-        // Get the index face value
-        int index = mesh->faces(i);
-        const auto shape_one =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
-        index = mesh->faces(i + 1);
-        const auto shape_two =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
-        index = mesh->faces(i + 2);
-        const auto shape_three =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
-        index = mesh->faces(i + 3);
-        const auto shape_four =
-            Eigen::Vector3f(mesh->positions(index), mesh->positions(index + 1),
-                            mesh->positions(index + 2));
+        int index = mesh->GetPositionAtFaceIndex(i);
+        Eigen::VectorXf shape_one;
+        utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
+        Eigen::VectorXf displacement_one;
+        utils::SliceEigenVector(displacement_one, U, index, index + 2);
+
+        index = mesh->GetPositionAtFaceIndex(i + 1);
+        Eigen::VectorXf shape_two;
+        utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
+        Eigen::VectorXf displacement_two;
+        utils::SliceEigenVector(displacement_two, U, index, index + 2);
+
+        index = mesh->GetPositionAtFaceIndex(i + 2);
+        Eigen::VectorXf shape_three;
+        utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
+        Eigen::VectorXf displacement_three;
+        utils::SliceEigenVector(displacement_three, U, index, index + 2);
+
+        index = mesh->GetPositionAtFaceIndex(i + 3);
+        Eigen::VectorXf shape_four;
+        utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
+        Eigen::VectorXf displacement_four;
+        utils::SliceEigenVector(displacement_four, U, index, index + 2);
 
         Eigen::MatrixXf B;
         AssembleStrainRelationshipMatrix(B, shape_one, shape_two, shape_three,
                                          shape_four);
 
         Eigen::VectorXf u(12);
-        u << shape_one, shape_two, shape_three, shape_four;
+        u << displacement_one, displacement_two, displacement_three,
+            displacement_four;
+        utils::GTestDebugPrint(u);
         AssembleElementStresses(u, B);
     }
 

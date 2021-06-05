@@ -43,8 +43,8 @@ void ListToMatrix(const std::vector<std::vector<T>>& V,
 }
 
 template <typename T>
-void SliceEigenVector(Eigen::Matrix<T, Eigen::Dynamic, 1>& out,
-                      const Eigen::Matrix<T, Eigen::Dynamic, 1>& in,
+void SliceEigenVector(Eigen::PlainObjectBase<T>& out,
+                      const Eigen::DenseBase<T>& in,
                       const int start, const int end) {
     assert(start < end && "YOU PROVIDED AN INVALID SLICE RANGE");
     assert(start != end && "START AND END ARE THE SAME");
@@ -63,8 +63,6 @@ void SliceByIndices(Eigen::PlainObjectBase<Out>& out,
                     const Eigen::DenseBase<In>& in,
                     const Eigen::DenseBase<Indices>& rows,
                     const Eigen::DenseBase<Indices>& cols) {
-    assert(rows.size() > 0 && "NO ROWS TO SLICE");
-    assert(cols.size() > 0 && "NO COLUMNS TO SLICE");
     assert(rows.minCoeff() >= 0 && "ROW INDEX IS LESS THAN 0");
     assert(rows.maxCoeff() <= in.rows() &&
            "ROW INDEX IS BIGGER THAN MAX SIZE OF INPUT MATRIX");
