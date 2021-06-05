@@ -127,8 +127,8 @@ template <class Clock = std::chrono::system_clock> struct timer {
     using time_point = typename Clock::time_point;
     using duration = typename Clock::duration;
 
-    timer(const duration duration) noexcept : expiry(Clock::now() + duration) {}
-    timer(const time_point expiry) noexcept : expiry(expiry) {}
+    explicit timer(const duration duration) noexcept : expiry(Clock::now() + duration) {}
+    explicit timer(const time_point expiry) noexcept : expiry(expiry) {}
 
     bool done(time_point now = Clock::now()) const noexcept {
         return now >= expiry;

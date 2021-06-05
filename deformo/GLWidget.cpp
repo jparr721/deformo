@@ -127,7 +127,8 @@ void GLWidget::paintGL() {
     // Solve at this timestep
     while (simulating) {
         const auto cycles = utils::stopwatch::time([&] { sim->Solve(); });
-        std::cout << "Solver took: " << cycles.count() << " cycles" << std::endl;
+        std::cout << "Solver took: " << cycles.count() << " cycles"
+                  << std::endl;
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
