@@ -154,6 +154,6 @@ class LinearTetrahedral {
     void InitializeVelocity();
     void InitializeAcceleration();
     void InitializeIntegrationConstants();
-    Eigen::VectorXf SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
-                           Eigen::VectorXi indices);
+    Eigen::VectorXf SolveU(const Eigen::MatrixXf& k, const Eigen::VectorXf& f,
+                           const Eigen::VectorXi& indices);
 };

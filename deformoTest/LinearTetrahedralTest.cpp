@@ -43,22 +43,22 @@ TEST(TestLinearTetrahedral, TestElementStiffness) {
   const auto mesh = MakeBasicMesh();
 
   const auto bc_1 = BoundaryCondition{
-      3,
+      2,
       Eigen::Vector3f(0.f, 3.125f, 0.f),
   };
 
   const auto bc_2 = BoundaryCondition{
-      4,
+      3,
       Eigen::Vector3f(0.f, 6.25f, 0.f),
   };
 
   const auto bc_3 = BoundaryCondition{
-      7,
+      6,
       Eigen::Vector3f(0.f, 6.25f, 0.f),
   };
 
   const auto bc_4 = BoundaryCondition{
-      8,
+      7,
       Eigen::Vector3f(0.f, 3.125f, 0.f),
   };
 

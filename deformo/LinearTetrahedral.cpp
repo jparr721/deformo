@@ -2,12 +2,9 @@
 
 #include "LinearTetrahedral.h"
 
-#include <igl/slice.h>
-
 #include <Eigen/Core>
 #include <Eigen/SparseCholesky>
 #include <cmath>
-#include <iostream>
 #include <utility>
 
 #include "Integrators.h"
@@ -64,22 +61,22 @@ void LinearTetrahedral::AssembleElementStiffness() {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
         int index = mesh->GetPositionAtFaceIndex(i);
-        stiffness_coordinates.push_back(index);
+        stiffness_coordinates.push_back(index / 3);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 1);
-        stiffness_coordinates.push_back(index);
+        stiffness_coordinates.push_back(index / 3);
         Eigen::VectorXf shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 2);
-        stiffness_coordinates.push_back(index);
+        stiffness_coordinates.push_back(index / 3);
         Eigen::VectorXf shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 3);
-        stiffness_coordinates.push_back(index);
+        stiffness_coordinates.push_back(index / 3);
         Eigen::VectorXf shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
 
@@ -125,7 +122,7 @@ void LinearTetrahedral::AssembleElementPlaneStresses() {
 
 void LinearTetrahedral::AssembleGlobalStiffness() {
     // Allocate space in global_stiffness for 3nx3n elements
-    const float K_rowsize = mesh->positions.size() * 3;
+    const float K_rowsize = mesh->positions.size();
 
     global_stiffness = Eigen::MatrixXf::Zero(K_rowsize, K_rowsize);
 
@@ -424,8 +421,9 @@ void LinearTetrahedral::InitializeIntegrationConstants() {
     a3 = 1.f / a2;
 }
 
-Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
-                                          Eigen::VectorXi indices) {
+Eigen::VectorXf LinearTetrahedral::SolveU(const Eigen::MatrixXf& k,
+                                          const Eigen::VectorXf& f,
+                                          const Eigen::VectorXi& indices) {
     assert(k.rows() == f.rows() &&
            "global_stiffness AND F DO NOT MATCH IN NUMBER OF ROWS");
 
@@ -444,7 +442,7 @@ Eigen::VectorXf LinearTetrahedral::SolveU(Eigen::MatrixXf k, Eigen::VectorXf f,
     // displacement vector.
     u = k.fullPivLu().solve(f);
 
-    assert(indices.size() == u.size() && "INDEX AND U DIFFER");
+    assert(indices.rows() == u.rows() && "INDEX AND U DIFFER");
 
     for (int i = 0; i < u.size(); ++i) {
         const float val = u(i);
@@ -489,20 +487,21 @@ void LinearTetrahedral::Solve() {
         // The row is the same as the index segment
         f.segment(segment, 3) << boundary_condition.force;
 
-        const unsigned int k_col_x = node_number * 3 - 3;
-        const unsigned int k_col_y = node_number * 3 - 2;
-        const unsigned int k_col_z = node_number * 3 - 1;
+        const unsigned int k_col_x = node_number * 3;
+        const unsigned int k_col_y = node_number * 3 + 1;
+        const unsigned int k_col_z = node_number * 3 + 2;
         kept_indices.segment(segment, 3) << k_col_x, k_col_y, k_col_z;
         segment += 3;
     }
 
-    igl::slice(global_stiffness, kept_indices, kept_indices, kk);
+    utils::SliceByIndices(kk, global_stiffness, kept_indices, kept_indices);
 
     // Solve for our global displacement
     const Eigen::VectorXf U = SolveU(kk, f, kept_indices);
 
     // Set global force
     global_force = global_stiffness * U;
+    utils::GTestDebugPrint(global_force);
 
     for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
         // Get the index face value
