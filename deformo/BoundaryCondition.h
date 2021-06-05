@@ -1,12 +1,16 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <vector>
 
 /*
 Static boundary condition for a given node
 */
 struct BoundaryCondition {
-  unsigned int node;
-  Eigen::Vector3f force;
+    unsigned int node;
+    Eigen::Vector3f force;
 };
 
+std::vector<BoundaryCondition> AssignBoundaryConditionToFixedNodes(
+    const std::vector<unsigned int>& face_indices,
+    const Eigen::Vector3f& force);

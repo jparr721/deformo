@@ -28,7 +28,7 @@ class LinearTetrahedral {
 
     // Timestep constants
     float current_time = 0.f;
-    float timestep_size = 0.005f;
+    float timestep_size = 1e-10;
 
     // Modulus of Elasticity
     const float kModulusOfElasticity;
@@ -56,9 +56,6 @@ class LinearTetrahedral {
 
     // The Mass Matrix
     Eigen::SparseMatrixXf mass;
-
-    // The Effective Mass Matrix
-    Eigen::FullPivLU<Eigen::MatrixXf> effective_mass;
 
     // The global stiffness matrix
     Eigen::MatrixXf global_stiffness;

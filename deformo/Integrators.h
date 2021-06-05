@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EigenTypes.h"
+#include <Eigen/Sparse>
 
 class ExplicitCentralDifferenceMethod {
   public:
@@ -24,15 +25,15 @@ class ExplicitCentralDifferenceMethod {
      */
     Eigen::VectorXf previous_position;
 
-    ExplicitCentralDifferenceMethod(
-        const float a0, const float a1, const float a2,
-        const Eigen::VectorXf& initial_displacement,
-        const Eigen::MatrixXf& stiffness,
-        const Eigen::SparseMatrixXf& mass_matrix,
-        const Eigen::FullPivLU<Eigen::MatrixXf>& effective_mass_matrix)
+    ExplicitCentralDifferenceMethod(const float a0, const float a1,
+                                    const float a2,
+                                    const Eigen::VectorXf& initial_displacement,
+                                    const Eigen::MatrixXf& stiffness,
+                                    const Eigen::SparseMatrixXf& mass_matrix)
         : a0(a0), a1(a1), a2(a2), previous_position(initial_displacement),
           stiffness_(stiffness), mass_matrix_(mass_matrix),
-          effective_mass_matrix_(effective_mass_matrix) {}
+          effective_mass_matrix_(
+              Eigen::SimplicialLDLT(Eigen::SparseMatrixXf(a0 * mass_matrix))) {}
 
     /**
     \brief Calculates the explicit Central Difference Method integration
@@ -52,14 +53,13 @@ class ExplicitCentralDifferenceMethod {
     \param acceleration The acceleration of the positions at timestep t
     \param velocity The velocity of the positions at timestep t
     \param forces The generalized stacked force vector
-    \param current_displacement The current displacement of the system
     solving for the displacement
     **/
     void Solve(Eigen::VectorXf& positions, Eigen::VectorXf& acceleration,
                Eigen::VectorXf& velocity, const Eigen::VectorXf& forces);
 
   private:
-    const Eigen::MatrixXf& stiffness_;
-    const Eigen::SparseMatrixXf& mass_matrix_;
-    const Eigen::FullPivLU<Eigen::MatrixXf>& effective_mass_matrix_;
+    const Eigen::MatrixXf stiffness_;
+    const Eigen::SparseMatrixXf mass_matrix_;
+    const Eigen::SimplicialLDLT<Eigen::SparseMatrixXf> effective_mass_matrix_;
 };

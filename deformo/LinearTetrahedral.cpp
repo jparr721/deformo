@@ -19,13 +19,14 @@ LinearTetrahedral::LinearTetrahedral(
       boundary_conditions(std::move(boundary_conditions)) {
     InitializeIntegrationConstants();
 
+    InitializeVelocity();
+    InitializeAcceleration();
+
     AssembleForces();
     AssembleElementStiffness();
     AssembleGlobalStiffness();
     AssembleMassMatrix(point_mass);
 
-    InitializeVelocity();
-    InitializeAcceleration();
     InitializeIntegrator();
 }
 
@@ -376,7 +377,11 @@ void LinearTetrahedral::AssembleStrainRelationshipMatrix(
     // Matrix is 6 x 12
     strain_relationship.resize(B1.rows(), B1.cols() * 4);
     strain_relationship << B1, B2, B3, B4;
-    strain_relationship /= (6 * V);
+    if (V != 0) {
+        strain_relationship /= (6 * V);
+    } else {
+        strain_relationship /= (6);
+    }
 }
 
 float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
@@ -408,12 +413,6 @@ void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
     }
 
     mass.setFromTriplets(mass_entries.begin(), mass_entries.end());
-
-    // Set effective mass matrix
-    const Eigen::MatrixXf em = (a0 * mass).eval();
-
-    // Now, compute the LU decomposition matrix
-    effective_mass = em.fullPivLu();
 }
 
 void LinearTetrahedral::InitializeIntegrationConstants() {
@@ -576,5 +575,5 @@ void LinearTetrahedral::InitializeIntegrator() {
         mesh->positions - (timestep_size * velocity) +
         ((std::pow(timestep_size, 2) / 2) * acceleration);
     integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        a0, a1, a2, last_displacement, global_stiffness, mass, effective_mass);
+        a0, a1, a2, last_displacement, global_stiffness, mass);
 }
