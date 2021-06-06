@@ -2,7 +2,6 @@
 
 #include <Eigen/Dense>
 #include <QKeyEvent>
-#include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
@@ -10,15 +9,11 @@
 #include <QOpenGLWidget>
 #include <QTimer>
 #include <memory>
-#include <string>
 
 #include "Camera.h"
 #include "Input.h"
 #include "LinearTetrahedral.h"
 #include "Mesh.h"
-
-void Perspective(Eigen::Matrix4d& camera, float vertical_angle,
-                 float aspect_ratio, float near_plane, float far_plane);
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -27,6 +22,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     unsigned int vbo;
     unsigned int c_vbo;
     unsigned int ibo;
+    unsigned int vvao;
 
     // Vertex Array Object
     QOpenGLVertexArrayObject vao;
@@ -52,8 +48,8 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     // LinearTetrahedral Object
     std::unique_ptr<LinearTetrahedral> sim;
 
-    GLWidget(QWidget* parent = nullptr);
-    ~GLWidget();
+    explicit GLWidget(QWidget* parent = nullptr);
+    ~GLWidget() override;
 
     void resizeGL(int width, int height) override;
 

@@ -17,11 +17,6 @@ LinearTetrahedral::LinearTetrahedral(
     : kModulusOfElasticity(modulus_of_elasticity),
       kPoissonsRatio(poissons_ratio), mesh(std::move(mesh)),
       boundary_conditions(std::move(boundary_conditions)) {
-    InitializeIntegrationConstants();
-
-    InitializeVelocity();
-    InitializeAcceleration();
-
     AssembleForces();
     AssembleElementStiffness();
     AssembleGlobalStiffness();
@@ -31,12 +26,12 @@ LinearTetrahedral::LinearTetrahedral(
 }
 
 void LinearTetrahedral::Update() {
-    current_time += timestep_size;
+    current_time += dt;
     Integrate();
 }
 
 void LinearTetrahedral::Integrate() {
-    integrator->Solve(mesh->positions, acceleration, velocity, global_force);
+    integrator->Solve(mesh->positions, global_force);
 }
 
 void LinearTetrahedral::AssembleForces() {
@@ -394,14 +389,6 @@ float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
     return parameter.determinant();
 }
 
-void LinearTetrahedral::InitializeVelocity() {
-    velocity = Eigen::VectorXf::Zero(mesh->size());
-}
-
-void LinearTetrahedral::InitializeAcceleration() {
-    acceleration = Eigen::VectorXf::Zero(mesh->size());
-}
-
 void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
     std::vector<Eigen::Triplet<float>> mass_entries;
     mass_entries.reserve(mesh->size());
@@ -413,13 +400,6 @@ void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
     }
 
     mass.setFromTriplets(mass_entries.begin(), mass_entries.end());
-}
-
-void LinearTetrahedral::InitializeIntegrationConstants() {
-    a0 = 1.f / std::pow(timestep_size, 2);
-    a1 = 1.f / (timestep_size * 2);
-    a2 = 2.f * a0;
-    a3 = 1.f / a2;
 }
 
 Eigen::VectorXf LinearTetrahedral::SolveU(const Eigen::MatrixXf& k,
@@ -488,9 +468,9 @@ void LinearTetrahedral::Solve() {
         // The row is the same as the index segment
         f.segment(segment, 3) << boundary_condition.force;
 
-        const unsigned int k_col_x = node_number * 3;
-        const unsigned int k_col_y = node_number * 3 + 1;
-        const unsigned int k_col_z = node_number * 3 + 2;
+        const unsigned int k_col_x = node_number;
+        const unsigned int k_col_y = node_number + 1;
+        const unsigned int k_col_z = node_number + 2;
         kept_indices.segment(segment, 3) << k_col_x, k_col_y, k_col_z;
         segment += 3;
     }
@@ -571,9 +551,6 @@ float LinearTetrahedral::ComputeElementVolume(
 }
 
 void LinearTetrahedral::InitializeIntegrator() {
-    const Eigen::VectorXf last_displacement =
-        mesh->positions - (timestep_size * velocity) +
-        ((std::pow(timestep_size, 2) / 2) * acceleration);
     integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        a0, a1, a2, last_displacement, global_stiffness, mass);
+        dt, mesh->positions, global_stiffness, mass);
 }

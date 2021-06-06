@@ -30,6 +30,9 @@
     <Filter Include="Physics">
       <UniqueIdentifier>{4dc3cc69-029e-4e72-b749-69e48b633f30}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{27004bde-1824-409c-a114-9c838ecbd1d2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -76,6 +79,9 @@
     <ClCompile Include="BoundaryCondition.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
+    <ClCompile Include="Vbo.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">
@@ -107,6 +113,12 @@
     </ClInclude>
     <ClInclude Include="BoundaryCondition.h">
       <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Vbo.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGL.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

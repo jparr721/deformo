@@ -12,7 +12,6 @@
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class LinearTetrahedral {
-  private:
     using BetaSubmatrixf = Eigen::Matrix<float, 6, 3>;
     struct ElementStiffness {
         Eigen::Matrix12f stiffness_matrix;
@@ -28,7 +27,7 @@ class LinearTetrahedral {
 
     // Timestep constants
     float current_time = 0.f;
-    float timestep_size = 1e-10;
+    float dt = 1e-10f;
 
     // Modulus of Elasticity
     const float kModulusOfElasticity;
@@ -36,23 +35,11 @@ class LinearTetrahedral {
     // Poisson's Ratio
     const float kPoissonsRatio;
 
-    // Integration constants
-    float a0 = 1e-10f;
-    float a1 = 1e-10f;
-    float a2 = 1e-10f;
-    float a3 = 1e-10f;
-
     // The Global Force Vector (Interaction Forces)
     Eigen::VectorXf global_force;
 
     // Global stacked vertex vector (xy) with index mapping of node orientations
     std::shared_ptr<Mesh> mesh;
-
-    // Global stacked acceleration vector
-    Eigen::VectorXf acceleration;
-
-    // Global stacked velocity vector
-    Eigen::VectorXf velocity;
 
     // The Mass Matrix
     Eigen::SparseMatrixXf mass;
@@ -146,11 +133,6 @@ class LinearTetrahedral {
     void InitializeIntegrator();
 
   private:
-    // constexpr static unsigned int stride = 3 * kTetrahedronElementCount;
-
-    void InitializeVelocity();
-    void InitializeAcceleration();
-    void InitializeIntegrationConstants();
     Eigen::VectorXf SolveU(const Eigen::MatrixXf& k, const Eigen::VectorXf& f,
                            const Eigen::VectorXi& indices);
 };

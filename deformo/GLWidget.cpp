@@ -239,28 +239,3 @@ void GLWidget::LogErrors(const char* fn) {
         std::cerr << "Error in fn: " << fn << ": " << err << std::endl;
     }
 }
-
-void Perspective(Eigen::Matrix4d& camera, float vertical_angle,
-                 float aspect_ratio, float near_plane, float far_plane) {
-    assert(far_plane > near_plane &&
-           "NEAR PLANE CANNOT BE GREATER THAN OR EQUAL TO FAR PLANE");
-
-    Eigen::Matrix4d m;
-    const float vertical_angle_rad = vertical_angle * (M_PI / 180);
-    const float sine = std::sin(vertical_angle_rad);
-
-    if (sine == 0.f) {
-        return;
-    }
-
-    const float cotan = std::cos(vertical_angle_rad) / sine;
-    const float clip = far_plane - near_plane;
-
-    m(0, 0) = cotan / aspect_ratio;
-    m(1, 1) = cotan;
-    m(2, 2) = -(near_plane + far_plane) / clip;
-    m(2, 3) = -1.f;
-    m(3, 2) = -(2.0f * near_plane * far_plane) / clip;
-
-    camera *= m;
-}

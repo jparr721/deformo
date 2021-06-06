@@ -2,20 +2,22 @@
 #include "Utils.h"
 
 void ExplicitCentralDifferenceMethod::Solve(Eigen::VectorXf& positions,
-                                            Eigen::VectorXf& acceleration,
-                                            Eigen::VectorXf& velocity,
                                             const Eigen::VectorXf& forces) {
-    const Eigen::VectorXf current_positions = positions;
     const Eigen::VectorXf effective_load =
-        forces - (((stiffness_ - a2 * mass_matrix_) * positions) -
-                  ((a0 * mass_matrix_) * previous_position));
+        forces - (stiffness_ - a2 * mass_matrix_) * positions -
+        (a0 * mass_matrix_)*previous_position;
 
-     const Eigen::VectorXf next_displacement =
-        effective_mass_matrix_.solve(effective_load);
+    const Eigen::VectorXf next_displacement =
+        effective_mass_matrix_.inverse() * effective_load;
 
-    positions += next_displacement;
-    acceleration =
-        a0 * (previous_position - (2 * current_positions) + positions);
-    velocity = a1 * ((-1 * previous_position) + positions);
-    previous_position = current_positions;
+    acceleration_ =
+        a0 * (previous_position - 2 * positions + next_displacement);
+    velocity_ = a1 * ((-1 * previous_position) + next_displacement);
+    previous_position = positions;
+    positions = next_displacement;
+}
+
+void ExplicitCentralDifferenceMethod::SetLastPosition(
+    const Eigen::VectorXf& positions) {
+    previous_position = positions - dt * velocity_ + a3 * acceleration_;
 }

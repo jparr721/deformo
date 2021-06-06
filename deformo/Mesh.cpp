@@ -93,7 +93,7 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     tetgenio out;
 
     // Generate tetrahedrals from PLC mesh with max size 1e-2.
-    const std::string tetgen_flags = "zpqa1e-2";
+    const std::string tetgen_flags = "zpqa1e-1";
     //const std::string tetgen_flags = "zpq";
     Tetrahedralize(V, F, tetgen_flags, out);
     assert(TetgenioToMesh(out, TV, TF, TT));
