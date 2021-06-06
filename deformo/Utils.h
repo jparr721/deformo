@@ -124,21 +124,21 @@ struct rdtscp_clock {
 
 // A timer using the specified clock.
 template <class Clock = std::chrono::system_clock> struct timer {
-    using time_point = typename Clock::time_point;
-    using duration = typename Clock::duration;
+    using TimePoint = typename Clock::time_point;
+    using Duration = typename Clock::duration;
 
-    explicit timer(const duration duration) noexcept : expiry(Clock::now() + duration) {}
-    explicit timer(const time_point expiry) noexcept : expiry(expiry) {}
+    explicit timer(const Duration duration) noexcept : expiry(Clock::now() + duration) {}
+    explicit timer(const TimePoint expiry) noexcept : expiry(expiry) {}
 
-    bool done(time_point now = Clock::now()) const noexcept {
+    bool done(TimePoint now = Clock::now()) const noexcept {
         return now >= expiry;
     }
 
-    auto remaining(time_point now = Clock::now()) const noexcept -> duration {
+    auto remaining(TimePoint now = Clock::now()) const noexcept -> Duration {
         return expiry - now;
     }
 
-    const time_point expiry;
+    const TimePoint expiry;
 };
 
 template <class Clock = std::chrono::system_clock>

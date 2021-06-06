@@ -79,10 +79,10 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     void mouseReleaseEvent(QMouseEvent* event) override;
 
   private:
-    QTimer* draw_timer;
-    std::unique_ptr<Input> input;
-    std::unique_ptr<Camera> camera;
-    bool simulating = true;
+    QTimer* draw_timer_;
+    std::unique_ptr<Input> input_;
+    std::unique_ptr<Camera> camera_;
+    bool simulating_ = false;
 
     void LogErrors(const char* fn);
     void BuildBuffers();

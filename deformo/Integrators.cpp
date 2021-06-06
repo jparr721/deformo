@@ -10,10 +10,8 @@ void ExplicitCentralDifferenceMethod::Solve(Eigen::VectorXf& positions,
         forces - (((stiffness_ - a2 * mass_matrix_) * positions) -
                   ((a0 * mass_matrix_) * previous_position));
 
-    // const Eigen::VectorXf next_displacement =
-    //    effective_mass_matrix_.solve(effective_load);
-    const Eigen::VectorXf next_displacement =
-        (a0 * mass_matrix_) * effective_load;
+     const Eigen::VectorXf next_displacement =
+        effective_mass_matrix_.solve(effective_load);
 
     positions += next_displacement;
     acceleration =

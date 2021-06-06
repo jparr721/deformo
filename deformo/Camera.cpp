@@ -48,7 +48,8 @@ const QMatrix4x4 Camera::Matrix() const { return world; }
 
 void Camera::Reset() {
   QMatrix4x4 new_world;
-  new_world.perspective(45.f, 4.f / 3.f, 0.f, 2000.f);
+  new_world.perspective(45.f, 4.f / 3.f, 0.f, 20000.f);
+  new_world.translate(QVector3D(0, 0, -30));
   world = new_world;
   translation = QVector3D(0.f, 0.f, 0.f);
   rotation = QQuaternion();

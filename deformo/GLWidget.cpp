@@ -12,15 +12,15 @@
 GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
     setFocusPolicy(Qt::ClickFocus);
 
-    draw_timer = new QTimer(this);
-    connect(draw_timer, &QTimer::timeout, this,
+    draw_timer_ = new QTimer(this);
+    connect(draw_timer_, &QTimer::timeout, this,
             QOverload<>::of(&GLWidget::update));
-    connect(draw_timer, &QTimer::timeout, this,
+    connect(draw_timer_, &QTimer::timeout, this,
             QOverload<>::of(&GLWidget::Update));
-    draw_timer->start(30);
+    draw_timer_->start(30);
 
-    input = std::make_unique<Input>();
-    camera = std::make_unique<Camera>();
+    input_ = std::make_unique<Input>();
+    camera_ = std::make_unique<Camera>();
 }
 
 GLWidget::~GLWidget() {
@@ -29,55 +29,55 @@ GLWidget::~GLWidget() {
     glDeleteBuffers(1, &c_vbo);
     vao.destroy();
 
-    delete draw_timer;
+    delete draw_timer_;
 }
 
 void GLWidget::Cleanup() { delete shader_program; }
 
 void GLWidget::Update() {
-    input->Update();
+    input_->Update();
 
-    if (input->MouseButtonPressed(Qt::RightButton)) {
-        camera->Rotate(-1 * camera->kRotationSpeed * input->MouseDelta().x(),
-                       camera->kUp);
-        camera->Rotate(-1 * camera->kRotationSpeed * input->MouseDelta().y(),
-                       camera->rotation.rotatedVector(camera->kRight));
+    if (input_->MouseButtonPressed(Qt::RightButton)) {
+        camera_->Rotate(-1 * camera_->kRotationSpeed * input_->MouseDelta().x(),
+                        camera_->kUp);
+        camera_->Rotate(-1 * camera_->kRotationSpeed * input_->MouseDelta().y(),
+                        camera_->rotation.rotatedVector(camera_->kRight));
     }
 
-    if (input->KeyPressed(Qt::Key_W)) {
-        camera->Forward();
+    if (input_->KeyPressed(Qt::Key_W)) {
+        camera_->Forward();
     }
 
-    if (input->KeyPressed(Qt::Key_S)) {
-        camera->Backward();
+    if (input_->KeyPressed(Qt::Key_S)) {
+        camera_->Backward();
     }
 
-    if (input->KeyPressed(Qt::Key_A)) {
-        camera->Left();
+    if (input_->KeyPressed(Qt::Key_A)) {
+        camera_->Left();
     }
 
-    if (input->KeyPressed(Qt::Key_D)) {
-        camera->Right();
+    if (input_->KeyPressed(Qt::Key_D)) {
+        camera_->Right();
     }
 
-    if (input->KeyPressed(Qt::Key_Q)) {
-        camera->Up();
+    if (input_->KeyPressed(Qt::Key_Q)) {
+        camera_->Up();
     }
 
-    if (input->KeyPressed(Qt::Key_E)) {
-        camera->Down();
+    if (input_->KeyPressed(Qt::Key_E)) {
+        camera_->Down();
     }
 
-    if (input->KeyPressed(Qt::Key_Space)) {
-        camera->Reset();
+    if (input_->KeyPressed(Qt::Key_Space)) {
+        camera_->Reset();
     }
 
-    if (input->KeyPressed(Qt::Key_M)) {
-        if (render_style == GL_LINE) {
-            render_style = GL_FILL;
-        } else {
-            render_style = GL_LINE;
-        }
+    if (input_->KeyPressed(Qt::Key_G)) {
+        simulating_ = !simulating_;
+    }
+
+    if (input_->KeyPressed(Qt::Key_M)) {
+        render_style = render_style == GL_LINE ? GL_FILL : GL_LINE;
     }
 }
 
@@ -124,18 +124,11 @@ void GLWidget::paintGL() {
     // Wire
     glPolygonMode(GL_FRONT_AND_BACK, render_style);
 
-    // Solve at this timestep
-    while (simulating) {
-        const auto cycles = utils::stopwatch::time([&] { sim->Solve(); });
-        std::cout << "Solver took: " << cycles.count() << " cycles"
-                  << std::endl;
-    }
-
     glClear(GL_COLOR_BUFFER_BIT);
 
     shader_program->bind();
 
-    shader_program->setUniformValue(projection_loc, camera->Matrix());
+    shader_program->setUniformValue(projection_loc, camera_->Matrix());
 
     // Add updated vertex coordinates
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -150,11 +143,19 @@ void GLWidget::paintGL() {
     // Render
     vao.bind();
 
-    glDrawElements(GL_TRIANGLES, mesh->faces_size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, mesh->faces_size(), GL_UNSIGNED_INT, nullptr);
 
     vao.release();
 
     shader_program->release();
+
+    // Solve at this timestep
+    if (simulating_) {
+        const auto cycles = utils::stopwatch::time([&] { sim->Solve(); });
+        std::cout << "Solver took: " << cycles.count() << " cycles"
+                  << std::endl;
+    }
+
     LogErrors("paintGL");
 }
 
@@ -169,12 +170,12 @@ void GLWidget::BuildBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, mesh->size_bytes(), mesh->data(),
                  GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
 
     glBindBuffer(GL_ARRAY_BUFFER, c_vbo);
     glBufferData(GL_ARRAY_BUFFER, mesh->colors_size_bytes(),
                  mesh->colors_data(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
 
@@ -196,7 +197,12 @@ void GLWidget::BuildPhysicsEngine() {
     assert(mesh != nullptr && "MESH IS NOT INITIALIZED");
     std::vector<unsigned int> dynamic_indices;
     utils::FindMaxVertices(dynamic_indices, mesh->positions);
-    const Eigen::Vector3f uniform_gravity = Eigen::Vector3f(0.f, 9.81f, 0.f);
+
+    for (const auto& face_index : dynamic_indices) {
+        mesh->colors.segment(face_index, 3) << 0.f, 1.f, 0.f;
+    }
+
+    const auto uniform_gravity = Eigen::Vector3f(0.f, -9.81f, 0.f);
     const auto boundary_conditions =
         AssignBoundaryConditionToFixedNodes(dynamic_indices, uniform_gravity);
     sim = std::make_unique<LinearTetrahedral>(210e6, 0.3, 1.f, mesh,
@@ -204,19 +210,19 @@ void GLWidget::BuildPhysicsEngine() {
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {
-    input->RegisterKeyPress(event->key());
+    input_->RegisterKeyPress(event->key());
 }
 
 void GLWidget::keyReleaseEvent(QKeyEvent* event) {
-    input->RegisterKeyRelease(event->key());
+    input_->RegisterKeyRelease(event->key());
 }
 
 void GLWidget::mousePressEvent(QMouseEvent* event) {
-    input->RegisterMouseButtonPress(event->button());
+    input_->RegisterMouseButtonPress(event->button());
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
-    input->RegisterMouseButtonRelease(event->button());
+    input_->RegisterMouseButtonRelease(event->button());
 }
 
 void GLWidget::resizeGL(int width, int height) {}

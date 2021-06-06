@@ -12,9 +12,7 @@ void FindMaxVertices(std::vector<unsigned>& indices,
     for (unsigned int i = 1; i < positions.rows(); i += 3) {
         if (positions(i) >= max_y) {
             // Add the x-oriented value so we can fetch the whole group later
-            // Divide by 3 so we can fetch the face associated with this for
-            // color mapping.
-            indices.push_back((i - 1) / 3);
+            indices.push_back((i - 1));
         }
     }
 }
