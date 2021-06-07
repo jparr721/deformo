@@ -22,9 +22,6 @@ class LinearTetrahedral {
     constexpr static int kStride = 12;
     constexpr static int kFaceStride = 4;
 
-    // \brief Thickness
-    constexpr static float kThickness = 2.5e-2f;
-
     // Timestep constants
     float current_time = 0.f;
     float dt = 1e-10f;
@@ -67,19 +64,13 @@ class LinearTetrahedral {
                       std::shared_ptr<Mesh> mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
     void Update();
-    void Integrate();
+
+    void InitializeIntegrator();
 
     void AssembleForces();
     void AssembleMassMatrix(const float point_mass);
 
     void AssembleGlobalStiffness();
-
-    void AssembleStressStrainMatrix(Eigen::Matrix66f& D);
-    void AssembleStrainRelationshipMatrix(Eigen::MatrixXf& strain_relationship,
-                                          const Eigen::Vector3f& shape_one,
-                                          const Eigen::Vector3f& shape_two,
-                                          const Eigen::Vector3f& shape_three,
-                                          const Eigen::Vector3f& shape_four);
 
     /**
     @brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
@@ -130,7 +121,12 @@ class LinearTetrahedral {
     float ConstructShapeFunctionParameter(float p1, float p2, float p3,
                                           float p4, float p5, float p6);
 
-    void InitializeIntegrator();
+    [[nodiscard]] static Eigen::Matrix66f
+    AssembleStressStrainMatrix(float poissons_ratio,
+                               float modulus_of_elasticity);
+    [[nodiscard]] Eigen::MatrixXf AssembleStrainRelationshipMatrix(
+        const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
+        const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four);
 
   private:
     Eigen::VectorXf SolveU(const Eigen::MatrixXf& k, const Eigen::VectorXf& f,

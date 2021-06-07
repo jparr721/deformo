@@ -102,19 +102,13 @@ struct rdtscp_clock {
     using time_point = std::chrono::time_point<rdtscp_clock, duration>;
 
     static auto now() noexcept -> time_point {
-#ifdef __APPLE__
-        std::uint32_t hi, lo;
-        __asm__ __volatile__("rdtscp" : "=d"(hi), "=a"(lo));
-        return time_point(
-            duration((static_cast<std::uint64_t>(hi) << 32) | lo));
-#elif __linux__
+#ifdef __linux__
         std::uint32_t hi, lo;
         __asm__ __volatile__("rdtscp" : "=d"(hi), "=a"(lo));
         return time_point(
             duration((static_cast<std::uint64_t>(hi) << 32) | lo));
 
 #else
-
         std::uint32_t aux;
         const std::uint64_t lo = __rdtscp(&aux);
         return time_point(duration(lo));
