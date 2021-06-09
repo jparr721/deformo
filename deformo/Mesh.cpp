@@ -36,7 +36,7 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
     Vectorize(faces, T);
     colors.resize(positions.rows());
     for (int i = 0; i < positions.rows(); i += 3) {
-        colors.segment(i, 3) << 1.f, 0.f, 0.f;
+        colors.segment(i, 3) << 0.f, 0.f, 1.f;
     }
 }
 
@@ -49,7 +49,7 @@ void Mesh::SetCutPlane(float cut_plane) {
 
     for (int i = 0; i < colors.size(); i += 3) {
         if (i < visible_elements) {
-            colors.segment(i, 3) << 1.f, 0.f, 0.f;
+            colors.segment(i, 3) << kMeshDefaultColor;
         } else {
             colors.segment(i, 3) << 1.f, 1.f, 1.f;
         }
@@ -84,7 +84,7 @@ void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
                                         const Eigen::MatrixXi& T) {
     igl::barycenter(V, T, barycenters);
 
-    CalculateTetrahedraCoordinatesWithCutPlane(V, T);
+    CalculateTetrahedralCoordinates(V, T);
 }
 
 void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
@@ -93,18 +93,20 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     tetgenio out;
 
     // Generate tetrahedrals from PLC mesh with max size 1e-2.
-    const std::string tetgen_flags = "zpqa1e-1";
-    //const std::string tetgen_flags = "zpq";
+    //const std::string tetgen_flags = "zpqa1e-1";
+    const std::string tetgen_flags = "zpq";
     Tetrahedralize(V, F, tetgen_flags, out);
     assert(TetgenioToMesh(out, TV, TF, TT));
 }
 
-void Mesh::CalculateTetrahedraCoordinatesWithCutPlane(
+void Mesh::CalculateTetrahedralCoordinates(
     const Eigen::MatrixXf& V, const Eigen::MatrixXi& T) {
     assert(cut_plane <= kNoCutPlane && cut_plane >= 0);
     Eigen::VectorXf v =
         barycenters.col(2).array() - barycenters.col(2).minCoeff();
     v /= v.col(0).maxCoeff();
+
+    std::cout << v.size() << std::endl;
 
     std::vector<int> s;
 

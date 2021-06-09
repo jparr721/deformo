@@ -1,6 +1,7 @@
 ﻿#include "pch.h"
 #include <memory>
 #include <iostream>
+#include <Eigen/SparseLU>
 
 #include "../deformo/EigenTypes.h"
 #include "../deformo/Integrators.h"

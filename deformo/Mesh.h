@@ -6,63 +6,53 @@
 #include "tetgen.h"
 
 class Mesh {
- public:
-  constexpr static float kNoCutPlane = 1.01f;
-  float cut_plane = kNoCutPlane;
+  public:
+    constexpr static float kNoCutPlane = 1.01f;
+    const Eigen::Vector3f kMeshDefaultColor = Eigen::Vector3f(0.f, 0.f, 1.f);
+    float cut_plane = kNoCutPlane;
 
-  Eigen::VectorXi faces;
-  Eigen::VectorXf positions;
-  // For calculating cut-planes
-  Eigen::MatrixXf barycenters;
-  Eigen::VectorXf colors;
+    Eigen::VectorXi faces;
+    Eigen::VectorXf positions;
+    // For calculating cut-planes
+    Eigen::MatrixXf barycenters;
+    Eigen::VectorXf colors;
 
-  Mesh(const std::string& ply_path, const float cut_plane);
-  Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T,
-       float cut_plane = kNoCutPlane);
+    Mesh(const std::string& ply_path, const float cut_plane);
+    Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T,
+         float cut_plane = kNoCutPlane);
 
-  void Update(const Eigen::VectorXf& positions_);
-  void SetCutPlane(float cut_plane);
-  void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                      const std::string& flags, tetgenio& out);
-  [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
+    void Update(const Eigen::VectorXf& positions_);
+    void SetCutPlane(float cut_plane);
+    void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                        const std::string& flags, tetgenio& out);
+    [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
 
-  [[nodiscard]] const float* data() { return positions.data(); }
-  [[nodiscard]] int size_bytes() { return positions.size() * sizeof(float); }
-  [[nodiscard]] int size() { return positions.size(); }
+    [[nodiscard]] int Size() const { return positions.rows(); }
+    [[nodiscard]] int FacesSize() const { return faces.rows(); }
 
-  [[nodiscard]] const float* colors_data() { return colors.data(); }
-  [[nodiscard]] int colors_size_bytes() {
-    return colors.size() * sizeof(float);
-  }
-  [[nodiscard]] int colors_size() { return colors.size(); }
+  private:
+    constexpr static int kMaxFaceSize = 3;
+    constexpr static int kMaxNumCorners = 4;
 
-  [[nodiscard]] const int* faces_data() { return faces.data(); }
-  [[nodiscard]] int faces_size_bytes() { return faces.size() * sizeof(int); }
-  [[nodiscard]] int faces_size() { return faces.size(); }
+    template <typename In, typename Out>
+    void Vectorize(Out& out, const In& in) {
+        out.resize(in.rows() * in.cols(), 1);
+        In in_t = in.transpose();
+        out = Eigen::Map<Out>(in_t.data(), in_t.rows() * in_t.cols());
+    }
 
- private:
-  constexpr static int kMaxFaceSize = 3;
-  constexpr static int kMaxNumCorners = 4;
+    void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
+                                      const Eigen::MatrixXi& T);
+    void ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                       Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
+                       Eigen::MatrixXi& TT);
 
-  template <typename In, typename Out>
-  void Vectorize(Out& out, const In& in) {
-    out.resize(in.rows() * in.cols(), 1);
-    In in_t = in.transpose();
-    out = Eigen::Map<Out>(in_t.data(), in_t.rows() * in_t.cols());
-  }
+    void CalculateTetrahedralCoordinates(const Eigen::MatrixXf& V,
+                                         const Eigen::MatrixXi& T);
 
-  void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
-                                    const Eigen::MatrixXi& T);
-  void ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                     Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
-                     Eigen::MatrixXi& TT);
+    bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
+                        tetgenio& in);
 
-  void CalculateTetrahedraCoordinatesWithCutPlane(const Eigen::MatrixXf& V,
-                                                  const Eigen::MatrixXi& T);
-
-  bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                      tetgenio& in);
-
-  bool TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
-                      Eigen::MatrixXi& F, Eigen::MatrixXi& T);
+    bool TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
+                        Eigen::MatrixXi& F, Eigen::MatrixXi& T);
 };

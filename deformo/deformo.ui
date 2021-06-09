@@ -50,6 +50,36 @@
       <enum>QLayout::SetDefaultConstraint</enum>
      </property>
      <item>
+      <widget class="QLabel" name="label_3">
+       <property name="text">
+        <string>Tetgen Flags</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="tetgen_flags_line_edit"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Poissons Ratio</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="poissons_ratio_spin_box"/>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Modulus of Elasticity</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QDoubleSpinBox" name="modulus_of_elasticity_spin_box"/>
+     </item>
+     <item>
       <widget class="QLabel" name="label">
        <property name="text">
         <string>Cut Plane</string>
@@ -68,16 +98,6 @@
         <enum>Qt::Horizontal</enum>
        </property>
       </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>Tetrahedral Area</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QDoubleSpinBox" name="tetrahedral_double_spin_box"/>
      </item>
      <item>
       <widget class="QCheckBox" name="interactive_mode_toggle">

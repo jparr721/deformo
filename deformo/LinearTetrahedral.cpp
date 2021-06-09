@@ -33,7 +33,7 @@ void LinearTetrahedral::Update() {
 }
 
 void LinearTetrahedral::AssembleForces() {
-    global_force = Eigen::VectorXf::Zero(mesh->size());
+    global_force = Eigen::VectorXf::Zero(mesh->Size());
 }
 
 void LinearTetrahedral::ComputeElementStiffness(
@@ -52,7 +52,7 @@ void LinearTetrahedral::ComputeElementStiffness(
 }
 
 void LinearTetrahedral::AssembleElementStiffness() {
-    for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
+    for (int i = 0; i < mesh->FacesSize(); i += kFaceStride) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
         int index = mesh->GetPositionAtFaceIndex(i);
@@ -117,7 +117,7 @@ void LinearTetrahedral::AssembleElementPlaneStresses() {
 
 void LinearTetrahedral::AssembleGlobalStiffness() {
     // Allocate space in global_stiffness for 3nx3n elements
-    const unsigned int size = mesh->size();
+    const unsigned int size = mesh->Size();
 
     global_stiffness = Eigen::MatrixXf::Zero(size, size);
 
@@ -393,11 +393,11 @@ float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
 
 void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
     std::vector<Eigen::Triplet<float>> mass_entries;
-    mass_entries.reserve(mesh->size());
+    mass_entries.reserve(mesh->Size());
 
-    mass.resize(mesh->size(), mesh->size());
+    mass.resize(mesh->Size(), mesh->Size());
 
-    for (int i = 0; i < mesh->size(); ++i) {
+    for (int i = 0; i < mesh->Size(); ++i) {
         mass_entries.emplace_back(i, i, point_mass);
     }
 
@@ -485,7 +485,7 @@ void LinearTetrahedral::Solve() {
     // Set global force
     global_force = global_stiffness * U;
 
-    for (int i = 0; i < mesh->faces_size(); i += kFaceStride) {
+    for (int i = 0; i < mesh->FacesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);

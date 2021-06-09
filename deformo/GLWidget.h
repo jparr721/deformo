@@ -56,9 +56,21 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     void Update();
 
     void SetCutPlane(float value);
+    void SetInteractiveModeToggle(int state);
+
+    void SetPoissonsRatio(double value);
+    void SetModulusOfElasticity(double value);
+
+    void SetTetgenFlags(const QString& value);
 
   signals:
     void OnCutPlaneChange(float value);
+    void OnInteractiveModeToggled(int state);
+
+    void OnPoissonsRatioChange(double value);
+    void OnModulusOfElasticityChange(double value);
+
+    void OnTetgenFlagsChange(const QString& value);
 
   protected:
     void initializeGL() override;

@@ -85,6 +85,22 @@ void GLWidget::SetCutPlane(float value) {
     emit OnCutPlaneChange(value);
 }
 
+void GLWidget::SetTetgenFlags(const QString& value) {
+    emit OnTetgenFlagsChange(value);
+}
+
+void GLWidget::SetInteractiveModeToggle(int state) {
+    emit OnInteractiveModeToggled(state);
+}
+
+void GLWidget::SetPoissonsRatio(double value) {
+    emit OnPoissonsRatioChange(value);
+}
+
+void GLWidget::SetModulusOfElasticity(double value) {
+    emit OnModulusOfElasticityChange(value);
+}
+
 void GLWidget::initializeGL() {
     initializeOpenGLFunctions();
     if (const auto code = glewInit(); code != GLEW_OK) {
@@ -133,13 +149,15 @@ void GLWidget::paintGL() {
 
     shader_program->setUniformValue(projection_loc, camera_->Matrix());
 
-    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3, mesh->positions);
-    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3, mesh->colors);
+    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3,
+                             mesh->positions);
+    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3,
+                             mesh->colors);
 
     // Render
     glBindVertexArray(vao);
 
-    glDrawElements(GL_TRIANGLES, mesh->faces_size(), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, mesh->FacesSize(), GL_UNSIGNED_INT, nullptr);
 
     glBindVertexArray(0);
 
@@ -162,16 +180,17 @@ void GLWidget::BuildBuffers() {
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &c_vbo);
 
-    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3, mesh->positions);
-    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3, mesh->colors);
+    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3,
+                             mesh->positions);
+    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3,
+                             mesh->colors);
     BindElementArrayObject(ibo, mesh->faces);
 }
 
 void GLWidget::BuildMesh(const float cut_plane) {
     const std::string cdir = std::filesystem::current_path().string();
 
-    const auto ply_path =
-        std::filesystem::path(cdir + "/cube.ply");
+    const auto ply_path = std::filesystem::path(cdir + "/cube.ply");
 
     mesh = std::make_shared<Mesh>(ply_path.string(), cut_plane);
 }

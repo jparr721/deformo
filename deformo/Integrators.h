@@ -1,8 +1,10 @@
 #pragma once
 
 #include "EigenTypes.h"
-#include <Eigen/Sparse>
-#include <igl/barycenter.h>
+#include <Eigen/SparseLU>
+
+#include <iostream>
+#include <utility>
 
 class ExplicitCentralDifferenceMethod {
   public:
@@ -39,20 +41,14 @@ class ExplicitCentralDifferenceMethod {
     // TODO(@jpar721) - Add damping to effective matrix calc.
     ExplicitCentralDifferenceMethod(const float dt,
                                     const Eigen::VectorXf& positions,
-                                    const Eigen::MatrixXf& stiffness,
+                                    Eigen::MatrixXf stiffness,
                                     const Eigen::SparseMatrixXf& mass_matrix)
-        : dt(dt), stiffness_(stiffness), mass_matrix_(mass_matrix) {
-        a0 = 1.f / (std::powf(dt, 2));
-        a1 = 1.f / (2.f * dt);
-        a2 = 2.f * a0;
-        a3 = 1.f / a2;
-
-        velocity_.resize(positions.rows());
-        velocity_.setZero();
-        acceleration_.resize(positions.rows());
-        acceleration_.setZero();
-        effective_mass_matrix_ = a0 * mass_matrix_;
+        : dt(dt), stiffness_(std::move(stiffness)), mass_matrix_(mass_matrix) {
+        SetMovementVectors(positions);
+        SetIntegrationConstants();
+        SetEffectiveMassMatrix();
         SetLastPosition(positions);
+        SetEffectiveLoadConstants();
     }
 
     /**
@@ -78,10 +74,21 @@ class ExplicitCentralDifferenceMethod {
   private:
     const Eigen::MatrixXf stiffness_;
     const Eigen::SparseMatrixXf mass_matrix_;
-    Eigen::MatrixXf effective_mass_matrix_;
+    Eigen::SparseMatrixXf effective_mass_matrix_;
 
     Eigen::VectorXf velocity_;
     Eigen::VectorXf acceleration_;
 
+    // Highly-specific for effective load calc
+    Eigen::MatrixXf el_stiffness_mass_diff_;
+    Eigen::MatrixXf el_mass_matrix_damping_diff_;
+
     void SetLastPosition(const Eigen::VectorXf& positions);
+    void SetEffectiveMassMatrix();
+    void SetEffectiveLoadConstants();
+    void SetIntegrationConstants();
+    void SetMovementVectors(const Eigen::VectorXf& positions);
+
+    Eigen::VectorXf ComputeEffectiveLoad(const Eigen::VectorXf& positions,
+                                         const Eigen::VectorXf& forces);
 };
