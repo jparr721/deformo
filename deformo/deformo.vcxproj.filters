@@ -79,9 +79,6 @@
     <ClCompile Include="BoundaryCondition.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="Vbo.cpp">
-      <Filter>Graphics</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Mesh.h">
@@ -118,6 +115,9 @@
       <Filter>Graphics</Filter>
     </ClInclude>
     <ClInclude Include="OpenGL.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Vao.h">
       <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>

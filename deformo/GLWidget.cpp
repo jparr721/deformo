@@ -4,7 +4,6 @@
 #include "Utils.h"
 
 #include <Eigen/Dense>
-#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -27,7 +26,7 @@ GLWidget::~GLWidget() {
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ibo);
     glDeleteBuffers(1, &c_vbo);
-    vao.destroy();
+    glDeleteVertexArrays(1, &vao);
 
     delete draw_timer_;
 }
@@ -88,6 +87,10 @@ void GLWidget::SetCutPlane(float value) {
 
 void GLWidget::initializeGL() {
     initializeOpenGLFunctions();
+    if (const auto code = glewInit(); code != GLEW_OK) {
+        std::cerr << glewGetErrorString(code) << std::endl;
+        exit(EXIT_FAILURE);
+    }
     connect(context(), &QOpenGLContext::aboutToBeDestroyed, this,
             &GLWidget::Cleanup);
     connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
@@ -130,22 +133,15 @@ void GLWidget::paintGL() {
 
     shader_program->setUniformValue(projection_loc, camera_->Matrix());
 
-    // Add updated vertex coordinates
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh->size_bytes(), mesh->data(),
-                 GL_DYNAMIC_DRAW);
-
-    // Add updated colors
-    glBindBuffer(GL_ARRAY_BUFFER, c_vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh->colors_size_bytes(),
-                 mesh->colors_data(), GL_DYNAMIC_DRAW);
+    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3, mesh->positions);
+    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3, mesh->colors);
 
     // Render
-    vao.bind();
+    glBindVertexArray(vao);
 
     glDrawElements(GL_TRIANGLES, mesh->faces_size(), GL_UNSIGNED_INT, nullptr);
 
-    vao.release();
+    glBindVertexArray(0);
 
     shader_program->release();
 
@@ -160,34 +156,21 @@ void GLWidget::paintGL() {
 }
 
 void GLWidget::BuildBuffers() {
-    vao.create();
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
+
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &c_vbo);
-    glGenBuffers(1, &ibo);
 
-    vao.bind();
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh->size_bytes(), mesh->data(),
-                 GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-
-    glBindBuffer(GL_ARRAY_BUFFER, c_vbo);
-    glBufferData(GL_ARRAY_BUFFER, mesh->colors_size_bytes(),
-                 mesh->colors_data(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh->faces_size_bytes(),
-                 mesh->faces_data(), GL_DYNAMIC_DRAW);
+    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3, mesh->positions);
+    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3, mesh->colors);
+    BindElementArrayObject(ibo, mesh->faces);
 }
 
 void GLWidget::BuildMesh(const float cut_plane) {
     const std::string cdir = std::filesystem::current_path().string();
 
-    const std::filesystem::path ply_path =
+    const auto ply_path =
         std::filesystem::path(cdir + "/cube.ply");
 
     mesh = std::make_shared<Mesh>(ply_path.string(), cut_plane);

@@ -124,7 +124,6 @@
     <QtUic Include="deformo.ui" />
     <QtMoc Include="Window.h" />
     <ClCompile Include="Utils.cpp" />
-    <ClCompile Include="Vbo.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -140,6 +139,7 @@
     <ClInclude Include="OpenGL.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Utils.h" />
+    <ClInclude Include="Vao.h" />
     <ClInclude Include="Vbo.h" />
     <QtMoc Include="GLWidget.h" />
   </ItemGroup>

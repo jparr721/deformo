@@ -1,11 +1,12 @@
 #pragma once
 
+#include "Vbo.h"
+#include "Vao.h"
+
 #include <Eigen/Dense>
 #include <QKeyEvent>
-#include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
-#include <QOpenGLVertexArrayObject>
 #include <QOpenGLWidget>
 #include <QTimer>
 #include <memory>
@@ -19,13 +20,10 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
 
   public:
-    unsigned int vbo;
-    unsigned int c_vbo;
-    unsigned int ibo;
-    unsigned int vvao;
-
-    // Vertex Array Object
-    QOpenGLVertexArrayObject vao;
+    unsigned int vao = 0;
+    unsigned int vbo = 0;
+    unsigned int c_vbo = 0;
+    unsigned int ibo = 0;
 
     QOpenGLShaderProgram* shader_program;
 
