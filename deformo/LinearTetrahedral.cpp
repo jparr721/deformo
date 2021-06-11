@@ -4,13 +4,10 @@
 
 #include <Eigen/Core>
 #include <Eigen/SparseCholesky>
-#include <cmath>
 #include <utility>
 
 #include "Integrators.h"
 #include "Utils.h"
-
-#include <igl/barycenter.h>
 
 LinearTetrahedral::LinearTetrahedral(
     const float modulus_of_elasticity, const float poissons_ratio,
@@ -52,7 +49,7 @@ void LinearTetrahedral::ComputeElementStiffness(
 }
 
 void LinearTetrahedral::AssembleElementStiffness() {
-    for (int i = 0; i < mesh->FacesSize(); i += kFaceStride) {
+    for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
         int index = mesh->GetPositionAtFaceIndex(i);
@@ -485,7 +482,7 @@ void LinearTetrahedral::Solve() {
     // Set global force
     global_force = global_stiffness * U;
 
-    for (int i = 0; i < mesh->FacesSize(); i += kFaceStride) {
+    for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);

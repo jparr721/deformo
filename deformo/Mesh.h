@@ -11,10 +11,9 @@ class Mesh {
     const Eigen::Vector3f kMeshDefaultColor = Eigen::Vector3f(0.f, 0.f, 1.f);
     float cut_plane = kNoCutPlane;
 
+    Eigen::VectorXi sim_nodes;
     Eigen::VectorXi faces;
     Eigen::VectorXf positions;
-    // For calculating cut-planes
-    Eigen::MatrixXf barycenters;
     Eigen::VectorXf colors;
 
     Mesh(const std::string& ply_path, const float cut_plane);
@@ -29,6 +28,7 @@ class Mesh {
 
     [[nodiscard]] int Size() const { return positions.rows(); }
     [[nodiscard]] int FacesSize() const { return faces.rows(); }
+    [[nodiscard]] int SimNodesSize() const { return sim_nodes.rows(); }
 
   private:
     constexpr static int kMaxFaceSize = 3;

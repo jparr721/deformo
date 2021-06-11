@@ -144,6 +144,13 @@
     <QtMoc Include="GLWidget.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Assets\backward-solid.svg" />
+    <None Include="Assets\forward-solid.svg" />
+    <None Include="Assets\pause-solid.svg" />
+    <None Include="Assets\play-solid.svg" />
+    <None Include="Assets\redo-solid.svg" />
+    <None Include="Assets\step-backward-solid.svg" />
+    <None Include="Assets\step-forward-solid.svg" />
     <None Include="core.frag" />
     <None Include="core.vs" />
     <None Include="cube.ply" />

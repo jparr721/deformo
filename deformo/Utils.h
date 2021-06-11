@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <intrin.h>
 #include <iostream>
+#include <numeric>
 #include <ratio>
 #include <type_traits>
 #include <vector>
@@ -24,10 +25,10 @@ template <typename T>
 inline constexpr bool is_printable_v = is_printable<T>::value;
 
 namespace utils {
-template <typename T>
-void MatrixToList(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& M,
-                  std::vector<std::vector<T>>& V) {
-    V.resize(M.rows(), std::vector<T>(M.cols()));
+template <typename Derived>
+void MatrixToList(std::vector<std::vector<typename Derived::Scalar>>& V,
+                  const Eigen::PlainObjectBase<Derived>& M) {
+    V.resize(M.rows(), std::vector<typename Derived::Scalar>(M.cols()));
 
     for (int row = 0; row < M.rows(); ++row) {
         for (int col = 0; col < M.cols(); ++col) {
@@ -36,9 +37,9 @@ void MatrixToList(const Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& M,
     }
 }
 
-template <typename T>
-void ListToMatrix(const std::vector<std::vector<T>>& V,
-                  Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>& M) {
+template <typename Derived>
+void ListToMatrix(Eigen::PlainObjectBase<Derived>& M,
+                  const std::vector<std::vector<typename Derived::Scalar>>& V) {
     M.resize(V.size(), V[0].size());
 
     for (int row = 0; row < V.size(); ++row) {
@@ -48,9 +49,9 @@ void ListToMatrix(const std::vector<std::vector<T>>& V,
     }
 }
 
-template <typename T>
-void SliceEigenVector(Eigen::PlainObjectBase<T>& out,
-                      const Eigen::DenseBase<T>& in, const int start,
+template <typename Derived>
+void SliceEigenVector(Eigen::PlainObjectBase<Derived>& out,
+                      const Eigen::DenseBase<Derived>& in, const int start,
                       const int end) {
     assert(start < end && "YOU PROVIDED AN INVALID SLICE RANGE");
     assert(start != end && "START AND END ARE THE SAME");
@@ -62,6 +63,35 @@ void SliceEigenVector(Eigen::PlainObjectBase<T>& out,
     for (int i = start; i <= end; ++i) {
         out(++out_idx) = in(i);
     }
+}
+/*
+ * Calculates the union of two lists, removing duplicates which would originate
+ * from the second list
+ */
+template <typename Derived>
+void MatrixUnion(Eigen::PlainObjectBase<Derived>& out,
+                 const Eigen::PlainObjectBase<Derived>& lhs,
+                 const Eigen::PlainObjectBase<Derived>& rhs) {
+  using T = typename Derived::Scalar;
+
+  std::vector<std::vector<T>> v_out;
+  std::vector<std::vector<T>> l;
+  std::vector<std::vector<T>> r;
+
+  MatrixToList(l, lhs);
+  MatrixToList(r, rhs);
+
+  v_out.insert(v_out.end(), r.begin(), r.end());
+  v_out.insert(v_out.end(), l.begin(), l.end());
+  std::sort(
+      v_out.begin(), v_out.end(),
+      [](const std::vector<T>& left, const std::vector<T>& right) -> bool {
+        return std::accumulate(left.begin(), left.end(), 0) >
+               std::accumulate(right.begin(), right.end(), 0);
+      });
+  v_out.erase(std::unique(v_out.begin(), v_out.end()), v_out.end());
+
+  ListToMatrix(out, v_out);
 }
 
 template <typename Out, typename In, typename Indices>
@@ -121,7 +151,8 @@ template <class Clock = std::chrono::system_clock> struct timer {
     using TimePoint = typename Clock::time_point;
     using Duration = typename Clock::duration;
 
-    explicit timer(const Duration duration) noexcept : expiry(Clock::now() + duration) {}
+    explicit timer(const Duration duration) noexcept
+        : expiry(Clock::now() + duration) {}
     explicit timer(const TimePoint expiry) noexcept : expiry(expiry) {}
 
     bool done(TimePoint now = Clock::now()) const noexcept {

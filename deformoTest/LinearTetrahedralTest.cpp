@@ -1,6 +1,6 @@
-#include <memory>
-
 #include "pch.h"
+
+#include <memory>
 
 #define TETLIBRARY
 #include "../deformo/Integrators.cpp"

@@ -207,7 +207,7 @@ void GLWidget::BuildPhysicsEngine() {
     const auto uniform_gravity = Eigen::Vector3f(0.f, -9.81f, 0.f);
     const auto boundary_conditions =
         AssignBoundaryConditionToFixedNodes(dynamic_indices, uniform_gravity);
-    sim = std::make_unique<LinearTetrahedral>(210e6, 0.3, 1.f, mesh,
+    sim = std::make_unique<LinearTetrahedral>(0.3, 210e6, 1.f, mesh,
                                               boundary_conditions);
 }
 

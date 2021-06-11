@@ -8,7 +8,6 @@
 #include <Eigen/Core>
 #include <filesystem>
 #include <iostream>
-#include <numeric>
 #include <vector>
 
 #include "Utils.h"
@@ -26,8 +25,11 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
     Eigen::MatrixXi TT;
 
     ConstructMesh(V, F, TV, TF, TT);
+    Vectorize(sim_nodes, TT);
+    Eigen::MatrixXi all_faces;
+    utils::MatrixUnion(all_faces, TT, TF);
 
-    InitializeRenderableSurfaces(TV, TT);
+    InitializeRenderableSurfaces(TV, all_faces);
 }
 
 Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
@@ -36,7 +38,7 @@ Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
     Vectorize(faces, T);
     colors.resize(positions.rows());
     for (int i = 0; i < positions.rows(); i += 3) {
-        colors.segment(i, 3) << 0.f, 0.f, 1.f;
+        colors.segment(i, 3) << kMeshDefaultColor;
     }
 }
 
@@ -77,13 +79,13 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     delete[] t_flags;
 }
 
-int Mesh::GetPositionAtFaceIndex(const int face_index) const { return faces(face_index) * 3; }
-
+int Mesh::GetPositionAtFaceIndex(const int face_index) const {
+    assert(face_index < sim_nodes.size());
+    return sim_nodes(face_index) * 3;
+}
 
 void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
                                         const Eigen::MatrixXi& T) {
-    igl::barycenter(V, T, barycenters);
-
     CalculateTetrahedralCoordinates(V, T);
 }
 
@@ -93,56 +95,23 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     tetgenio out;
 
     // Generate tetrahedrals from PLC mesh with max size 1e-2.
-    //const std::string tetgen_flags = "zpqa1e-1";
+    // const std::string tetgen_flags = "zpqa1e-1";
     const std::string tetgen_flags = "zpq";
     Tetrahedralize(V, F, tetgen_flags, out);
     assert(TetgenioToMesh(out, TV, TF, TT));
 }
 
-void Mesh::CalculateTetrahedralCoordinates(
-    const Eigen::MatrixXf& V, const Eigen::MatrixXi& T) {
-    assert(cut_plane <= kNoCutPlane && cut_plane >= 0);
-    Eigen::VectorXf v =
-        barycenters.col(2).array() - barycenters.col(2).minCoeff();
-    v /= v.col(0).maxCoeff();
+void Mesh::CalculateTetrahedralCoordinates(const Eigen::MatrixXf& V,
+                                           const Eigen::MatrixXi& T) {
+    Eigen::MatrixXf colors_placeholder(V.rows(), 3);
 
-    std::cout << v.size() << std::endl;
-
-    std::vector<int> s;
-
-    for (int i = 0; i < v.size(); ++i) {
-        if (v(i) < cut_plane) {
-            s.push_back(i);
-        }
-    }
-
-    const int rows = s.size() * 4;
-    constexpr int cols = 3;
-
-    Eigen::MatrixXf V_placeholder(rows, cols);
-    Eigen::MatrixXf colors_placeholder(rows, cols);
-    Eigen::MatrixXi F_placeholder(rows, cols);
-
-    for (int i = 0; i < s.size(); ++i) {
-        V_placeholder.row(i * 4 + 0) = V.row(T(s.at(i), 0));
-        V_placeholder.row(i * 4 + 1) = V.row(T(s.at(i), 1));
-        V_placeholder.row(i * 4 + 2) = V.row(T(s.at(i), 2));
-        V_placeholder.row(i * 4 + 3) = V.row(T(s.at(i), 3));
-
-        F_placeholder.row(i * 4 + 0) << (i * 4) + 0, (i * 4) + 1, (i * 4) + 3;
-        F_placeholder.row(i * 4 + 1) << (i * 4) + 0, (i * 4) + 2, (i * 4) + 1;
-        F_placeholder.row(i * 4 + 2) << (i * 4) + 2, (i * 4) + 2, (i * 4) + 0;
-        F_placeholder.row(i * 4 + 3) << (i * 4) + 1, (i * 4) + 2, (i * 4) + 3;
-
+    for (int i = 0; i < V.rows(); ++i) {
         // Color each face
-        colors_placeholder.row(i * 4 + 0) << 1.f, 0.f, 0.f;
-        colors_placeholder.row(i * 4 + 1) << 1.f, 0.f, 0.f;
-        colors_placeholder.row(i * 4 + 2) << 1.f, 0.f, 0.f;
-        colors_placeholder.row(i * 4 + 3) << 1.f, 0.f, 0.f;
+        colors_placeholder.row(i) = kMeshDefaultColor;
     }
 
-    Vectorize(positions, V_placeholder);
-    Vectorize(faces, F_placeholder);
+    Vectorize(positions, V);
+    Vectorize(faces, T);
     Vectorize(colors, colors_placeholder);
 }
 
@@ -151,8 +120,8 @@ bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     std::vector<std::vector<float>> v;
     std::vector<std::vector<int>> f;
 
-    utils::MatrixToList(V, v);
-    utils::MatrixToList(F, f);
+    utils::MatrixToList(v, V);
+    utils::MatrixToList(f, F);
 
     // Make sure everything loaded properly.
     assert(v.size() > 0);
@@ -253,9 +222,9 @@ bool Mesh::TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
         }
     }
 
-    utils::ListToMatrix(v, V);
-    utils::ListToMatrix(f, F);
-    utils::ListToMatrix(t, T);
+    utils::ListToMatrix(V, v);
+    utils::ListToMatrix(F, f);
+    utils::ListToMatrix(T, t);
 
     return true;
 }

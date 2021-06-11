@@ -131,6 +131,27 @@
     <None Include="cube.ply">
       <Filter>Assets</Filter>
     </None>
+    <None Include="Assets\backward-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\forward-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\pause-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\play-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\redo-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\step-backward-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
+    <None Include="Assets\step-forward-solid.svg">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="GLWidget.h">
