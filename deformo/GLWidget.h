@@ -1,13 +1,11 @@
 #pragma once
 
-#include "Vbo.h"
-#include "Vao.h"
 #include "ShaderProgram.h"
+#include "Vao.h"
 
 #include <Eigen/Dense>
 #include <QKeyEvent>
 #include <QOpenGLFunctions>
-#include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
 #include <QTimer>
 #include <memory>
@@ -26,8 +24,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     unsigned int c_vbo = 0;
     unsigned int ibo = 0;
 
-    QOpenGLShaderProgram* shader_program;
-    std::shared_ptr<ShaderProgram> other_shader;
+    std::shared_ptr<ShaderProgram> shader_program;
 
     // Toggleable Wire Mesh
     GLenum render_style = GL_LINE;

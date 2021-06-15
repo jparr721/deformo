@@ -18,7 +18,7 @@ auto Shader::Compile() -> bool {
         return false;
     }
 
-    LogErrors("Compile");
+    LogErrors("Shader::Compile");
 
     return is_linked == GL_TRUE;
 }
