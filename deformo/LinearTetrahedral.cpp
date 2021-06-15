@@ -24,9 +24,10 @@ LinearTetrahedral::LinearTetrahedral(
     InitializeIntegrator();
 }
 
-void LinearTetrahedral::Update() {
+void LinearTetrahedral::Update(Eigen::VectorXf& displacements) {
     current_time += dt;
-    integrator->Solve(mesh->positions, global_force);
+    integrator->Solve(displacements, global_force);
+    mesh->Update(displacements);
 }
 
 void LinearTetrahedral::AssembleForces() {
@@ -437,6 +438,11 @@ Eigen::VectorXf LinearTetrahedral::SolveU(const Eigen::MatrixXf& k,
 void LinearTetrahedral::Solve() {
     assert(!boundary_conditions.empty() && "NO CONDITIONS TO SOLVE FOR");
 
+    if (current_time != 0.f) {
+        Update(global_displacement);
+        return;
+    }
+
     // Per-element stiffness applied to our boundary conditions
     Eigen::MatrixXf kk;
 
@@ -444,6 +450,7 @@ void LinearTetrahedral::Solve() {
     Eigen::VectorXf f;
     // Resize the force vector to the # of boundary conditions * 3;
     f.resize(boundary_conditions.size() * 3);
+    f.setZero();
 
     // Stacked vector of xyz columns/rows to slice.
     Eigen::VectorXi kept_indices;
@@ -477,35 +484,35 @@ void LinearTetrahedral::Solve() {
     utils::SliceByIndices(kk, global_stiffness, kept_indices, kept_indices);
 
     // Solve for our global displacement
-    const Eigen::VectorXf U = SolveU(kk, f, kept_indices);
+    global_displacement = SolveU(kk, f, kept_indices);
 
     // Set global force
-    global_force = global_stiffness * U;
+    global_force = global_stiffness * global_displacement;
 
     for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_one;
-        utils::SliceEigenVector(displacement_one, U, index, index + 2);
+        utils::SliceEigenVector(displacement_one, global_displacement, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 1);
         Eigen::VectorXf shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_two;
-        utils::SliceEigenVector(displacement_two, U, index, index + 2);
+        utils::SliceEigenVector(displacement_two, global_displacement, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 2);
         Eigen::VectorXf shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_three;
-        utils::SliceEigenVector(displacement_three, U, index, index + 2);
+        utils::SliceEigenVector(displacement_three, global_displacement, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 3);
         Eigen::VectorXf shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_four;
-        utils::SliceEigenVector(displacement_four, U, index, index + 2);
+        utils::SliceEigenVector(displacement_four, global_displacement, index, index + 2);
 
         const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
             shape_one, shape_two, shape_three, shape_four);
@@ -517,7 +524,7 @@ void LinearTetrahedral::Solve() {
     }
 
     AssembleElementPlaneStresses();
-    Update();
+    Update(global_displacement);
 }
 
 float LinearTetrahedral::ComputeElementVolume(
@@ -549,6 +556,8 @@ float LinearTetrahedral::ComputeElementVolume(
 }
 
 void LinearTetrahedral::InitializeIntegrator() {
+    global_displacement.resize(mesh->positions.size());
+    global_displacement.setZero();
     integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        dt, mesh->positions, global_stiffness, mass);
+        dt, global_displacement, global_stiffness, mass);
 }

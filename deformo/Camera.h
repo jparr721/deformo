@@ -5,8 +5,8 @@
 
 class Camera {
  public:
-  constexpr static float kTranslateSpeed = 0.05;
-  constexpr static float kRotationSpeed = 0.005;
+  constexpr static float kTranslateSpeed = 0.5f;
+  constexpr static float kRotationSpeed = 0.005f;
   const QVector3D kForward = QVector3D(0., 0., -kTranslateSpeed);
   const QVector3D kUp = QVector3D(0., kTranslateSpeed, 0.);
   const QVector3D kRight = QVector3D(kTranslateSpeed, 0., 0.);

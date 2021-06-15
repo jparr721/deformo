@@ -75,5 +75,6 @@ TEST(TestLinearTetrahedral, TestElementStiffness) {
       -3.57628e-07f, -30.7042f, -4.02584f, 3.07763f, 31.3293f, -5.34919f,
       9.32853f, -3.8147e-06f, 6.24997f, -1.19209e-07f, 0.f, 3.12509f,
       9.53674e-07f;
+  utils::GTestDebugPrint(lt->global_force);
   ASSERT_TRUE(lt->global_force.isApprox(force_compare));
 }

@@ -1,9 +1,6 @@
 #pragma once
 
 #include "EigenTypes.h"
-#include <Eigen/SparseLU>
-
-#include <iostream>
 #include <utility>
 
 class ExplicitCentralDifferenceMethod {
@@ -40,14 +37,14 @@ class ExplicitCentralDifferenceMethod {
 
     // TODO(@jpar721) - Add damping to effective matrix calc.
     ExplicitCentralDifferenceMethod(const float dt,
-                                    const Eigen::VectorXf& positions,
+                                    const Eigen::VectorXf& displacements,
                                     Eigen::MatrixXf stiffness,
                                     const Eigen::SparseMatrixXf& mass_matrix)
         : dt(dt), stiffness_(std::move(stiffness)), mass_matrix_(mass_matrix) {
-        SetMovementVectors(positions);
+        SetMovementVectors(displacements);
         SetIntegrationConstants();
         SetEffectiveMassMatrix();
-        SetLastPosition(positions);
+        SetLastPosition(displacements);
         SetEffectiveLoadConstants();
     }
 
@@ -65,11 +62,11 @@ class ExplicitCentralDifferenceMethod {
         effective_mass_matrix * effective_load = next_displacement
     \n }
 
-    \param positions The new displacement value
+    \param displacements The new displacement value
     \param forces The generalized stacked force vector
     solving for the displacement
     **/
-    void Solve(Eigen::VectorXf& positions, const Eigen::VectorXf& forces);
+    void Solve(Eigen::VectorXf& displacements, const Eigen::VectorXf& forces);
 
   private:
     const Eigen::MatrixXf stiffness_;
@@ -89,6 +86,6 @@ class ExplicitCentralDifferenceMethod {
     void SetIntegrationConstants();
     void SetMovementVectors(const Eigen::VectorXf& positions);
 
-    Eigen::VectorXf ComputeEffectiveLoad(const Eigen::VectorXf& positions,
+    Eigen::VectorXf ComputeEffectiveLoad(const Eigen::VectorXf& displacements,
                                          const Eigen::VectorXf& forces);
 };

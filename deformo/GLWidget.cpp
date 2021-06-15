@@ -37,9 +37,9 @@ void GLWidget::Update() {
     input_->Update();
 
     if (input_->MouseButtonPressed(Qt::RightButton)) {
-        camera_->Rotate(-1 * camera_->kRotationSpeed * input_->MouseDelta().x(),
+        camera_->Rotate(camera_->kRotationSpeed * input_->MouseDelta().x(),
                         camera_->kUp);
-        camera_->Rotate(-1 * camera_->kRotationSpeed * input_->MouseDelta().y(),
+        camera_->Rotate(camera_->kRotationSpeed * input_->MouseDelta().y(),
                         camera_->rotation.rotatedVector(camera_->kRight));
     }
 
@@ -65,6 +65,10 @@ void GLWidget::Update() {
 
     if (input_->KeyPressed(Qt::Key_E)) {
         camera_->Down();
+    }
+
+    if (input_->KeyPressed(Qt::Key_R)) {
+        Reset();
     }
 
     if (input_->KeyPressed(Qt::Key_Space)) {
@@ -197,18 +201,23 @@ void GLWidget::BuildMesh(const float cut_plane) {
 
 void GLWidget::BuildPhysicsEngine() {
     assert(mesh != nullptr && "MESH IS NOT INITIALIZED");
+
+    const auto uniform_gravity = Eigen::Vector3f(0.f, -9.81f, 0.f);
     std::vector<unsigned int> dynamic_indices;
     utils::FindMaxVertices(dynamic_indices, mesh->positions);
 
     for (const auto& face_index : dynamic_indices) {
         mesh->colors.segment(face_index, 3) << 0.f, 1.f, 0.f;
     }
-
-    const auto uniform_gravity = Eigen::Vector3f(0.f, -9.81f, 0.f);
     const auto boundary_conditions =
         AssignBoundaryConditionToFixedNodes(dynamic_indices, uniform_gravity);
-    sim = std::make_unique<LinearTetrahedral>(0.3, 210e6, 1.f, mesh,
+    sim = std::make_unique<LinearTetrahedral>(210e6, 0.3, 1.f, mesh,
                                               boundary_conditions);
+}
+
+void GLWidget::Reset() {
+    BuildMesh();
+    BuildPhysicsEngine();
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {

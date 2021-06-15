@@ -2,7 +2,6 @@
 
 #include "Mesh.h"
 
-#include <igl/barycenter.h>
 #include <igl/readPLY.h>
 
 #include <Eigen/Core>
@@ -25,6 +24,7 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
     Eigen::MatrixXi TT;
 
     ConstructMesh(V, F, TV, TF, TT);
+
     Vectorize(sim_nodes, TT);
     Eigen::MatrixXi all_faces;
     utils::MatrixUnion(all_faces, TT, TF);
@@ -34,16 +34,12 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
 
 Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
     : cut_plane(cut_plane) {
-    Vectorize(positions, V);
-    Vectorize(faces, T);
-    colors.resize(positions.rows());
-    for (int i = 0; i < positions.rows(); i += 3) {
-        colors.segment(i, 3) << kMeshDefaultColor;
-    }
+    Vectorize(sim_nodes, T);
+    InitializeRenderableSurfaces(V, T);
 }
 
-void Mesh::Update(const Eigen::VectorXf& positions_) {
-    positions += positions_;
+void Mesh::Update(const Eigen::VectorXf& displacements) {
+    positions = displacements + rest_positions;
 }
 
 void Mesh::SetCutPlane(float cut_plane) {
@@ -79,6 +75,13 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     delete[] t_flags;
 }
 
+void Mesh::Reset() {
+    positions = rest_positions;
+    for (int i = 0; i < positions.rows(); i += 3) {
+        colors.segment(i, 3) << kMeshDefaultColor;
+    }
+}
+
 int Mesh::GetPositionAtFaceIndex(const int face_index) const {
     assert(face_index < sim_nodes.size());
     return sim_nodes(face_index) * 3;
@@ -86,7 +89,14 @@ int Mesh::GetPositionAtFaceIndex(const int face_index) const {
 
 void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
                                         const Eigen::MatrixXi& T) {
-    CalculateTetrahedralCoordinates(V, T);
+    Vectorize(positions, V);
+    rest_positions = positions;
+    Vectorize(faces, T);
+    colors.resize(positions.rows());
+    for (int i = 0; i < positions.rows(); i += 3) {
+        colors.segment(i, 3) << kMeshDefaultColor;
+    }
+
 }
 
 void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
@@ -103,16 +113,6 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 
 void Mesh::CalculateTetrahedralCoordinates(const Eigen::MatrixXf& V,
                                            const Eigen::MatrixXi& T) {
-    Eigen::MatrixXf colors_placeholder(V.rows(), 3);
-
-    for (int i = 0; i < V.rows(); ++i) {
-        // Color each face
-        colors_placeholder.row(i) = kMeshDefaultColor;
-    }
-
-    Vectorize(positions, V);
-    Vectorize(faces, T);
-    Vectorize(colors, colors_placeholder);
 }
 
 bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,

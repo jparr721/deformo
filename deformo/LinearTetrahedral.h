@@ -24,7 +24,7 @@ class LinearTetrahedral {
 
     // Timestep constants
     float current_time = 0.f;
-    float dt = 1e-2f;
+    float dt = 1e-5f;
 
     // Modulus of Elasticity
     const float kModulusOfElasticity;
@@ -43,6 +43,9 @@ class LinearTetrahedral {
 
     // The global stiffness matrix
     Eigen::MatrixXf global_stiffness;
+
+    // The global displacement vector
+    Eigen::VectorXf global_displacement;
 
     // Element stiffness matrices and mapped coordinates
     std::vector<ElementStiffness> element_stiffnesses;
@@ -63,7 +66,7 @@ class LinearTetrahedral {
                       const float poissons_ratio, const float point_mass,
                       std::shared_ptr<Mesh> mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
-    void Update();
+    void Update(Eigen::VectorXf& displacements);
 
     void InitializeIntegrator();
 

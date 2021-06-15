@@ -94,4 +94,6 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     void BuildBuffers();
     void BuildMesh(float cut_plane = Mesh::kNoCutPlane);
     void BuildPhysicsEngine();
+
+    void Reset();
 };

@@ -16,14 +16,18 @@ class Mesh {
     Eigen::VectorXf positions;
     Eigen::VectorXf colors;
 
+    Eigen::VectorXf rest_positions;
+
     Mesh(const std::string& ply_path, const float cut_plane);
     Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T,
          float cut_plane = kNoCutPlane);
 
-    void Update(const Eigen::VectorXf& positions_);
+    void Update(const Eigen::VectorXf& displacements);
     void SetCutPlane(float cut_plane);
     void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                         const std::string& flags, tetgenio& out);
+    void Reset();
+
     [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
 
     [[nodiscard]] int Size() const { return positions.rows(); }
