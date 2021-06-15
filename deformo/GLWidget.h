@@ -2,6 +2,7 @@
 
 #include "ShaderProgram.h"
 #include "Vao.h"
+#include "Vbo.h"
 
 #include <Eigen/Dense>
 #include <QKeyEvent>
