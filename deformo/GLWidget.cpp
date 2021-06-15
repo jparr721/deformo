@@ -126,18 +126,18 @@ void GLWidget::initializeGL() {
     BuildMesh();
     BuildPhysicsEngine();
 
-    shader_program->AddShader(GL_VERTEX_SHADER, "core.vs");
-    shader_program->AddShader(GL_FRAGMENT_SHADER, "core.frag");
+    shader_program->AddShader(GL_VERTEX_SHADER, "core.vs.glsl");
+    shader_program->AddShader(GL_FRAGMENT_SHADER, "core.frag.glsl");
 
     shader_program->Link();
     shader_program->Bind();
 
     BuildBuffers();
 
+    shader_program->Release();
     model_loc = shader_program->UniformLocation("m");
     view_loc = shader_program->UniformLocation("v");
     projection_loc = shader_program->UniformLocation("p");
-    shader_program->Release();
 
     LogErrors("initializeGL");
 }
@@ -202,7 +202,7 @@ void GLWidget::BuildMesh(const float cut_plane) {
 void GLWidget::BuildPhysicsEngine() {
     assert(mesh != nullptr && "MESH IS NOT INITIALIZED");
 
-    const auto uniform_gravity = Eigen::Vector3f(0.f, 9.81f, 0.f);
+    const auto uniform_gravity = Eigen::Vector3f(0.f, -9.81f, 0.f);
     std::vector<unsigned int> dynamic_indices;
     utils::FindMaxVertices(dynamic_indices, mesh->positions);
 
@@ -211,7 +211,7 @@ void GLWidget::BuildPhysicsEngine() {
     }
     const auto boundary_conditions =
         AssignBoundaryConditionToFixedNodes(dynamic_indices, uniform_gravity);
-    sim = std::make_unique<LinearTetrahedral>(210e6, 0.3, 1.f, mesh,
+    sim = std::make_unique<LinearTetrahedral>(1000, 0.3, 1.f, mesh,
                                               boundary_conditions);
 }
 

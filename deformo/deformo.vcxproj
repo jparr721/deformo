@@ -114,6 +114,7 @@
   <ItemGroup>
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Configuration.cpp" />
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="ExplicitCentralDifference.cpp" />
@@ -133,6 +134,7 @@
   <ItemGroup>
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Configuration.h" />
     <ClInclude Include="EigenTypes.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="ExplicitCentralDifference.h" />
@@ -150,6 +152,7 @@
     <QtMoc Include="GLWidget.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include=".env" />
     <None Include="Assets\backward-solid.svg" />
     <None Include="Assets\forward-solid.svg" />
     <None Include="Assets\pause-solid.svg" />
@@ -157,8 +160,8 @@
     <None Include="Assets\redo-solid.svg" />
     <None Include="Assets\step-backward-solid.svg" />
     <None Include="Assets\step-forward-solid.svg" />
-    <None Include="core.frag" />
-    <None Include="core.vs" />
+    <None Include="core.frag.glsl" />
+    <None Include="core.vs.glsl" />
     <None Include="cube.ply" />
   </ItemGroup>
   <ItemGroup>

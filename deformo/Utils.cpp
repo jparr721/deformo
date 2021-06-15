@@ -20,7 +20,7 @@ void FindMaxVertices(std::vector<unsigned>& indices,
 auto OpenFile(const std::string& filename) -> std::ifstream {
     std::ifstream input;
     input.open(filename);
-    assert(input.good());
+    assert(input.good() && "FAILED TO READ FILE");
 
     return input;
 }

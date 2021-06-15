@@ -15,6 +15,7 @@
 #include "Input.h"
 #include "LinearTetrahedral.h"
 #include "Mesh.h"
+#include "Renderer.h"
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -42,6 +43,9 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
 
     // Mesh object for 3D geometry
     std::shared_ptr<Mesh> mesh;
+
+    // Renderer for loading the sim geometry
+    std::unique_ptr<Renderer> renderer;
 
     // LinearTetrahedral Object
     std::unique_ptr<LinearTetrahedral> sim;

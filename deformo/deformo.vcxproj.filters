@@ -91,6 +91,9 @@
     <ClCompile Include="ShaderProgram.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Configuration.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -141,12 +144,15 @@
     <ClInclude Include="ShaderProgram.h">
       <Filter>Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Configuration.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="core.vs">
+    <None Include="core.vs.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="core.frag">
+    <None Include="core.frag.glsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="cube.ply">
@@ -173,6 +179,7 @@
     <None Include="Assets\step-forward-solid.svg">
       <Filter>Assets</Filter>
     </None>
+    <None Include=".env" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="deformo.rc">
