@@ -1,4 +1,4 @@
-#include "Integrators.h"
+#include "ExplicitCentralDifference.h"
 #include "Utils.h"
 
 void ExplicitCentralDifferenceMethod::Solve(Eigen::VectorXf& displacements,

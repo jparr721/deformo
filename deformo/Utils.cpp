@@ -1,4 +1,5 @@
 #include "Utils.h"
+#include <sstream>
 
 namespace utils {
 void FindMaxVertices(std::vector<unsigned>& indices,
@@ -15,5 +16,28 @@ void FindMaxVertices(std::vector<unsigned>& indices,
             indices.push_back((i - 1));
         }
     }
+}
+auto OpenFile(const std::string& filename) -> std::ifstream {
+    std::ifstream input;
+    input.open(filename);
+    assert(input.good());
+
+    return input;
+}
+
+auto ReadFile(const std::string& path) -> std::string {
+    std::ostringstream sstr;
+    const auto stream = OpenFile(path);
+    sstr << stream.rdbuf();
+    return sstr.str();
+}
+
+auto Split(const std::string& input, const std::string& delimiter)
+    -> std::pair<std::string, std::string> {
+    const auto delimiter_index = input.find(delimiter);
+    assert(delimiter_index != input.npos && "MALFORMED CONFIG");
+    const std::string key = input.substr(0, delimiter_index);
+    const std::string value = input.substr(delimiter_index + 1);
+    return std::make_pair(key, value);
 }
 } // namespace utils

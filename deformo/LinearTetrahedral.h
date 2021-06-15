@@ -5,7 +5,7 @@
 
 #include "BoundaryCondition.h"
 #include "EigenTypes.h"
-#include "Integrators.h"
+#include "ExplicitCentralDifference.h"
 #include "Mesh.h"
 
 /**
@@ -19,7 +19,6 @@ class LinearTetrahedral {
     };
 
   public:
-    constexpr static int kStride = 12;
     constexpr static int kFaceStride = 4;
 
     // Timestep constants
@@ -106,7 +105,7 @@ class LinearTetrahedral {
     /*
     @brief Compute the volume of the tetrahedral element.
     */
-    float ComputeElementVolume(const Eigen::Vector3f& shape_one,
+    [[nodiscard]] float ComputeElementVolume(const Eigen::Vector3f& shape_one,
                                const Eigen::Vector3f& shape_two,
                                const Eigen::Vector3f& shape_three,
                                const Eigen::Vector3f& shape_four);
@@ -121,8 +120,9 @@ class LinearTetrahedral {
     @param p5 Bot row, value 1
     @param p6 Bot row, value 2
     */
-    float ConstructShapeFunctionParameter(float p1, float p2, float p3,
-                                          float p4, float p5, float p6);
+    [[nodiscard]] float ConstructShapeFunctionParameter(float p1, float p2,
+                                                        float p3, float p4,
+                                                        float p5, float p6);
 
     [[nodiscard]] static Eigen::Matrix66f
     AssembleStressStrainMatrix(float poissons_ratio,

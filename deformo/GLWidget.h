@@ -2,6 +2,7 @@
 
 #include "Vbo.h"
 #include "Vao.h"
+#include "ShaderProgram.h"
 
 #include <Eigen/Dense>
 #include <QKeyEvent>
@@ -26,6 +27,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     unsigned int ibo = 0;
 
     QOpenGLShaderProgram* shader_program;
+    std::shared_ptr<ShaderProgram> other_shader;
 
     // Toggleable Wire Mesh
     GLenum render_style = GL_LINE;
@@ -90,7 +92,6 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     std::unique_ptr<Camera> camera_;
     bool simulating_ = false;
 
-    void LogErrors(const char* fn);
     void BuildBuffers();
     void BuildMesh(float cut_plane = Mesh::kNoCutPlane);
     void BuildPhysicsEngine();

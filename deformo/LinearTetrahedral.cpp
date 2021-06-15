@@ -6,7 +6,6 @@
 #include <Eigen/SparseCholesky>
 #include <utility>
 
-#include "Integrators.h"
 #include "Utils.h"
 
 LinearTetrahedral::LinearTetrahedral(
@@ -474,10 +473,8 @@ void LinearTetrahedral::Solve() {
         // The row is the same as the index segment
         f.segment(segment, 3) << boundary_condition.force;
 
-        const unsigned int k_col_x = node_number;
-        const unsigned int k_col_y = node_number + 1;
-        const unsigned int k_col_z = node_number + 2;
-        kept_indices.segment(segment, 3) << k_col_x, k_col_y, k_col_z;
+        kept_indices.segment(segment, 3) << node_number, node_number + 1,
+            node_number + 2;
         segment += 3;
     }
 
@@ -494,25 +491,29 @@ void LinearTetrahedral::Solve() {
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_one;
-        utils::SliceEigenVector(displacement_one, global_displacement, index, index + 2);
+        utils::SliceEigenVector(displacement_one, global_displacement, index,
+                                index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 1);
         Eigen::VectorXf shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_two;
-        utils::SliceEigenVector(displacement_two, global_displacement, index, index + 2);
+        utils::SliceEigenVector(displacement_two, global_displacement, index,
+                                index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 2);
         Eigen::VectorXf shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_three;
-        utils::SliceEigenVector(displacement_three, global_displacement, index, index + 2);
+        utils::SliceEigenVector(displacement_three, global_displacement, index,
+                                index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 3);
         Eigen::VectorXf shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_four;
-        utils::SliceEigenVector(displacement_four, global_displacement, index, index + 2);
+        utils::SliceEigenVector(displacement_four, global_displacement, index,
+                                index + 2);
 
         const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
             shape_one, shape_two, shape_three, shape_four);

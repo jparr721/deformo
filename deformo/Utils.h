@@ -5,6 +5,7 @@
 #include <array>
 #include <chrono>
 #include <cstdint>
+#include <fstream>
 #include <intrin.h>
 #include <iostream>
 #include <numeric>
@@ -25,6 +26,10 @@ template <typename T>
 inline constexpr bool is_printable_v = is_printable<T>::value;
 
 namespace utils {
+auto OpenFile(const std::string& filename) -> std::ifstream;
+auto ReadFile(const std::string& path) -> std::string;
+auto Split(const std::string& input, const std::string& delimiter)
+    -> std::pair<std::string, std::string>;
 template <typename Derived>
 void MatrixToList(std::vector<std::vector<typename Derived::Scalar>>& V,
                   const Eigen::PlainObjectBase<Derived>& M) {
@@ -72,26 +77,26 @@ template <typename Derived>
 void MatrixUnion(Eigen::PlainObjectBase<Derived>& out,
                  const Eigen::PlainObjectBase<Derived>& lhs,
                  const Eigen::PlainObjectBase<Derived>& rhs) {
-  using T = typename Derived::Scalar;
+    using T = typename Derived::Scalar;
 
-  std::vector<std::vector<T>> v_out;
-  std::vector<std::vector<T>> l;
-  std::vector<std::vector<T>> r;
+    std::vector<std::vector<T>> v_out;
+    std::vector<std::vector<T>> l;
+    std::vector<std::vector<T>> r;
 
-  MatrixToList(l, lhs);
-  MatrixToList(r, rhs);
+    MatrixToList(l, lhs);
+    MatrixToList(r, rhs);
 
-  v_out.insert(v_out.end(), r.begin(), r.end());
-  v_out.insert(v_out.end(), l.begin(), l.end());
-  std::sort(
-      v_out.begin(), v_out.end(),
-      [](const std::vector<T>& left, const std::vector<T>& right) -> bool {
-        return std::accumulate(left.begin(), left.end(), 0) >
-               std::accumulate(right.begin(), right.end(), 0);
-      });
-  v_out.erase(std::unique(v_out.begin(), v_out.end()), v_out.end());
+    v_out.insert(v_out.end(), r.begin(), r.end());
+    v_out.insert(v_out.end(), l.begin(), l.end());
+    std::sort(
+        v_out.begin(), v_out.end(),
+        [](const std::vector<T>& left, const std::vector<T>& right) -> bool {
+            return std::accumulate(left.begin(), left.end(), 0) >
+                   std::accumulate(right.begin(), right.end(), 0);
+        });
+    v_out.erase(std::unique(v_out.begin(), v_out.end()), v_out.end());
 
-  ListToMatrix(out, v_out);
+    ListToMatrix(out, v_out);
 }
 
 template <typename Out, typename In, typename Indices>

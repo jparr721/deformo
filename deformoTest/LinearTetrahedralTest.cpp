@@ -3,9 +3,9 @@
 #include <memory>
 
 #define TETLIBRARY
-#include "../deformo/Integrators.cpp"
 #include "../deformo/LinearTetrahedral.cpp"
 #include "../deformo/LinearTetrahedral.h"
+#include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/Mesh.cpp"
 #include "../deformo/Mesh.h"
 #include "tetgen.h"

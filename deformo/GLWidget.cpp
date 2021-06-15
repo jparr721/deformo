@@ -31,7 +31,7 @@ GLWidget::~GLWidget() {
     delete draw_timer_;
 }
 
-void GLWidget::Cleanup() { delete shader_program; }
+void GLWidget::Cleanup() {}
 
 void GLWidget::Update() {
     input_->Update();
@@ -121,24 +121,34 @@ void GLWidget::initializeGL() {
     // White background
     glClearColor(255.f, 255.f, 255.f, 1.f);
 
-    shader_program = new QOpenGLShaderProgram(this);
+    other_shader = std::make_shared<ShaderProgram>();
+    //shader_program = new QOpenGLShaderProgram(this);
 
     BuildMesh();
     BuildPhysicsEngine();
 
-    shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");
-    shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                            "./core.frag");
-    shader_program->link();
-    shader_program->bind();
+    other_shader->AddShader(GL_VERTEX_SHADER, "core.vs");
+    other_shader->AddShader(GL_FRAGMENT_SHADER, "core.frag");
+    //shader_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "./core.vs");
+    //shader_program->addShaderFromSourceFile(QOpenGLShader::Fragment,
+    //                                        "./core.frag");
+
+    other_shader->Link();
+    other_shader->Bind();
+    //shader_program->link();
+    //shader_program->bind();
 
     BuildBuffers();
-    shader_program->release();
-
+    //shader_program->release();
     // Configure camera matrix positions
-    model_loc = shader_program->uniformLocation("m");
-    view_loc = shader_program->uniformLocation("v");
-    projection_loc = shader_program->uniformLocation("p");
+    //model_loc = shader_program->uniformLocation("m");
+    //view_loc = shader_program->uniformLocation("v");
+    //projection_loc = shader_program->uniformLocation("p");
+
+    model_loc = other_shader->UniformLocation("m");
+    view_loc = other_shader->UniformLocation("v");
+    projection_loc = other_shader->UniformLocation("p");
+    other_shader->Release();
 
     LogErrors("initializeGL");
 }
@@ -147,15 +157,23 @@ void GLWidget::paintGL() {
     // Wire
     glPolygonMode(GL_FRONT_AND_BACK, render_style);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    shader_program->bind();
+    //shader_program->bind();
+    other_shader->Bind();
 
-    shader_program->setUniformValue(projection_loc, camera_->Matrix());
+    //shader_program->setUniformValue(projection_loc, camera_->Matrix());
+    other_shader->SetMatrixUniform(projection_loc, camera_->Matrix());
+    LogErrors("paintGL set uniform");
 
-    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3,
+    //BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3,
+    //                         mesh->positions);
+    //BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3,
+    //                         mesh->colors);
+
+    BindVertexAttributeArray(other_shader->id, "position", vbo, 3,
                              mesh->positions);
-    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3,
+    BindVertexAttributeArray(other_shader->id, "color", c_vbo, 3,
                              mesh->colors);
 
     // Render
@@ -165,7 +183,8 @@ void GLWidget::paintGL() {
 
     glBindVertexArray(0);
 
-    shader_program->release();
+    //shader_program->release();
+    other_shader->Release();
 
     // Solve at this timestep
     if (simulating_) {
@@ -184,9 +203,13 @@ void GLWidget::BuildBuffers() {
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &c_vbo);
 
-    BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3,
+    //BindVertexAttributeArray(shader_program->programId(), "position", vbo, 3,
+    //                         mesh->positions);
+    //BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3,
+    //                         mesh->colors);
+    BindVertexAttributeArray(other_shader->id, "position", vbo, 3,
                              mesh->positions);
-    BindVertexAttributeArray(shader_program->programId(), "color", c_vbo, 3,
+    BindVertexAttributeArray(other_shader->id, "color", c_vbo, 3,
                              mesh->colors);
     BindElementArrayObject(ibo, mesh->faces);
 }
@@ -202,7 +225,7 @@ void GLWidget::BuildMesh(const float cut_plane) {
 void GLWidget::BuildPhysicsEngine() {
     assert(mesh != nullptr && "MESH IS NOT INITIALIZED");
 
-    const auto uniform_gravity = Eigen::Vector3f(0.f, -9.81f, 0.f);
+    const auto uniform_gravity = Eigen::Vector3f(0.f, 9.81f, 0.f);
     std::vector<unsigned int> dynamic_indices;
     utils::FindMaxVertices(dynamic_indices, mesh->positions);
 
@@ -238,15 +261,3 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
 
 void GLWidget::resizeGL(int width, int height) {}
 
-void GLWidget::LogErrors(const char* fn) {
-    GLenum err;
-    for (;;) {
-        err = glGetError();
-
-        if (err == GL_NO_ERROR) {
-            break;
-        }
-
-        std::cerr << "Error in fn: " << fn << ": " << err << std::endl;
-    }
-}

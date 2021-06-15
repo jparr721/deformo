@@ -4,7 +4,8 @@
 #include <Eigen/SparseLU>
 
 #include "../deformo/EigenTypes.h"
-#include "../deformo/Integrators.h"
+#include "../deformo/ExplicitCentralDifference.h"
+#include "../deformo/ExplicitCentralDifference.cpp"
 #include "../deformo/LinearTetrahedral.h"
 auto MakeInitialDisplacement() -> Eigen::Vector2f {
   return Eigen::Vector2f(0.f, 0.392f);
