@@ -1,11 +1,11 @@
-#include "pch.h"
-
 #include <memory>
 
+#include "pch.h"
+
 #define TETLIBRARY
+#include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/LinearTetrahedral.cpp"
 #include "../deformo/LinearTetrahedral.h"
-#include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/Mesh.cpp"
 #include "../deformo/Mesh.h"
 #include "tetgen.h"
@@ -34,7 +34,8 @@ auto MakeBasicMesh() -> std::shared_ptr<Mesh> {
 TEST(TestLinearTetrahedral, TestConstructor) {
   const auto mesh = MakeBasicMesh();
   const auto lt = std::make_unique<LinearTetrahedral>(
-      0.1f, 0.1f, 1.f, mesh, std::vector<BoundaryCondition>{});
+      0.1f, 0.1f, 1.f, mesh,
+      std::vector<BoundaryCondition>{{1, Eigen::Vector3f(0, 0, 0)}});
 
   EXPECT_TRUE(lt.get() != nullptr);
 }

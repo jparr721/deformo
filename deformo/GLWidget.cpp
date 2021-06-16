@@ -133,11 +133,9 @@ void GLWidget::initializeGL() {
 
 void GLWidget::paintGL() {
     renderer->Render();
-    // Solve at this timestep
+
     if (simulating_) {
-        const auto cycles = utils::stopwatch::time([&] { sim->Solve(); });
-        std::cout << "Solver took: " << cycles.count() << " cycles"
-                  << std::endl;
+        sim->Solve();
     }
 
     LogErrors("paintGL");

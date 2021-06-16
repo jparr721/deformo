@@ -21,12 +21,15 @@ LinearTetrahedral::LinearTetrahedral(
     AssembleMassMatrix(point_mass);
 
     InitializeIntegrator();
+
+    AssembleBoundaryForces();
+    ComputeInitialGlobalDisplacement();
 }
 
-void LinearTetrahedral::Update(Eigen::VectorXf& displacements) {
+void LinearTetrahedral::Update() {
     current_time += dt;
-    integrator->Solve(displacements, global_force);
-    mesh->Update(displacements);
+    integrator->Solve(global_displacement, global_force);
+    mesh->Update(global_displacement);
 }
 
 void LinearTetrahedral::AssembleForces() {
@@ -91,6 +94,42 @@ void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u,
     const Eigen::Vector6f sigma = D * B * u;
 
     sigmas.emplace_back(sigma);
+}
+
+void LinearTetrahedral::AssembleBoundaryForces() {
+    assert(!boundary_conditions.empty() && "NO CONDITIONS TO SOLVE FOR");
+
+    boundary_forces.resize(boundary_conditions.size() * 3);
+    boundary_forces.setZero();
+
+    // Stacked vector of xyz columns/rows to slice.
+    boundary_force_indices.resize(boundary_conditions.size() * 3);
+
+    // So we have a key difference from literature. Our boundary conditions
+    // specify external forces as opposed to specifying which nodes are fixed,
+    // we just assume nodes without forces are fixed at 0. So in a problem of
+    // the form U1 - U4 where we have 4 nodes, and 2 (U2, U3) are degrees of
+    // freedom, we can make conditions as:
+    //
+    // { node: 2, force(x, y, z), node: 3, force(x, y, z) }
+    //
+    // Where x, y and z are the directions in which the force is applied. We can
+    // map into the force vector at these coordinates
+    int segment = 0; // Keep track of kept indices as a 0-indexed vector
+    for (const auto& boundary_condition : boundary_conditions) {
+        // Get the node number so we can begin indexing
+        const unsigned int node_number = boundary_condition.node;
+
+        // The row is the same as the index segment
+        boundary_forces.segment(segment, 3) << boundary_condition.force;
+
+        boundary_force_indices.segment(segment, 3) << node_number,
+            node_number + 1, node_number + 2;
+        segment += 3;
+    }
+
+    utils::SliceByIndices(per_element_stuffness, global_stiffness,
+                          boundary_force_indices, boundary_force_indices);
 }
 
 void LinearTetrahedral::AssembleElementPlaneStresses() {
@@ -401,89 +440,34 @@ void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
     mass.setFromTriplets(mass_entries.begin(), mass_entries.end());
 }
 
-Eigen::VectorXf LinearTetrahedral::SolveU(const Eigen::MatrixXf& k,
-                                          const Eigen::VectorXf& f,
-                                          const Eigen::VectorXi& indices) {
-    assert(k.rows() == f.rows() &&
-           "global_stiffness AND F DO NOT MATCH IN NUMBER OF ROWS");
+void LinearTetrahedral::ComputeInitialGlobalDisplacement() {
+    assert(per_element_stuffness.rows() == boundary_forces.rows() &&
+           "per_element_stiffness AND boundary_forces DO NOT MATCH IN NUMBER "
+           "OF ROWS");
 
     Eigen::VectorXf u;
-
-    Eigen::VectorXf U;
 
     // Indices is always # of nodes not including multi-coordinate layouts
     u.resize(mesh->positions.size());
 
-    // Begin the process of initializing global displacement
-    U.setZero(u.size());
-
     // Full pivot LU factorization of element_stiffnesses minimized as far as it
     // can go, then we solve with respect to f, assigning to our global
     // displacement vector.
-    u = k.fullPivLu().solve(f);
+    u = per_element_stuffness.fullPivLu().solve(boundary_forces);
 
-    assert(indices.rows() == u.rows() && "INDEX AND U DIFFER");
+    assert(boundary_force_indices.rows() == u.rows() && "INDEX AND U DIFFER");
 
     for (int i = 0; i < u.size(); ++i) {
         const float val = u(i);
-        const unsigned int index = indices(i);
+        const unsigned int index = boundary_force_indices(i);
 
-        U.row(index) << val;
+        global_displacement.row(index) << val;
     }
-
-    return U;
 }
 
 void LinearTetrahedral::Solve() {
-    assert(!boundary_conditions.empty() && "NO CONDITIONS TO SOLVE FOR");
-
-    // Per-element stiffness applied to our boundary conditions
-    Eigen::MatrixXf kk;
-
-    // Our local force vector
-    Eigen::VectorXf f;
-    // Resize the force vector to the # of boundary conditions * 3;
-    f.resize(boundary_conditions.size() * 3);
-    f.setZero();
-
-    // Stacked vector of xyz columns/rows to slice.
-    Eigen::VectorXi kept_indices;
-    kept_indices.resize(boundary_conditions.size() * 3);
-
-    // So we have a key difference from literature. Our boundary conditions
-    // specify external forces as opposed to specifying which nodes are fixed,
-    // we just assume nodes without forces are fixed at 0. So in a problem of
-    // the form U1 - U4 where we have 4 nodes, and 2 (U2, U3) are degrees of
-    // freedom, we can make conditions as:
-    //
-    // { node: 2, force(x, y, z), node: 3, force(x, y, z) }
-    //
-    // Where x, y and z are the directions in which the force is applied. We can
-    // map into the force vector at these coordinates
-    int segment = 0; // Keep track of kept indices as a 0-indexed vector
-    for (const auto& boundary_condition : boundary_conditions) {
-        // Get the node number so we can begin indexing
-        const unsigned int node_number = boundary_condition.node;
-
-        // The row is the same as the index segment
-        f.segment(segment, 3) << boundary_condition.force;
-
-        kept_indices.segment(segment, 3) << node_number, node_number + 1,
-            node_number + 2;
-        segment += 3;
-    }
-
-    utils::SliceByIndices(kk, global_stiffness, kept_indices, kept_indices);
-
-    // Solve for our global displacement
-    if (current_time == 0.f) {
-        global_displacement = SolveU(kk, f, kept_indices);
-    }
-
     // Set global force
     global_force = global_stiffness * global_displacement;
-    std::cout << global_force << std::endl;
-    std::cout << "====" << std::endl;
 
     for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
@@ -524,7 +508,7 @@ void LinearTetrahedral::Solve() {
     }
 
     AssembleElementPlaneStresses();
-    Update(global_displacement);
+    Update();
 }
 
 float LinearTetrahedral::ComputeElementVolume(

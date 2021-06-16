@@ -31,6 +31,12 @@ class LinearTetrahedral {
     // Poisson's Ratio
     const float kPoissonsRatio;
 
+    // The boundary force indices
+    Eigen::VectorXi boundary_force_indices;
+
+    // The boundary forces
+    Eigen::VectorXf boundary_forces;
+
     // The Global Force Vector (Interaction Forces)
     Eigen::VectorXf global_force;
 
@@ -39,6 +45,9 @@ class LinearTetrahedral {
 
     // The Mass Matrix
     Eigen::SparseMatrixXf mass;
+
+    // The Per-Element Stiffness Matrix
+    Eigen::MatrixXf per_element_stuffness;
 
     // The global stiffness matrix
     Eigen::MatrixXf global_stiffness;
@@ -65,7 +74,7 @@ class LinearTetrahedral {
                       const float poissons_ratio, const float point_mass,
                       std::shared_ptr<Mesh> mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
-    void Update(Eigen::VectorXf& displacements);
+    void Update();
 
     void InitializeIntegrator();
 
@@ -92,6 +101,8 @@ class LinearTetrahedral {
     void AssembleElementStresses(const Eigen::VectorXf& u,
                                  const Eigen::MatrixXf& B);
 
+    void AssembleBoundaryForces();
+
     /*
     @bried Calculates the element principal stresses
     */
@@ -106,9 +117,9 @@ class LinearTetrahedral {
     @brief Compute the volume of the tetrahedral element.
     */
     [[nodiscard]] float ComputeElementVolume(const Eigen::Vector3f& shape_one,
-                               const Eigen::Vector3f& shape_two,
-                               const Eigen::Vector3f& shape_three,
-                               const Eigen::Vector3f& shape_four);
+                                             const Eigen::Vector3f& shape_two,
+                                             const Eigen::Vector3f& shape_three,
+                                             const Eigen::Vector3f& shape_four);
 
     /*
     @brief Construct the shape function parameter matrix determinant.
@@ -124,7 +135,7 @@ class LinearTetrahedral {
                                                         float p3, float p4,
                                                         float p5, float p6);
 
-    [[nodiscard]] static Eigen::Matrix66f
+    [[nodiscard]] Eigen::Matrix66f
     AssembleStressStrainMatrix(float poissons_ratio,
                                float modulus_of_elasticity);
     [[nodiscard]] Eigen::MatrixXf AssembleStrainRelationshipMatrix(
@@ -132,6 +143,5 @@ class LinearTetrahedral {
         const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four);
 
   private:
-    Eigen::VectorXf SolveU(const Eigen::MatrixXf& k, const Eigen::VectorXf& f,
-                           const Eigen::VectorXi& indices);
+    void ComputeInitialGlobalDisplacement();
 };
