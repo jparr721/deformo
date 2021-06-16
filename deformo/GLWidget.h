@@ -31,16 +31,6 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     // Toggleable Wire Mesh
     GLenum render_style = GL_LINE;
 
-    // Camera Shader Locations
-    int model_loc = 0;
-    int view_loc = 0;
-    int projection_loc = 0;
-
-    // Camera Shader Values
-    QMatrix4x4 model;
-    QMatrix4x4 view;
-    QMatrix4x4 projection;
-
     // Mesh object for 3D geometry
     std::shared_ptr<Mesh> mesh;
 
@@ -91,10 +81,9 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
   private:
     QTimer* draw_timer_;
     std::unique_ptr<Input> input_;
-    std::unique_ptr<Camera> camera_;
+    std::shared_ptr<Camera> camera_;
     bool simulating_ = false;
 
-    void BuildBuffers();
     void BuildMesh(float cut_plane = Mesh::kNoCutPlane);
     void BuildPhysicsEngine();
 

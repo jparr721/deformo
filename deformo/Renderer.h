@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Camera.h"
 #include "Mesh.h"
 #include "OpenGL.h"
 #include "ShaderProgram.h"
@@ -15,25 +16,35 @@ enum DirtyStatus {
 
 class Renderer {
   public:
+    // Geometry Rendering System
     unsigned int vao = 0;
     unsigned int vbo = 0;
     unsigned int c_vbo = 0;
     unsigned int ibo = 0;
 
-    GLenum render_mode = GL_FILL;
+    // View Coordinate System
+    int m = -1;
+    int v = -1;
+    int p = -1;
 
-    Renderer(std::shared_ptr<Mesh> mesh, std::shared_ptr<ShaderProgram> shader_program);
+    Renderer(std::shared_ptr<Mesh> mesh,
+             std::shared_ptr<ShaderProgram> shader_program,
+             std::shared_ptr<Camera> camera);
     ~Renderer();
 
     auto Render() -> void;
     auto SetPositionDisplacement(const Eigen::VectorXf& positions) -> void;
     auto SetColors(const Eigen::VectorXf& colors) -> void;
+    auto SetRenderMode() -> void;
 
   private:
-    std::shared_ptr<Mesh> mesh_;
-    std::shared_ptr<ShaderProgram> shader_program_;
+    GLenum render_mode_ = GL_LINE;
 
     std::bitset<4> dirty_;
+
+    std::shared_ptr<Camera> camera_;
+    std::shared_ptr<Mesh> mesh_;
+    std::shared_ptr<ShaderProgram> shader_program_;
 
     auto BuildBuffers() -> void;
     auto ReloadRenderMode() -> void;

@@ -19,7 +19,7 @@ GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
     draw_timer_->start(30);
 
     input_ = std::make_unique<Input>();
-    camera_ = std::make_unique<Camera>();
+    camera_ = std::make_shared<Camera>();
 }
 
 GLWidget::~GLWidget() {
@@ -80,7 +80,7 @@ void GLWidget::Update() {
     }
 
     if (input_->KeyPressed(Qt::Key_M)) {
-        render_style = render_style == GL_LINE ? GL_FILL : GL_LINE;
+        renderer->SetRenderMode();
     }
 }
 
@@ -126,47 +126,13 @@ void GLWidget::initializeGL() {
     BuildMesh();
     BuildPhysicsEngine();
 
-    shader_program->AddShader(GL_VERTEX_SHADER, "core.vs.glsl");
-    shader_program->AddShader(GL_FRAGMENT_SHADER, "core.frag.glsl");
-
-    shader_program->Link();
-    shader_program->Bind();
-
-    BuildBuffers();
-
-    shader_program->Release();
-    model_loc = shader_program->UniformLocation("m");
-    view_loc = shader_program->UniformLocation("v");
-    projection_loc = shader_program->UniformLocation("p");
+    renderer = std::make_unique<Renderer>(mesh, shader_program, camera_);
 
     LogErrors("initializeGL");
 }
 
 void GLWidget::paintGL() {
-    // Wire
-    glPolygonMode(GL_FRONT_AND_BACK, render_style);
-
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    shader_program->Bind();
-
-    shader_program->SetMatrixUniform(projection_loc, camera_->Matrix());
-    LogErrors("paintGL set uniform");
-
-    BindVertexAttributeArray(shader_program->id, "position", vbo, 3,
-                             mesh->positions);
-    BindVertexAttributeArray(shader_program->id, "color", c_vbo, 3,
-                             mesh->colors);
-
-    // Render
-    glBindVertexArray(vao);
-
-    glDrawElements(GL_TRIANGLES, mesh->FacesSize(), GL_UNSIGNED_INT, nullptr);
-
-    glBindVertexArray(0);
-
-    shader_program->Release();
-
+    renderer->Render();
     // Solve at this timestep
     if (simulating_) {
         const auto cycles = utils::stopwatch::time([&] { sim->Solve(); });
@@ -175,20 +141,6 @@ void GLWidget::paintGL() {
     }
 
     LogErrors("paintGL");
-}
-
-void GLWidget::BuildBuffers() {
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glGenBuffers(1, &vbo);
-    glGenBuffers(1, &c_vbo);
-
-    BindVertexAttributeArray(shader_program->id, "position", vbo, 3,
-                             mesh->positions);
-    BindVertexAttributeArray(shader_program->id, "color", c_vbo, 3,
-                             mesh->colors);
-    BindElementArrayObject(ibo, mesh->faces);
 }
 
 void GLWidget::BuildMesh(const float cut_plane) {
