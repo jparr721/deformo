@@ -189,4 +189,3 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void GLWidget::resizeGL(int width, int height) {}
-
