@@ -81,7 +81,7 @@ auto Renderer::BuildBuffers() -> void {
 
     BindVertexAttributeArray(shader_program_->id, "position", vbo, 3,
                              mesh_->positions);
-    BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 3,
+    BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 4,
                              mesh_->colors);
     BindElementArrayObject(ibo, mesh_->faces);
     LogErrors("Renderer::BuildBuffers");
@@ -98,7 +98,7 @@ auto Renderer::ReloadVertexBuffers() -> void {
     BindVertexAttributeArray(shader_program_->id, "position", vbo, 3,
                              mesh_->positions);
     if (dirty_[DirtyStatus::colors]) {
-        BindVertexAttributeArray(shader_program_->id, "colors", c_vbo, 3,
+        BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 4,
                                  mesh_->colors);
         dirty_.flip(DirtyStatus::colors);
     }

@@ -8,7 +8,12 @@
 class Mesh {
   public:
     constexpr static float kNoCutPlane = 1.01f;
-    const Eigen::Vector3f kMeshDefaultColor = Eigen::Vector3f(0.f, 0.f, 1.f);
+    inline const static Eigen::Vector4f kMeshDefaultColor =
+        Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
+    inline const static Eigen::Vector4f kMeshDefaultColorInvisible =
+        Eigen::Vector4f(0.f, 0.f, 1.f, 0.f);
+    inline const static Eigen::Vector4f kMeshDefaultSelectedColor =
+        Eigen::Vector4f(0.f, 1.f, 0.f, 0.f);
     float cut_plane = kNoCutPlane;
 
     Eigen::VectorXi sim_nodes;

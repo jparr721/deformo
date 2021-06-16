@@ -45,11 +45,11 @@ void Mesh::Update(const Eigen::VectorXf& displacements) {
 void Mesh::SetCutPlane(float cut_plane) {
     const int visible_elements = ceil(positions.size() * cut_plane);
 
-    for (int i = 0; i < colors.size(); i += 3) {
+    for (int i = 0; i < colors.size(); i += 4) {
         if (i < visible_elements) {
-            colors.segment(i, 3) << kMeshDefaultColor;
+            colors.segment(i, 4) << kMeshDefaultColor;
         } else {
-            colors.segment(i, 3) << 1.f, 1.f, 1.f;
+            colors.segment(i, 4) << kMeshDefaultColorInvisible;
         }
     }
 }
@@ -77,8 +77,8 @@ void Mesh::Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
 
 void Mesh::Reset() {
     positions = rest_positions;
-    for (int i = 0; i < positions.rows(); i += 3) {
-        colors.segment(i, 3) << kMeshDefaultColor;
+    for (int i = 0; i < colors.rows(); i += 4) {
+        colors.segment(i, 4) << kMeshDefaultColor;
     }
 }
 
@@ -92,11 +92,10 @@ void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
     Vectorize(positions, V);
     rest_positions = positions;
     Vectorize(faces, T);
-    colors.resize(positions.rows());
-    for (int i = 0; i < positions.rows(); i += 3) {
-        colors.segment(i, 3) << kMeshDefaultColor;
+    colors.resize(V.rows() * 4);
+    for (int i = 0; i < V.rows() + positions.rows(); i += 4) {
+        colors.segment(i, 4) << kMeshDefaultColor;
     }
-
 }
 
 void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,

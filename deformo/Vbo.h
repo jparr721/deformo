@@ -16,7 +16,7 @@ void BindVertexAttributeArray(const unsigned int program_id, const std::string& 
         glBufferData(GL_ARRAY_BUFFER, sizeof(Derived::Scalar) * data.size(), data.data(),
                      GL_DYNAMIC_DRAW);
     }
-    glVertexAttribPointer(handle, stride, GL_FLOAT, GL_FALSE, 3 * sizeof(Derived::Scalar),
+    glVertexAttribPointer(handle, stride, GL_FLOAT, GL_FALSE, stride * sizeof(Derived::Scalar),
                           nullptr);
     glEnableVertexAttribArray(handle);
 }

@@ -159,7 +159,8 @@ void GLWidget::BuildPhysicsEngine() {
     utils::FindMaxVertices(dynamic_indices, mesh->positions);
 
     for (const auto& face_index : dynamic_indices) {
-        mesh->colors.segment(face_index, 3) << 0.f, 1.f, 0.f;
+        mesh->colors.segment((face_index / 3) * 4, 4)
+            << Mesh::kMeshDefaultSelectedColor;
     }
     const auto boundary_conditions =
         AssignBoundaryConditionToFixedNodes(dynamic_indices, uniform_gravity);

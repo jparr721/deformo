@@ -437,11 +437,6 @@ Eigen::VectorXf LinearTetrahedral::SolveU(const Eigen::MatrixXf& k,
 void LinearTetrahedral::Solve() {
     assert(!boundary_conditions.empty() && "NO CONDITIONS TO SOLVE FOR");
 
-    if (current_time != 0.f) {
-        Update(global_displacement);
-        return;
-    }
-
     // Per-element stiffness applied to our boundary conditions
     Eigen::MatrixXf kk;
 
@@ -481,10 +476,14 @@ void LinearTetrahedral::Solve() {
     utils::SliceByIndices(kk, global_stiffness, kept_indices, kept_indices);
 
     // Solve for our global displacement
-    global_displacement = SolveU(kk, f, kept_indices);
+    if (current_time == 0.f) {
+        global_displacement = SolveU(kk, f, kept_indices);
+    }
 
     // Set global force
     global_force = global_stiffness * global_displacement;
+    std::cout << global_force << std::endl;
+    std::cout << "====" << std::endl;
 
     for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
