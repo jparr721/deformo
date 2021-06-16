@@ -1,6 +1,18 @@
 #include "ExplicitCentralDifference.h"
 #include "Utils.h"
 
+ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
+    const float dt, const Eigen::VectorXf& displacements,
+    Eigen::MatrixXf stiffness, const Eigen::SparseMatrixXf& mass_matrix,
+    const Eigen::VectorXf& initial_forces)
+    : dt(dt), stiffness_(std::move(stiffness)), mass_matrix_(mass_matrix) {
+    SetIntegrationConstants();
+    SetEffectiveMassMatrix();
+    SetMovementVectors(displacements, initial_forces, mass_matrix);
+    SetLastPosition(displacements);
+    SetEffectiveLoadConstants();
+}
+
 void ExplicitCentralDifferenceMethod::Solve(Eigen::VectorXf& displacements,
                                             const Eigen::VectorXf& forces) {
     const Eigen::VectorXf effective_load =
@@ -44,11 +56,13 @@ void ExplicitCentralDifferenceMethod::SetIntegrationConstants() {
 }
 
 void ExplicitCentralDifferenceMethod::SetMovementVectors(
-    const Eigen::VectorXf& positions) {
+    const Eigen::VectorXf& positions, const Eigen::VectorXf& forces,
+    const Eigen::MatrixXf& mass_matrix) {
     velocity_.resize(positions.rows());
     velocity_.setZero();
     acceleration_.resize(positions.rows());
     acceleration_.setZero();
+    acceleration_ = mass_matrix.inverse() * forces;
 }
 
 Eigen::VectorXf ExplicitCentralDifferenceMethod::ComputeEffectiveLoad(

@@ -77,6 +77,7 @@ template <typename Derived>
 void MatrixUnion(Eigen::PlainObjectBase<Derived>& out,
                  const Eigen::PlainObjectBase<Derived>& lhs,
                  const Eigen::PlainObjectBase<Derived>& rhs) {
+    assert(lhs.cols() == rhs.cols() && "INVALID MATRIX COMBINATION");
     using T = typename Derived::Scalar;
 
     std::vector<std::vector<T>> v_out;

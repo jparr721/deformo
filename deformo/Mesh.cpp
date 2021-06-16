@@ -26,8 +26,18 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
     ConstructMesh(V, F, TV, TF, TT);
 
     Vectorize(sim_nodes, TT);
+
+    // Convert TT for the matrix union
+    Eigen::MatrixXi TTF;
+    TTF.resize(sim_nodes.rows() / 3, 3);
+
+    for (int i = 0; i < TTF.rows(); ++i) {
+        TTF.row(i) << sim_nodes(i * 3), sim_nodes(i * 3 + 1), sim_nodes(i * 3 + 2);
+    }
+
+    std::cout << TTF << std::endl;
     Eigen::MatrixXi all_faces;
-    utils::MatrixUnion(all_faces, TT, TF);
+    utils::MatrixUnion(all_faces, TTF, TF);
 
     InitializeRenderableSurfaces(TV, all_faces);
 }
@@ -104,14 +114,10 @@ void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
     tetgenio out;
 
     // Generate tetrahedrals from PLC mesh with max size 1e-2.
-    // const std::string tetgen_flags = "zpqa1e-1";
-    const std::string tetgen_flags = "zpq";
+    const std::string tetgen_flags = "zpqa1e-1";
+    // const std::string tetgen_flags = "zpq";
     Tetrahedralize(V, F, tetgen_flags, out);
     assert(TetgenioToMesh(out, TV, TF, TT));
-}
-
-void Mesh::CalculateTetrahedralCoordinates(const Eigen::MatrixXf& V,
-                                           const Eigen::MatrixXi& T) {
 }
 
 bool Mesh::MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,

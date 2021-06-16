@@ -1,6 +1,7 @@
+#include "pch.h"
+
 #include <memory>
 
-#include "pch.h"
 
 #define TETLIBRARY
 #include "../deformo/ExplicitCentralDifference.h"
@@ -72,10 +73,9 @@ TEST(TestLinearTetrahedral, TestElementStiffness) {
 
   Eigen::VectorXf force_compare(24);
   force_compare << -31.3293f, -5.34904f, -9.32853f, 30.7042f, -4.02576f,
-      -3.07762f, -4.05312e-06f, 3.12495f, -6.70552e-07f, 1.43051e-06f, 6.24987f,
-      -3.57628e-07f, -30.7042f, -4.02584f, 3.07763f, 31.3293f, -5.34919f,
-      9.32853f, -3.8147e-06f, 6.24997f, -1.19209e-07f, 0.f, 3.12509f,
-      9.53674e-07f;
-  utils::GTestDebugPrint(lt->global_force);
+      -3.07762f, 0.f, 3.12495f, 0.f, 0.f, 6.24987f, 0.f, -30.7042f, -4.02584f,
+      3.07763f, 31.3293f, -5.34919f, 9.32853f, 0.f, 6.24997f, 0.f, 0.f,
+      3.12509f, 0.f;
   ASSERT_TRUE(lt->global_force.isApprox(force_compare));
+
 }

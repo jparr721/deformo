@@ -39,14 +39,8 @@ class ExplicitCentralDifferenceMethod {
     ExplicitCentralDifferenceMethod(const float dt,
                                     const Eigen::VectorXf& displacements,
                                     Eigen::MatrixXf stiffness,
-                                    const Eigen::SparseMatrixXf& mass_matrix)
-        : dt(dt), stiffness_(std::move(stiffness)), mass_matrix_(mass_matrix) {
-        SetMovementVectors(displacements);
-        SetIntegrationConstants();
-        SetEffectiveMassMatrix();
-        SetLastPosition(displacements);
-        SetEffectiveLoadConstants();
-    }
+                                    const Eigen::SparseMatrixXf& mass_matrix,
+                                    const Eigen::VectorXf& initial_forces);
 
     /**
     \brief Calculates the explicit Central Difference Method integration
@@ -68,6 +62,9 @@ class ExplicitCentralDifferenceMethod {
     **/
     void Solve(Eigen::VectorXf& displacements, const Eigen::VectorXf& forces);
 
+    const Eigen::VectorXf Velocity() const { return velocity_; }
+    const Eigen::VectorXf Acceleration() const { return acceleration_; }
+
   private:
     const Eigen::MatrixXf stiffness_;
     const Eigen::SparseMatrixXf mass_matrix_;
@@ -84,7 +81,9 @@ class ExplicitCentralDifferenceMethod {
     void SetEffectiveMassMatrix();
     void SetEffectiveLoadConstants();
     void SetIntegrationConstants();
-    void SetMovementVectors(const Eigen::VectorXf& positions);
+    void SetMovementVectors(const Eigen::VectorXf& positions,
+                            const Eigen::VectorXf& forces,
+                            const Eigen::MatrixXf& mass_matrix);
 
     Eigen::VectorXf ComputeEffectiveLoad(const Eigen::VectorXf& displacements,
                                          const Eigen::VectorXf& forces);

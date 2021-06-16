@@ -1,15 +1,13 @@
 ﻿#include "pch.h"
-#include <memory>
-#include <iostream>
+
 #include <Eigen/SparseLU>
+#include <iostream>
+#include <memory>
 
 #include "../deformo/EigenTypes.h"
-#include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/ExplicitCentralDifference.cpp"
+#include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/LinearTetrahedral.h"
-auto MakeInitialDisplacement() -> Eigen::Vector2f {
-  return Eigen::Vector2f(0.f, 0.392f);
-}
 
 auto MakeStiffnessMatrix() -> Eigen::Matrix2f {
   Eigen::Matrix2f stiffness;
@@ -32,38 +30,39 @@ auto MakeMassMatrix() -> Eigen::SparseMatrixXf {
 }
 
 TEST(TestExplicitCentralDifference, TestConstructor) {
-  const Eigen::Vector2f initial_displacement = MakeInitialDisplacement();
+  const Eigen::Vector2f initial_displacement = Eigen::Vector2f(0, 0);
+  const Eigen::Vector2f initial_forces = Eigen::Vector2f(0.f, 10.f);
   const Eigen::Matrix2f stiffness = MakeStiffnessMatrix();
   const Eigen::SparseMatrixXf mass_matrix = MakeMassMatrix();
 
   const auto integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-      0.28, initial_displacement, stiffness, mass_matrix);
+      0.28, initial_displacement, stiffness, mass_matrix, initial_forces);
+
+  std::cout << integrator->Acceleration() << std::endl;
+  ASSERT_TRUE(integrator->Acceleration().isApprox(Eigen::Vector2f(0, 10)));
 
   GTEST_ASSERT_NE(integrator.get(), nullptr);
 }
 
 TEST(TestExplicitCentralDifference, TestSolver) {
-  const Eigen::Vector2f initial_displacement = MakeInitialDisplacement();
+  Eigen::VectorXf displacement = Eigen::Vector2f(0.f, 0.f);
+  Eigen::Vector2f forces = Eigen::Vector2f(0.f, 10.f);
   const Eigen::Matrix2f stiffness = MakeStiffnessMatrix();
   const Eigen::SparseMatrixXf mass_matrix = MakeMassMatrix();
 
   const auto integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-      .28, initial_displacement, stiffness, mass_matrix);
-
-  Eigen::VectorXf positions(2);
-  positions << 0, 0;
-  const Eigen::Vector2f force(0, 10);
+      .28, displacement, stiffness, mass_matrix, forces);
 
   for (int i = 0; i < 12; ++i) {
-    integrator->Solve(positions, force);
+    integrator->Solve(displacement, forces);
     if (i == 0) {
       Eigen::VectorXf compare(2);
       compare << 0, 0.392f;
-     ASSERT_TRUE(compare.isApprox(positions));
+      ASSERT_TRUE(compare.isApprox(displacement));
     }
   }
 
   Eigen::VectorXf compare(2);
   compare << 1.0223f, 2.60083f;
- ASSERT_TRUE(compare.isApprox(positions));
+  ASSERT_TRUE(compare.isApprox(displacement));
 }

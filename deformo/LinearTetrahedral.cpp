@@ -116,12 +116,12 @@ void LinearTetrahedral::AssembleBoundaryForces() {
     // Where x, y and z are the directions in which the force is applied. We can
     // map into the force vector at these coordinates
     int segment = 0; // Keep track of kept indices as a 0-indexed vector
-    for (const auto& boundary_condition : boundary_conditions) {
+    for (const auto& [node, force] : boundary_conditions) {
         // Get the node number so we can begin indexing
-        const unsigned int node_number = boundary_condition.node;
+        const unsigned int node_number = node;
 
         // The row is the same as the index segment
-        boundary_forces.segment(segment, 3) << boundary_condition.force;
+        boundary_forces.segment(segment, 3) << force;
 
         boundary_force_indices.segment(segment, 3) << node_number,
             node_number + 1, node_number + 2;
@@ -448,7 +448,7 @@ void LinearTetrahedral::ComputeInitialGlobalDisplacement() {
     Eigen::VectorXf u;
 
     // Indices is always # of nodes not including multi-coordinate layouts
-    u.resize(mesh->positions.size());
+    u.resize(boundary_forces.size());
 
     // Full pivot LU factorization of element_stiffnesses minimized as far as it
     // can go, then we solve with respect to f, assigning to our global
@@ -466,7 +466,6 @@ void LinearTetrahedral::ComputeInitialGlobalDisplacement() {
 }
 
 void LinearTetrahedral::Solve() {
-    // Set global force
     global_force = global_stiffness * global_displacement;
 
     for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
@@ -543,5 +542,5 @@ void LinearTetrahedral::InitializeIntegrator() {
     global_displacement.resize(mesh->positions.size());
     global_displacement.setZero();
     integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        dt, global_displacement, global_stiffness, mass);
+        dt, global_displacement, global_stiffness, mass, global_force);
 }

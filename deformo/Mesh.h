@@ -56,9 +56,6 @@ class Mesh {
                        Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
                        Eigen::MatrixXi& TT);
 
-    void CalculateTetrahedralCoordinates(const Eigen::MatrixXf& V,
-                                         const Eigen::MatrixXi& T);
-
     bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                         tetgenio& in);
 
