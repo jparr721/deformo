@@ -23,7 +23,7 @@ class LinearTetrahedral {
 
     // Timestep constants
     float current_time = 0.f;
-    float dt = 0.28f;
+    float dt = 1e-4f;
 
     // Modulus of Elasticity
     const float kModulusOfElasticity;

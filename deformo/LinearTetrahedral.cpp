@@ -34,6 +34,10 @@ void LinearTetrahedral::Update() {
 
 void LinearTetrahedral::AssembleForces() {
     global_force = Eigen::VectorXf::Zero(mesh->Size());
+
+    for (const auto& bc : boundary_conditions) {
+        global_force.segment(bc.node, 3) << bc.force;
+    }
 }
 
 void LinearTetrahedral::ComputeElementStiffness(
@@ -466,7 +470,7 @@ void LinearTetrahedral::ComputeInitialGlobalDisplacement() {
 }
 
 void LinearTetrahedral::Solve() {
-    global_force = global_stiffness * global_displacement;
+    //global_force = global_stiffness * global_displacement;
 
     for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
