@@ -85,7 +85,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>Assets/step-backward-solid.svg</normaloff>Assets/step-backward-solid.svg</iconset>
+         <normaloff>../../../.designer/backup/Assets/step-backward-solid.svg</normaloff>../../../.designer/backup/Assets/step-backward-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -102,7 +102,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>Assets/play-solid.svg</normaloff>Assets/play-solid.svg</iconset>
+         <normaloff>../../../.designer/backup/Assets/play-solid.svg</normaloff>../../../.designer/backup/Assets/play-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -119,7 +119,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>Assets/pause-solid.svg</normaloff>Assets/pause-solid.svg</iconset>
+         <normaloff>../../../.designer/backup/Assets/pause-solid.svg</normaloff>../../../.designer/backup/Assets/pause-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -136,7 +136,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>Assets/step-forward-solid.svg</normaloff>Assets/step-forward-solid.svg</iconset>
+         <normaloff>../../../.designer/backup/Assets/step-forward-solid.svg</normaloff>../../../.designer/backup/Assets/step-forward-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -160,7 +160,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="sim_settings_page">
      <property name="geometry">
@@ -625,7 +625,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLineEdit" name="tetgen_flags_line_edit_3">
+          <widget class="QLineEdit" name="tetgen_flags_line_edit">
            <property name="maximumSize">
             <size>
              <width>110</width>
@@ -662,7 +662,7 @@
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
   </widget>

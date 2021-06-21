@@ -3,7 +3,13 @@
 #include <string>
 
 #include "EigenTypes.h"
-#include "tetgen.h"
+#include "MeshGenerator.h"
+
+enum CutPlaneAxis {
+    x_axis = 0,
+    y_axis,
+    z_axis,
+};
 
 class Mesh {
   public:
@@ -15,6 +21,8 @@ class Mesh {
     inline const static Eigen::Vector4f kMeshDefaultSelectedColor =
         Eigen::Vector4f(0.f, 1.f, 0.f, 0.f);
     float cut_plane = kNoCutPlane;
+
+    std::string tetgen_flags = "zpq";
 
     Eigen::VectorXi sim_nodes;
     Eigen::VectorXi faces;
@@ -29,19 +37,14 @@ class Mesh {
 
     void Update(const Eigen::VectorXf& displacements);
     void SetCutPlane(float cut_plane);
-    void Tetrahedralize(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                        const std::string& flags, tetgenio& out);
     void Reset();
-
-    [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
 
     [[nodiscard]] int Size() const { return positions.rows(); }
     [[nodiscard]] int FacesSize() const { return faces.rows(); }
     [[nodiscard]] int SimNodesSize() const { return sim_nodes.rows(); }
+    [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
 
   private:
-    constexpr static int kMaxFaceSize = 3;
-    constexpr static int kMaxNumCorners = 4;
 
     template <typename In, typename Out>
     void Vectorize(Out& out, const In& in) {
@@ -55,10 +58,4 @@ class Mesh {
     void ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                        Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
                        Eigen::MatrixXi& TT);
-
-    bool MeshToTetgenio(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                        tetgenio& in);
-
-    bool TetgenioToMesh(const tetgenio& out, Eigen::MatrixXf& V,
-                        Eigen::MatrixXi& F, Eigen::MatrixXi& T);
 };

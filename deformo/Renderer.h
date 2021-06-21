@@ -36,6 +36,9 @@ class Renderer {
     auto SetPositionDisplacement(const Eigen::VectorXf& positions) -> void;
     auto SetColors(const Eigen::VectorXf& colors) -> void;
     auto SetRenderMode() -> void;
+    void SetTetgenFlags(const std::string& flags);
+    void SetCutPlane(float cut_plane);
+    void SetCutPlaneAxis(CutPlaneAxis cut_plane_axis);
 
   private:
     GLenum render_mode_ = GL_LINE;

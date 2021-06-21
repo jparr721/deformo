@@ -64,4 +64,14 @@ Window::Window(QWidget* parent) : QMainWindow(parent) {
     // Run Simulation Button (Right Pane, Sim Settings)
     connect(ui.sim_settings_run_button, &QPushButton::released, ui.openGLWidget,
             &GLWidget::RunSimulationButtonPressed);
+
+    // Render Parameters
+    connect(ui.tetgen_flags_line_edit, &QLineEdit::textChanged, ui.openGLWidget,
+            &GLWidget::SetTetgenFlags);
+    connect(ui.openGLWidget, &GLWidget::OnTetgenFlagsChange,
+            ui.tetgen_flags_line_edit, &QLineEdit::setText);
+
+    // Re Render Simulation (Right Pane, Render Settings)
+    connect(ui.render_properties_render_button, &QPushButton::released,
+            ui.openGLWidget, &GLWidget::RenderSimulationButtonPressed);
 }

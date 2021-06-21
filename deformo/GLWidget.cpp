@@ -170,11 +170,11 @@ void GLWidget::resizeGL(int width, int height) {}
 
 // SLOTS ====================
 void GLWidget::SetSliceAxis(const QString& value) {
+    std::cout << value.toUtf8().constData() << std::endl;
     emit OnSliceAxisChange(value);
 }
 
 void GLWidget::SetSliceValue(float value) {
-    mesh->SetCutPlane(value / 100.f);
     emit OnSliceValueChange(value);
 }
 
@@ -199,9 +199,15 @@ void GLWidget::SetRayleighLambda(double value) {
 void GLWidget::SetRayleighMu(double value) { emit OnRayleighMuChange(value); }
 
 void GLWidget::RunSimulationButtonPressed() {
-    std::cout << "Pressed" << std::endl;
+    std::cout << "Run Simulation Pressed" << std::endl;
 }
 
 void GLWidget::SetTetgenFlags(const QString& value) {
+    std::cout << value.toUtf8().constData() << std::endl;
     emit OnTetgenFlagsChange(value);
 }
+
+void GLWidget::RenderSimulationButtonPressed() {
+    std::cout << "Render Button Pressed" << std::endl;
+}
+

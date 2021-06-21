@@ -97,6 +97,9 @@
     <ClCompile Include="Rayleigh.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
+    <ClCompile Include="MeshGenerator.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -152,6 +155,9 @@
     </ClInclude>
     <ClInclude Include="Rayleigh.h">
       <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshGenerator.h">
+      <Filter>Renderer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

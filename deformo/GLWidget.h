@@ -65,8 +65,11 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     // Simulation Settings -- Run Simulation Button
     void RunSimulationButtonPressed();
 
-    // Render Properties Window
+    // Render Properties Window -- Tetgen Flags
     void SetTetgenFlags(const QString& value);
+
+    // Render Properties Window -- Re Render Button
+    void RenderSimulationButtonPressed();
 
   signals:
     // Simulation Settings Window
