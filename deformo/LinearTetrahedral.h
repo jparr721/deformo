@@ -12,7 +12,7 @@
 This class holds the numerical simulator for the corotational linear FEA model.
 **/
 class LinearTetrahedral {
-    using BetaSubmatrixf = Eigen::Matrix<float, 6, 3>;
+    using BetaSubMatrixXf = Eigen::Matrix<float, 6, 3>;
     struct ElementStiffness {
         Eigen::Matrix12f stiffness_matrix;
         std::vector<int> indices;
@@ -21,24 +21,23 @@ class LinearTetrahedral {
   public:
     constexpr static int kFaceStride = 4;
 
+    const unsigned int integrator_size;
+
     // Timestep constants
     float current_time = 0.f;
-    float dt = 1e-4f;
+    float dt = 0.1f;
 
     // Modulus of Elasticity
-    const float kModulusOfElasticity;
+    const float modulus_of_elasticity;
 
     // Poisson's Ratio
-    const float kPoissonsRatio;
+    const float poissons_ratio;
 
     // The boundary force indices
     Eigen::VectorXi boundary_force_indices;
 
     // The boundary forces
     Eigen::VectorXf boundary_forces;
-
-    // The Global Force Vector (Interaction Forces)
-    Eigen::VectorXf global_force;
 
     // Global stacked vertex vector (xy) with index mapping of node orientations
     std::shared_ptr<Mesh> mesh;
@@ -47,7 +46,7 @@ class LinearTetrahedral {
     Eigen::SparseMatrixXf mass;
 
     // The Per-Element Stiffness Matrix
-    Eigen::MatrixXf per_element_stuffness;
+    Eigen::MatrixXf per_element_stiffness;
 
     // The global stiffness matrix
     Eigen::MatrixXf global_stiffness;
@@ -78,7 +77,6 @@ class LinearTetrahedral {
 
     void InitializeIntegrator();
 
-    void AssembleForces();
     void AssembleMassMatrix(const float point_mass);
 
     void AssembleGlobalStiffness();
@@ -104,7 +102,7 @@ class LinearTetrahedral {
     void AssembleBoundaryForces();
 
     /*
-    @bried Calculates the element principal stresses
+    @bried Calculates the element plane stresses
     */
     void AssembleElementPlaneStresses();
 
@@ -135,13 +133,12 @@ class LinearTetrahedral {
                                                         float p3, float p4,
                                                         float p5, float p6);
 
+    [[nodiscard]] Eigen::VectorXf ComputeRenderedDisplacements();
+
     [[nodiscard]] Eigen::Matrix66f
     AssembleStressStrainMatrix(float poissons_ratio,
                                float modulus_of_elasticity);
     [[nodiscard]] Eigen::MatrixXf AssembleStrainRelationshipMatrix(
         const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
         const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four);
-
-  private:
-    void ComputeInitialGlobalDisplacement();
 };

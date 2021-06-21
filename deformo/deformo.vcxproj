@@ -124,6 +124,7 @@
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
     <QtMoc Include="Window.h" />
+    <ClCompile Include="Rayleigh.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="OpenGL.h" />
+    <ClInclude Include="Rayleigh.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Shader.h" />

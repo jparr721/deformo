@@ -40,7 +40,8 @@ class ExplicitCentralDifferenceMethod {
                                     const Eigen::VectorXf& displacements,
                                     Eigen::MatrixXf stiffness,
                                     const Eigen::SparseMatrixXf& mass_matrix,
-                                    const Eigen::VectorXf& initial_forces);
+                                    const Eigen::VectorXf& initial_forces,
+                                    const Eigen::MatrixXf& damping);
 
     /**
     \brief Calculates the explicit Central Difference Method integration
@@ -66,6 +67,7 @@ class ExplicitCentralDifferenceMethod {
     const Eigen::VectorXf Acceleration() const { return acceleration_; }
 
   private:
+    const Eigen::MatrixXf damping_;
     const Eigen::MatrixXf stiffness_;
     const Eigen::SparseMatrixXf mass_matrix_;
     Eigen::SparseMatrixXf effective_mass_matrix_;

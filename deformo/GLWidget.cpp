@@ -84,27 +84,6 @@ void GLWidget::Update() {
     }
 }
 
-void GLWidget::SetCutPlane(float value) {
-    mesh->SetCutPlane(value / 100.f);
-    emit OnCutPlaneChange(value);
-}
-
-void GLWidget::SetTetgenFlags(const QString& value) {
-    emit OnTetgenFlagsChange(value);
-}
-
-void GLWidget::SetInteractiveModeToggle(int state) {
-    emit OnInteractiveModeToggled(state);
-}
-
-void GLWidget::SetPoissonsRatio(double value) {
-    emit OnPoissonsRatioChange(value);
-}
-
-void GLWidget::SetModulusOfElasticity(double value) {
-    emit OnModulusOfElasticityChange(value);
-}
-
 void GLWidget::initializeGL() {
     initializeOpenGLFunctions();
     if (const auto code = glewInit(); code != GLEW_OK) {
@@ -188,3 +167,41 @@ void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void GLWidget::resizeGL(int width, int height) {}
+
+// SLOTS ====================
+void GLWidget::SetSliceAxis(const QString& value) {
+    emit OnSliceAxisChange(value);
+}
+
+void GLWidget::SetSliceValue(float value) {
+    mesh->SetCutPlane(value / 100.f);
+    emit OnSliceValueChange(value);
+}
+
+void GLWidget::SetNodalMass(float value) { emit OnNodalMassChange(value); }
+
+void GLWidget::SetPoissonsRatio(double value) {
+    emit OnPoissonsRatioChange(value);
+}
+
+void GLWidget::SetYoungsModulus(double value) {
+    emit OnYoungsModulusChange(value);
+}
+
+void GLWidget::SetTimestepSize(double value) {
+    emit OnTimestepSizeChange(value);
+}
+
+void GLWidget::SetRayleighLambda(double value) {
+    emit OnRayleighLambdaChange(value);
+}
+
+void GLWidget::SetRayleighMu(double value) { emit OnRayleighMuChange(value); }
+
+void GLWidget::RunSimulationButtonPressed() {
+    std::cout << "Pressed" << std::endl;
+}
+
+void GLWidget::SetTetgenFlags(const QString& value) {
+    emit OnTetgenFlagsChange(value);
+}

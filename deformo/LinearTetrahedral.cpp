@@ -6,38 +6,28 @@
 #include <Eigen/SparseCholesky>
 #include <utility>
 
+#include "Rayleigh.h"
 #include "Utils.h"
 
 LinearTetrahedral::LinearTetrahedral(
     const float modulus_of_elasticity, const float poissons_ratio,
     const float point_mass, std::shared_ptr<Mesh> mesh,
     std::vector<BoundaryCondition> boundary_conditions)
-    : kModulusOfElasticity(modulus_of_elasticity),
-      kPoissonsRatio(poissons_ratio), mesh(std::move(mesh)),
-      boundary_conditions(std::move(boundary_conditions)) {
-    AssembleForces();
+    : modulus_of_elasticity(modulus_of_elasticity),
+      poissons_ratio(poissons_ratio), mesh(std::move(mesh)),
+      boundary_conditions(std::move(boundary_conditions)),
+      integrator_size(boundary_conditions.size()) {
     AssembleElementStiffness();
     AssembleGlobalStiffness();
     AssembleMassMatrix(point_mass);
-
-    InitializeIntegrator();
-
     AssembleBoundaryForces();
-    ComputeInitialGlobalDisplacement();
+    InitializeIntegrator();
 }
 
 void LinearTetrahedral::Update() {
     current_time += dt;
-    integrator->Solve(global_displacement, global_force);
-    mesh->Update(global_displacement);
-}
-
-void LinearTetrahedral::AssembleForces() {
-    global_force = Eigen::VectorXf::Zero(mesh->Size());
-
-    for (const auto& bc : boundary_conditions) {
-        global_force.segment(bc.node, 3) << bc.force;
-    }
+    integrator->Solve(global_displacement, boundary_forces);
+    mesh->Update(ComputeRenderedDisplacements());
 }
 
 void LinearTetrahedral::ComputeElementStiffness(
@@ -48,7 +38,7 @@ void LinearTetrahedral::ComputeElementStiffness(
         shape_one, shape_two, shape_three, shape_four);
 
     const Eigen::Matrix66f D =
-        AssembleStressStrainMatrix(kPoissonsRatio, kModulusOfElasticity);
+        AssembleStressStrainMatrix(poissons_ratio, modulus_of_elasticity);
 
     const float V =
         ComputeElementVolume(shape_one, shape_two, shape_three, shape_four);
@@ -93,7 +83,7 @@ void LinearTetrahedral::AssembleElementStiffness() {
 void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u,
                                                 const Eigen::MatrixXf& B) {
     const Eigen::Matrix66f D =
-        AssembleStressStrainMatrix(kPoissonsRatio, kModulusOfElasticity);
+        AssembleStressStrainMatrix(poissons_ratio, modulus_of_elasticity);
 
     const Eigen::Vector6f sigma = D * B * u;
 
@@ -103,23 +93,12 @@ void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u,
 void LinearTetrahedral::AssembleBoundaryForces() {
     assert(!boundary_conditions.empty() && "NO CONDITIONS TO SOLVE FOR");
 
-    boundary_forces.resize(boundary_conditions.size() * 3);
+    boundary_forces.resize(integrator_size * 3);
     boundary_forces.setZero();
 
-    // Stacked vector of xyz columns/rows to slice.
-    boundary_force_indices.resize(boundary_conditions.size() * 3);
+    boundary_force_indices.resize(integrator_size * 3);
 
-    // So we have a key difference from literature. Our boundary conditions
-    // specify external forces as opposed to specifying which nodes are fixed,
-    // we just assume nodes without forces are fixed at 0. So in a problem of
-    // the form U1 - U4 where we have 4 nodes, and 2 (U2, U3) are degrees of
-    // freedom, we can make conditions as:
-    //
-    // { node: 2, force(x, y, z), node: 3, force(x, y, z) }
-    //
-    // Where x, y and z are the directions in which the force is applied. We can
-    // map into the force vector at these coordinates
-    int segment = 0; // Keep track of kept indices as a 0-indexed vector
+    int segment = 0;
     for (const auto& [node, force] : boundary_conditions) {
         // Get the node number so we can begin indexing
         const unsigned int node_number = node;
@@ -132,7 +111,7 @@ void LinearTetrahedral::AssembleBoundaryForces() {
         segment += 3;
     }
 
-    utils::SliceByIndices(per_element_stuffness, global_stiffness,
+    utils::SliceByIndices(per_element_stiffness, global_stiffness,
                           boundary_force_indices, boundary_force_indices);
 }
 
@@ -351,8 +330,8 @@ Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
     const float V =
         ComputeElementVolume(shape_one, shape_two, shape_three, shape_four);
     const auto create_beta_submatrix = [](float beta, float gamma,
-                                          float delta) -> BetaSubmatrixf {
-        BetaSubmatrixf B;
+                                          float delta) -> BetaSubMatrixXf {
+        BetaSubMatrixXf B;
         B.row(0) << beta, 0, 0;
         B.row(1) << 0, gamma, 0;
         B.row(2) << 0, 0, delta;
@@ -405,15 +384,15 @@ Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
     const float delta_4 =
         ConstructShapeFunctionParameter(x1, y1, x2, y2, x3, y3);
 
-    const BetaSubmatrixf B1 = create_beta_submatrix(beta_1, gamma_1, delta_1);
-    const BetaSubmatrixf B2 = create_beta_submatrix(beta_2, gamma_2, delta_2);
-    const BetaSubmatrixf B3 = create_beta_submatrix(beta_3, gamma_3, delta_3);
-    const BetaSubmatrixf B4 = create_beta_submatrix(beta_4, gamma_4, delta_4);
+    const BetaSubMatrixXf B1 = create_beta_submatrix(beta_1, gamma_1, delta_1);
+    const BetaSubMatrixXf B2 = create_beta_submatrix(beta_2, gamma_2, delta_2);
+    const BetaSubMatrixXf B3 = create_beta_submatrix(beta_3, gamma_3, delta_3);
+    const BetaSubMatrixXf B4 = create_beta_submatrix(beta_4, gamma_4, delta_4);
 
     // Matrix is 6 x 12
     strain_relationship.resize(B1.rows(), B1.cols() * 4);
     strain_relationship << B1, B2, B3, B4;
-    if (V != 0) {
+    if (V != 0.f) {
         strain_relationship /= (6 * V);
     } else {
         strain_relationship /= (6);
@@ -431,74 +410,54 @@ float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
     return parameter.determinant();
 }
 
-void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
-    std::vector<Eigen::Triplet<float>> mass_entries;
-    mass_entries.reserve(mesh->Size());
+Eigen::VectorXf LinearTetrahedral::ComputeRenderedDisplacements() {
+    assert(!boundary_conditions.empty() && "NO BOUNDARY CONDITIONS");
+    Eigen::VectorXf output = Eigen::VectorXf::Zero(mesh->Size());
 
-    mass.resize(mesh->Size(), mesh->Size());
-
-    for (int i = 0; i < mesh->Size(); ++i) {
-        mass_entries.emplace_back(i, i, point_mass);
+    int i = 0;
+    for (const auto& [node, _] : boundary_conditions) {
+        output.segment(node, 3) << global_displacement(i),
+            global_displacement(i + 1), global_displacement(i + 2);
+        i += 3;
     }
 
-    mass.setFromTriplets(mass_entries.begin(), mass_entries.end());
+    return output;
 }
 
-void LinearTetrahedral::ComputeInitialGlobalDisplacement() {
-    assert(per_element_stuffness.rows() == boundary_forces.rows() &&
-           "per_element_stiffness AND boundary_forces DO NOT MATCH IN NUMBER "
-           "OF ROWS");
-
-    Eigen::VectorXf u;
-
-    // Indices is always # of nodes not including multi-coordinate layouts
-    u.resize(boundary_forces.size());
-
-    // Full pivot LU factorization of element_stiffnesses minimized as far as it
-    // can go, then we solve with respect to f, assigning to our global
-    // displacement vector.
-    u = per_element_stuffness.fullPivLu().solve(boundary_forces);
-
-    assert(boundary_force_indices.rows() == u.rows() && "INDEX AND U DIFFER");
-
-    for (int i = 0; i < u.size(); ++i) {
-        const float val = u(i);
-        const unsigned int index = boundary_force_indices(i);
-
-        global_displacement.row(index) << val;
-    }
+void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
+    mass.resize(integrator_size * 3, integrator_size * 3);
+    mass.setIdentity();
 }
 
 void LinearTetrahedral::Solve() {
-    //global_force = global_stiffness * global_displacement;
-
+    const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements();
     for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_one;
-        utils::SliceEigenVector(displacement_one, global_displacement, index,
+        utils::SliceEigenVector(displacement_one, solved_displacement, index,
                                 index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 1);
         Eigen::VectorXf shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_two;
-        utils::SliceEigenVector(displacement_two, global_displacement, index,
+        utils::SliceEigenVector(displacement_two, solved_displacement, index,
                                 index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 2);
         Eigen::VectorXf shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_three;
-        utils::SliceEigenVector(displacement_three, global_displacement, index,
+        utils::SliceEigenVector(displacement_three, solved_displacement, index,
                                 index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 3);
         Eigen::VectorXf shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
         Eigen::VectorXf displacement_four;
-        utils::SliceEigenVector(displacement_four, global_displacement, index,
+        utils::SliceEigenVector(displacement_four, solved_displacement, index,
                                 index + 2);
 
         const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
@@ -543,8 +502,13 @@ float LinearTetrahedral::ComputeElementVolume(
 }
 
 void LinearTetrahedral::InitializeIntegrator() {
-    global_displacement.resize(mesh->positions.size());
+    global_displacement.resize(integrator_size * 3);
     global_displacement.setZero();
+
+    Eigen::MatrixXf damping;
+    ComputeRayleighDamping(damping, per_element_stiffness, mass, 0.5, 0.5, 1e1);
+
     integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        dt, global_displacement, global_stiffness, mass, global_force);
+        dt, global_displacement, per_element_stiffness, mass, boundary_forces,
+        damping);
 }

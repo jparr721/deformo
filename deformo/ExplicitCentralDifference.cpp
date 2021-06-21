@@ -4,8 +4,9 @@
 ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
     const float dt, const Eigen::VectorXf& displacements,
     Eigen::MatrixXf stiffness, const Eigen::SparseMatrixXf& mass_matrix,
-    const Eigen::VectorXf& initial_forces)
-    : dt(dt), stiffness_(std::move(stiffness)), mass_matrix_(mass_matrix) {
+    const Eigen::VectorXf& initial_forces, const Eigen::MatrixXf& damping)
+    : dt(dt), damping_(damping), stiffness_(std::move(stiffness)),
+      mass_matrix_(mass_matrix) {
     SetIntegrationConstants();
     SetEffectiveMassMatrix();
     SetMovementVectors(displacements, initial_forces, mass_matrix);
@@ -34,7 +35,7 @@ void ExplicitCentralDifferenceMethod::SetLastPosition(
 }
 
 void ExplicitCentralDifferenceMethod::SetEffectiveMassMatrix() {
-    effective_mass_matrix_ = a0 * mass_matrix_;
+    effective_mass_matrix_ = a0 * mass_matrix_ + a1 * damping_;
     Eigen::SparseLU<Eigen::SparseMatrixXf> solver;
     solver.compute(effective_mass_matrix_);
     Eigen::SparseMatrixXf I(effective_mass_matrix_.rows(),
@@ -45,7 +46,7 @@ void ExplicitCentralDifferenceMethod::SetEffectiveMassMatrix() {
 
 void ExplicitCentralDifferenceMethod::SetEffectiveLoadConstants() {
     el_stiffness_mass_diff_ = stiffness_ - a2 * mass_matrix_;
-    el_mass_matrix_damping_diff_ = a0 * mass_matrix_;
+    el_mass_matrix_damping_diff_ = a0 * mass_matrix_ - a1 * damping_;
 }
 
 void ExplicitCentralDifferenceMethod::SetIntegrationConstants() {

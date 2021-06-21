@@ -49,21 +49,40 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     void Cleanup();
     void Update();
 
-    void SetCutPlane(float value);
-    void SetInteractiveModeToggle(int state);
-
+    // Simulation Settings Window
+    // Simulation Settings -- FEA Parameters
+    void SetSliceAxis(const QString& value);
+    void SetSliceValue(float value);
+    void SetNodalMass(float value);
     void SetPoissonsRatio(double value);
-    void SetModulusOfElasticity(double value);
+    void SetYoungsModulus(double value);
+    void SetTimestepSize(double value);
 
+    // Simulation Settings -- Damping Parameters
+    void SetRayleighLambda(double value);
+    void SetRayleighMu(double value);
+
+    // Simulation Settings -- Run Simulation Button
+    void RunSimulationButtonPressed();
+
+    // Render Properties Window
     void SetTetgenFlags(const QString& value);
 
   signals:
-    void OnCutPlaneChange(float value);
-    void OnInteractiveModeToggled(int state);
-
+    // Simulation Settings Window
+    // Simulation Settings -- FEA Parameters
+    void OnSliceAxisChange(const QString& value);
+    void OnSliceValueChange(float value);
+    void OnNodalMassChange(float value);
     void OnPoissonsRatioChange(double value);
-    void OnModulusOfElasticityChange(double value);
+    void OnYoungsModulusChange(double value);
+    void OnTimestepSizeChange(double value);
 
+    // Simulation Settings -- Damping Parameters
+    void OnRayleighLambdaChange(double value);
+    void OnRayleighMuChange(double value);
+
+    // Render Properties Window
     void OnTetgenFlagsChange(const QString& value);
 
   protected:
