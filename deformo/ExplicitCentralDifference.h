@@ -36,12 +36,14 @@ class ExplicitCentralDifferenceMethod {
     Eigen::VectorXf previous_position;
 
     // TODO(@jpar721) - Add damping to effective matrix calc.
-    ExplicitCentralDifferenceMethod(const float dt,
-                                    const Eigen::VectorXf& displacements,
-                                    Eigen::MatrixXf stiffness,
-                                    const Eigen::SparseMatrixXf& mass_matrix,
-                                    const Eigen::VectorXf& initial_forces,
-                                    const Eigen::MatrixXf& damping);
+    ExplicitCentralDifferenceMethod(
+        float dt, float point_mass, Eigen::MatrixXf stiffness,
+        const Eigen::VectorXf& initial_displacements,
+        const Eigen::VectorXf& initial_forces);
+
+    void SetDamping(float mu = 0.5f, float lambda = 0.5f);
+    void SetMassMatrix(float point_mass);
+    void SetIntegrationConstants(float dt) noexcept;
 
     /**
     \brief Calculates the explicit Central Difference Method integration
@@ -63,13 +65,15 @@ class ExplicitCentralDifferenceMethod {
     **/
     void Solve(Eigen::VectorXf& displacements, const Eigen::VectorXf& forces);
 
-    const Eigen::VectorXf Velocity() const { return velocity_; }
-    const Eigen::VectorXf Acceleration() const { return acceleration_; }
+    Eigen::VectorXf Velocity() const { return velocity_; }
+    Eigen::VectorXf Acceleration() const { return acceleration_; }
 
   private:
-    const Eigen::MatrixXf damping_;
     const Eigen::MatrixXf stiffness_;
-    const Eigen::SparseMatrixXf mass_matrix_;
+
+    Eigen::SparseMatrixXf mass_matrix_;
+
+    Eigen::MatrixXf damping_;
     Eigen::SparseMatrixXf effective_mass_matrix_;
 
     Eigen::VectorXf velocity_;
@@ -79,14 +83,12 @@ class ExplicitCentralDifferenceMethod {
     Eigen::MatrixXf el_stiffness_mass_diff_;
     Eigen::MatrixXf el_mass_matrix_damping_diff_;
 
-    void SetLastPosition(const Eigen::VectorXf& positions);
     void SetEffectiveMassMatrix();
-    void SetEffectiveLoadConstants();
-    void SetIntegrationConstants();
+    void SetLastPosition(const Eigen::VectorXf& positions);
     void SetMovementVectors(const Eigen::VectorXf& positions,
                             const Eigen::VectorXf& forces,
                             const Eigen::MatrixXf& mass_matrix);
 
     Eigen::VectorXf ComputeEffectiveLoad(const Eigen::VectorXf& displacements,
-                                         const Eigen::VectorXf& forces);
+                                         const Eigen::VectorXf& forces) const;
 };

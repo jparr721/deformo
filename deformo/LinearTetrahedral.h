@@ -19,19 +19,13 @@ class LinearTetrahedral {
     };
 
   public:
-    constexpr static int kFaceStride = 4;
-
     const unsigned int integrator_size;
 
-    // Timestep constants
-    float current_time = 0.f;
-    float dt = 0.1f;
-
     // Modulus of Elasticity
-    const float modulus_of_elasticity;
+    float modulus_of_elasticity;
 
     // Poisson's Ratio
-    const float poissons_ratio;
+    float poissons_ratio;
 
     // The boundary force indices
     Eigen::VectorXi boundary_force_indices;
@@ -41,9 +35,6 @@ class LinearTetrahedral {
 
     // Global stacked vertex vector (xy) with index mapping of node orientations
     std::shared_ptr<Mesh> mesh;
-
-    // The Mass Matrix
-    Eigen::SparseMatrixXf mass;
 
     // The Per-Element Stiffness Matrix
     Eigen::MatrixXf per_element_stiffness;
@@ -66,18 +57,10 @@ class LinearTetrahedral {
     // Boundary conditions on nodes in the mesh
     std::vector<BoundaryCondition> boundary_conditions;
 
-    // The integrator for our sim
-    std::unique_ptr<ExplicitCentralDifferenceMethod> integrator;
-
-    LinearTetrahedral(const float modulus_of_elasticity,
-                      const float poissons_ratio, const float point_mass,
+    LinearTetrahedral(float modulus_of_elasticity, float poissons_ratio,
                       std::shared_ptr<Mesh> mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
     void Update();
-
-    void InitializeIntegrator();
-
-    void AssembleMassMatrix(const float point_mass);
 
     void AssembleGlobalStiffness();
 

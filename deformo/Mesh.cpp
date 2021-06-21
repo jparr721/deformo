@@ -49,18 +49,6 @@ void Mesh::Update(const Eigen::VectorXf& displacements) {
     positions = displacements + rest_positions;
 }
 
-void Mesh::SetCutPlane(float cut_plane) {
-    const int visible_elements = ceil(positions.size() * cut_plane);
-
-    for (int i = 0; i < colors.size(); i += 4) {
-        if (i < visible_elements) {
-            colors.segment(i, 4) << kMeshDefaultColor;
-        } else {
-            colors.segment(i, 4) << kMeshDefaultColorInvisible;
-        }
-    }
-}
-
 void Mesh::Reset() {
     positions = rest_positions;
     for (int i = 0; i < colors.rows(); i += 4) {
@@ -86,9 +74,24 @@ void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
 
 void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
                          Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
-                         Eigen::MatrixXi& TT) {
+                         Eigen::MatrixXi& TT) const {
     tetgenio out;
     // const std::string tetgen_flags = "zpqa1e-1";
     Tetrahedralize(out, V, F, tetgen_flags);
     assert(TetgenioToMesh(TV, TF, TT, out));
 }
+
+// ================ SETTERS
+void Mesh::SetCutPlane(float cut_plane) {
+    const int visible_elements = ceil(positions.size() * cut_plane);
+
+    for (int i = 0; i < colors.size(); i += 4) {
+        if (i < visible_elements) {
+            colors.segment(i, 4) << kMeshDefaultColor;
+        } else {
+            colors.segment(i, 4) << kMeshDefaultColorInvisible;
+        }
+    }
+}
+void Mesh::SetCutPlaneAxis(CutPlaneAxis axis) { cut_plane_axis = axis; }
+void Mesh::SetTetgenFlags(const std::string& flags) { tetgen_flags = flags; }

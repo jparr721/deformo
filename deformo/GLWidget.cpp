@@ -115,6 +115,7 @@ void GLWidget::paintGL() {
 
     if (simulating_) {
         sim->Solve();
+        sim->Integrate();
     }
 
     LogErrors("paintGL");
@@ -141,8 +142,8 @@ void GLWidget::BuildPhysicsEngine() {
     }
     const auto boundary_conditions =
         AssignBoundaryConditionToFixedNodes(dynamic_indices, uniform_gravity);
-    sim = std::make_unique<LinearTetrahedral>(1000, 0.3, 1.f, mesh,
-                                              boundary_conditions);
+    sim =
+        std::make_unique<Simulation>(1000, 0.3, 1.f, mesh, boundary_conditions);
 }
 
 void GLWidget::Reset() {
@@ -174,9 +175,7 @@ void GLWidget::SetSliceAxis(const QString& value) {
     emit OnSliceAxisChange(value);
 }
 
-void GLWidget::SetSliceValue(float value) {
-    emit OnSliceValueChange(value);
-}
+void GLWidget::SetSliceValue(float value) { emit OnSliceValueChange(value); }
 
 void GLWidget::SetNodalMass(float value) { emit OnNodalMassChange(value); }
 
@@ -210,4 +209,3 @@ void GLWidget::SetTetgenFlags(const QString& value) {
 void GLWidget::RenderSimulationButtonPressed() {
     std::cout << "Render Button Pressed" << std::endl;
 }
-

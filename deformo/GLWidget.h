@@ -13,9 +13,9 @@
 
 #include "Camera.h"
 #include "Input.h"
-#include "LinearTetrahedral.h"
 #include "Mesh.h"
 #include "Renderer.h"
+#include "Simulation.h"
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     Q_OBJECT
@@ -38,7 +38,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     std::unique_ptr<Renderer> renderer;
 
     // LinearTetrahedral Object
-    std::unique_ptr<LinearTetrahedral> sim;
+    std::unique_ptr<Simulation> sim;
 
     explicit GLWidget(QWidget* parent = nullptr);
     ~GLWidget() override;

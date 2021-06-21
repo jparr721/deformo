@@ -11,22 +11,21 @@
 
 LinearTetrahedral::LinearTetrahedral(
     const float modulus_of_elasticity, const float poissons_ratio,
-    const float point_mass, std::shared_ptr<Mesh> mesh,
+    std::shared_ptr<Mesh> mesh,
     std::vector<BoundaryCondition> boundary_conditions)
-    : modulus_of_elasticity(modulus_of_elasticity),
+    : integrator_size(boundary_conditions.size()),
+      modulus_of_elasticity(modulus_of_elasticity),
       poissons_ratio(poissons_ratio), mesh(std::move(mesh)),
-      boundary_conditions(std::move(boundary_conditions)),
-      integrator_size(boundary_conditions.size()) {
+      boundary_conditions(std::move(boundary_conditions)) {
     AssembleElementStiffness();
     AssembleGlobalStiffness();
-    AssembleMassMatrix(point_mass);
     AssembleBoundaryForces();
-    InitializeIntegrator();
+
+    global_displacement.resize(integrator_size * 3);
+    global_displacement.setZero();
 }
 
 void LinearTetrahedral::Update() {
-    current_time += dt;
-    integrator->Solve(global_displacement, boundary_forces);
     mesh->Update(ComputeRenderedDisplacements());
 }
 
@@ -46,7 +45,7 @@ void LinearTetrahedral::ComputeElementStiffness(
 }
 
 void LinearTetrahedral::AssembleElementStiffness() {
-    for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
+    for (int i = 0; i < mesh->SimNodesSize(); i += Mesh::FacesStride()) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
         int index = mesh->GetPositionAtFaceIndex(i);
@@ -424,14 +423,9 @@ Eigen::VectorXf LinearTetrahedral::ComputeRenderedDisplacements() {
     return output;
 }
 
-void LinearTetrahedral::AssembleMassMatrix(const float point_mass) {
-    mass.resize(integrator_size * 3, integrator_size * 3);
-    mass.setIdentity();
-}
-
 void LinearTetrahedral::Solve() {
     const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements();
-    for (int i = 0; i < mesh->SimNodesSize(); i += kFaceStride) {
+    for (int i = 0; i < mesh->SimNodesSize(); i += Mesh::FacesStride()) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
@@ -499,16 +493,4 @@ float LinearTetrahedral::ComputeElementVolume(
     V.row(3) << 1, x4, y4, z4;
 
     return V.determinant() / 6;
-}
-
-void LinearTetrahedral::InitializeIntegrator() {
-    global_displacement.resize(integrator_size * 3);
-    global_displacement.setZero();
-
-    Eigen::MatrixXf damping;
-    ComputeRayleighDamping(damping, per_element_stiffness, mass, 0.5, 0.5, 1e1);
-
-    integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-        dt, global_displacement, per_element_stiffness, mass, boundary_forces,
-        damping);
 }

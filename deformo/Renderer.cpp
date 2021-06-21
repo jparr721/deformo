@@ -72,6 +72,15 @@ auto Renderer::SetRenderMode() -> void {
     dirty_.set(DirtyStatus::render_mode);
 }
 
+void Renderer::SetTetgenFlags(const std::string& flags) {
+}
+
+void Renderer::SetCutPlane(float cut_plane) { mesh_->SetCutPlane(cut_plane); }
+
+void Renderer::SetCutPlaneAxis(CutPlaneAxis cut_plane_axis) {
+    mesh_->SetCutPlaneAxis(cut_plane_axis);
+}
+
 auto Renderer::BuildBuffers() -> void {
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);

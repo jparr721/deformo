@@ -100,6 +100,9 @@
     <ClCompile Include="MeshGenerator.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Simulation.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -158,6 +161,9 @@
     </ClInclude>
     <ClInclude Include="MeshGenerator.h">
       <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Simulation.h">
+      <Filter>Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

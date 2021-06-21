@@ -73,7 +73,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QToolButton" name="toolButton_3">
+      <widget class="QToolButton" name="skip_start_button">
        <property name="minimumSize">
         <size>
          <width>30</width>
@@ -81,11 +81,12 @@
         </size>
        </property>
        <property name="text">
-        <string>...</string>
+        <string/>
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>../../../.designer/backup/Assets/step-backward-solid.svg</normaloff>../../../.designer/backup/Assets/step-backward-solid.svg</iconset>
+         <normaloff>../../../.designer/backup/Assets/step-backward-solid.svg</normaloff>
+         <normalon>Assets/step-backward-solid.svg</normalon>../../../.designer/backup/Assets/step-backward-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -102,7 +103,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>../../../.designer/backup/Assets/play-solid.svg</normaloff>../../../.designer/backup/Assets/play-solid.svg</iconset>
+         <normaloff>Assets/play-solid.svg</normaloff>Assets/play-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -119,7 +120,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>../../../.designer/backup/Assets/pause-solid.svg</normaloff>../../../.designer/backup/Assets/pause-solid.svg</iconset>
+         <normaloff>Assets/pause-solid.svg</normaloff>Assets/pause-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -136,7 +137,7 @@
        </property>
        <property name="icon">
         <iconset>
-         <normaloff>../../../.designer/backup/Assets/step-forward-solid.svg</normaloff>../../../.designer/backup/Assets/step-forward-solid.svg</iconset>
+         <normaloff>Assets/step-forward-solid.svg</normaloff>Assets/step-forward-solid.svg</iconset>
        </property>
       </widget>
      </item>
@@ -160,7 +161,7 @@
      </font>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="sim_settings_page">
      <property name="geometry">
@@ -662,7 +663,7 @@
      <x>0</x>
      <y>0</y>
      <width>1920</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>
