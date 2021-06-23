@@ -127,31 +127,12 @@ void GLWidget::BuildMesh(const float cut_plane) {
     const auto ply_path = std::filesystem::path(cdir + "/cube.ply");
 
     mesh = std::make_shared<Mesh>(ply_path.string(), cut_plane);
-
-    // Eigen::MatrixXf V(8, 3);
-    // V.row(0) << 0, 0, 0;
-    // V.row(1) << 0.025, 0, 0;
-    // V.row(2) << 0, 0.5, 0;
-    // V.row(3) << 0.025, 0.5, 0;
-    // V.row(4) << 0, 0, 0.25;
-    // V.row(5) << 0.025, 0, 0.25;
-    // V.row(6) << 0, 0.5, 0.25;
-    // V.row(7) << 0.025, 0.5, 0.25;
-
-    // Eigen::MatrixXi T(5, 4);
-    // T.row(0) << 0, 1, 3, 5;
-    // T.row(1) << 0, 3, 2, 6;
-    // T.row(2) << 5, 4, 6, 0;
-    // T.row(3) << 5, 6, 7, 3;
-    // T.row(4) << 0, 5, 3, 6;
-
-    // mesh = std::make_shared<Mesh>(V, T);
 }
 
 void GLWidget::BuildPhysicsEngine() {
     assert(mesh != nullptr && "MESH IS NOT INITIALIZED");
 
-    const auto uniform_gravity = Eigen::Vector3f(0.f, -20.81f, 0.f);
+    const auto uniform_gravity = Eigen::Vector3f(0.f, -100.f, 0.f);
     std::vector<unsigned int> dynamic_indices;
     utils::FindMaxVertices(dynamic_indices, mesh->positions);
 

@@ -26,7 +26,7 @@ class Mesh {
 
     float cut_plane = kNoCutPlane;
 
-    std::string tetgen_flags = "zpqm";
+    std::string tetgen_flags = "zpq";
 
     // Geometry Colors
     Eigen::VectorXf colors;
