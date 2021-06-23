@@ -22,13 +22,10 @@ class LinearTetrahedral {
     const unsigned int integrator_size;
 
     // Modulus of Elasticity
-    float modulus_of_elasticity;
+    float youngs_modulus;
 
     // Poisson's Ratio
     float poissons_ratio;
-
-    // The boundary force indices
-    Eigen::VectorXi boundary_force_indices;
 
     // The boundary forces
     Eigen::VectorXf boundary_forces;
@@ -60,6 +57,8 @@ class LinearTetrahedral {
     LinearTetrahedral(float modulus_of_elasticity, float poissons_ratio,
                       std::shared_ptr<Mesh> mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
+
+    // ===========================
     void Update();
 
     void AssembleGlobalStiffness();
@@ -93,14 +92,6 @@ class LinearTetrahedral {
     @brief Applies the vector of boundary conditions to the nodes and solves
     */
     void Solve();
-
-    /*
-    @brief Compute the volume of the tetrahedral element.
-    */
-    [[nodiscard]] float ComputeElementVolume(const Eigen::Vector3f& shape_one,
-                                             const Eigen::Vector3f& shape_two,
-                                             const Eigen::Vector3f& shape_three,
-                                             const Eigen::Vector3f& shape_four);
 
     /*
     @brief Construct the shape function parameter matrix determinant.

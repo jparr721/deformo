@@ -17,7 +17,7 @@ ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
 
 void ExplicitCentralDifferenceMethod::SetDamping(const float mu,
                                                  const float lambda) {
-    ComputeRayleighDamping(damping_, stiffness_, mass_matrix_, mu, lambda);
+    ComputeRayleighDamping(damping_, stiffness_, mass_matrix_, mu, lambda, 0);
 }
 
 void ExplicitCentralDifferenceMethod::Solve(Eigen::VectorXf& displacements,
@@ -46,7 +46,6 @@ void ExplicitCentralDifferenceMethod::SetMassMatrix(float point_mass) {
     mass_matrix_ *= point_mass;
 }
 
-
 void ExplicitCentralDifferenceMethod::SetEffectiveMassMatrix() {
     effective_mass_matrix_ = a0 * mass_matrix_ + a1 * damping_;
     Eigen::SparseLU<Eigen::SparseMatrixXf> solver;
@@ -57,7 +56,8 @@ void ExplicitCentralDifferenceMethod::SetEffectiveMassMatrix() {
     effective_mass_matrix_ = solver.solve(I);
 }
 
-void ExplicitCentralDifferenceMethod::SetIntegrationConstants(const float dt) noexcept {
+void ExplicitCentralDifferenceMethod::SetIntegrationConstants(
+    const float dt) noexcept {
     a0 = 1.f / (std::powf(dt, 2));
     a1 = 1.f / (2.f * dt);
     a2 = 2.f * a0;

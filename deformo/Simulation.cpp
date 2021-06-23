@@ -12,6 +12,8 @@ Simulation::Simulation(
 }
 
 void Simulation::Solve() {
+    assert(engine_ != nullptr);
+    assert(integrator_ != nullptr);
     current_time += dt;
     engine_->Solve();
 }

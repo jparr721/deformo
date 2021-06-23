@@ -14,7 +14,7 @@ LinearTetrahedral::LinearTetrahedral(
     std::shared_ptr<Mesh> mesh,
     std::vector<BoundaryCondition> boundary_conditions)
     : integrator_size(boundary_conditions.size()),
-      modulus_of_elasticity(modulus_of_elasticity),
+      youngs_modulus(modulus_of_elasticity),
       poissons_ratio(poissons_ratio), mesh(std::move(mesh)),
       boundary_conditions(std::move(boundary_conditions)) {
     AssembleElementStiffness();
@@ -37,10 +37,10 @@ void LinearTetrahedral::ComputeElementStiffness(
         shape_one, shape_two, shape_three, shape_four);
 
     const Eigen::Matrix66f D =
-        AssembleStressStrainMatrix(poissons_ratio, modulus_of_elasticity);
+        AssembleStressStrainMatrix(poissons_ratio, youngs_modulus);
 
-    const float V =
-        ComputeElementVolume(shape_one, shape_two, shape_three, shape_four);
+    const float V = utils::ComputeTetrahedraElementVolume(
+        shape_one, shape_two, shape_three, shape_four);
     element_stiffness = V * B.transpose() * D * B;
 }
 
@@ -82,7 +82,7 @@ void LinearTetrahedral::AssembleElementStiffness() {
 void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u,
                                                 const Eigen::MatrixXf& B) {
     const Eigen::Matrix66f D =
-        AssembleStressStrainMatrix(poissons_ratio, modulus_of_elasticity);
+        AssembleStressStrainMatrix(poissons_ratio, youngs_modulus);
 
     const Eigen::Vector6f sigma = D * B * u;
 
@@ -95,6 +95,8 @@ void LinearTetrahedral::AssembleBoundaryForces() {
     boundary_forces.resize(integrator_size * 3);
     boundary_forces.setZero();
 
+    // The boundary force indices
+    Eigen::VectorXi boundary_force_indices;
     boundary_force_indices.resize(integrator_size * 3);
 
     int segment = 0;
@@ -327,7 +329,7 @@ Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
     const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four) {
     Eigen::MatrixXf strain_relationship;
     const float V =
-        ComputeElementVolume(shape_one, shape_two, shape_three, shape_four);
+        utils::ComputeTetrahedraElementVolume(shape_one, shape_two, shape_three, shape_four);
     const auto create_beta_submatrix = [](float beta, float gamma,
                                           float delta) -> BetaSubMatrixXf {
         BetaSubMatrixXf B;
@@ -465,32 +467,4 @@ void LinearTetrahedral::Solve() {
 
     AssembleElementPlaneStresses();
     Update();
-}
-
-float LinearTetrahedral::ComputeElementVolume(
-    const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
-    const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four) {
-    const float x1 = shape_one.x();
-    const float y1 = shape_one.y();
-    const float z1 = shape_one.z();
-
-    const float x2 = shape_two.x();
-    const float y2 = shape_two.y();
-    const float z2 = shape_two.z();
-
-    const float x3 = shape_three.x();
-    const float y3 = shape_three.y();
-    const float z3 = shape_three.z();
-
-    const float x4 = shape_four.x();
-    const float y4 = shape_four.y();
-    const float z4 = shape_four.z();
-
-    Eigen::Matrix4f V;
-    V.row(0) << 1, x1, y1, z1;
-    V.row(1) << 1, x2, y2, z2;
-    V.row(2) << 1, x3, y3, z3;
-    V.row(3) << 1, x4, y4, z4;
-
-    return V.determinant() / 6;
 }

@@ -2,6 +2,10 @@
 #include <sstream>
 
 namespace utils {
+std::string QStringToString(const QString& string) {
+    return string.toUtf8().constData();
+}
+
 void FindMaxVertices(std::vector<unsigned>& indices,
                      const Eigen::VectorXf& positions) {
     float max_y = -1e-10f;

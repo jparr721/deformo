@@ -10,7 +10,7 @@
 
 class Simulation {
   public:
-    float dt = 0.1f;
+    float dt = 0.01f;
     float current_time = 0.f;
 
     Simulation() = default;
@@ -26,11 +26,47 @@ class Simulation {
         const std::vector<BoundaryCondition>& boundary_conditions) {
         engine_->boundary_conditions = boundary_conditions;
     }
-    void SetYoungsModulus(float E) const { engine_->modulus_of_elasticity = E; }
+    void SetYoungsModulus(float E) const { engine_->youngs_modulus = E; }
     void SetPoissonsRatio(float v) const { engine_->poissons_ratio = v; }
     void SetMass(float mass) const { integrator_->SetMassMatrix(mass); }
+    void SetNodalMass(float mass) const { integrator_->SetMassMatrix(mass); }
+    void SetTimestepSize(float dt) { this->dt = dt; }
+
+    void SetRayleighMu(float mu) {
+        rayleigh_mu = mu;
+        integrator_->SetDamping(rayleigh_mu, rayleigh_lambda);
+    }
+
+    void SetRayleighLambda(float lambda) {
+        rayleigh_lambda = lambda;
+        integrator_->SetDamping(rayleigh_mu, rayleigh_lambda);
+    }
+
+    void SetDampingMatrix(float mu, float lambda) {
+        rayleigh_mu = mu;
+        rayleigh_lambda = lambda;
+        integrator_->SetDamping(rayleigh_mu, rayleigh_lambda);
+    }
+
+    void SetTetgenFlags(const std::string& value) const {
+        mesh_->SetTetgenFlags(value);
+    }
+
+    void SetSliceValue(float value) const { mesh_->SetCutPlane(value); }
+    void SetSliceAxis(const std::string& value) const {
+        mesh_->SetCutPlaneAxis(StringToCutPlaneAxis(value));
+    }
+
+    void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
+
+    // Getters
+
 
   private:
+    float rayleigh_mu = 0.5f;
+    float rayleigh_lambda = 0.5f;
+
     std::unique_ptr<LinearTetrahedral> engine_;
     std::unique_ptr<ExplicitCentralDifferenceMethod> integrator_;
+    std::shared_ptr<Mesh> mesh_;
 };

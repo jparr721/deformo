@@ -3,13 +3,14 @@
 #include <string>
 
 #include "EigenTypes.h"
-#include "MeshGenerator.h"
 
 enum class CutPlaneAxis {
     x_axis = 0,
     y_axis,
     z_axis,
 };
+
+CutPlaneAxis StringToCutPlaneAxis(const std::string& input);
 
 class Mesh {
   public:
@@ -25,7 +26,7 @@ class Mesh {
 
     float cut_plane = kNoCutPlane;
 
-    std::string tetgen_flags = "zpq";
+    std::string tetgen_flags = "zpqm";
 
     // Geometry Colors
     Eigen::VectorXf colors;

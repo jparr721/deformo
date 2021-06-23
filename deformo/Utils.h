@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
+#include <QString>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -119,6 +120,39 @@ void SliceByIndices(Eigen::PlainObjectBase<Out>& out,
         }
     }
 }
+
+template <typename Derived>
+[[nodiscard]] float ComputeTetrahedraElementVolume(
+    const Eigen::PlainObjectBase<Derived>& position_one,
+    const Eigen::PlainObjectBase<Derived>& position_two,
+    const Eigen::PlainObjectBase<Derived>& position_three,
+    const Eigen::PlainObjectBase<Derived>& position_four) {
+    const float x1 = position_one.x();
+    const float y1 = position_one.y();
+    const float z1 = position_one.z();
+
+    const float x2 = position_two.x();
+    const float y2 = position_two.y();
+    const float z2 = position_two.z();
+
+    const float x3 = position_three.x();
+    const float y3 = position_three.y();
+    const float z3 = position_three.z();
+
+    const float x4 = position_four.x();
+    const float y4 = position_four.y();
+    const float z4 = position_four.z();
+
+    Eigen::Matrix4f V;
+    V.row(0) << 1, x1, y1, z1;
+    V.row(1) << 1, x2, y2, z2;
+    V.row(2) << 1, x3, y3, z3;
+    V.row(3) << 1, x4, y4, z4;
+
+    return V.determinant() / 6;
+}
+
+[[nodiscard]] std::string QStringToString(const QString& string);
 
 template <typename T> void GTestDebugPrint(T value) {
     std::cerr << value << std::endl;

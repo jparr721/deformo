@@ -8,6 +8,26 @@
 #include "MeshGenerator.h"
 #include "Utils.h"
 
+CutPlaneAxis StringToCutPlaneAxis(const std::string& input) {
+    assert(input == "X-Axis" || input == "Y-Axis" ||
+           input == "Z-Axis" && "INVALID CUT PLANE AXIS INPUT");
+
+    if (input == "X-Axis") {
+        return CutPlaneAxis::x_axis;
+    }
+
+    if (input == "Y-Axis") {
+        return CutPlaneAxis::y_axis;
+    }
+
+    if (input == "Z-Axis") {
+        return CutPlaneAxis::z_axis;
+    }
+
+    // Unreachable, just want to make the linter happy.
+    return CutPlaneAxis::x_axis;
+}
+
 Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
     : cut_plane(cut_plane) {
     assert(std::filesystem::path(ply_path).extension() == ".ply" &&
@@ -21,6 +41,19 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
     Eigen::MatrixXi TT;
 
     ConstructMesh(V, F, TV, TF, TT);
+
+    for (int row = 0; row < TT.rows(); ++row) {
+        const Eigen::Vector3f position_one = TV.row(TT(row, 0));
+        const Eigen::Vector3f position_two = TV.row(TT(row, 1));
+        const Eigen::Vector3f position_three = TV.row(TT(row, 2));
+        const Eigen::Vector3f position_four = TV.row(TT(row, 3));
+        const float volume = utils::ComputeTetrahedraElementVolume(
+            position_one, position_two, position_three, position_four);
+
+        std::cout << "VOLUME: " << volume << std::endl;
+
+        assert(volume > 0);
+    }
 
     Vectorize(sim_nodes, TT);
 
