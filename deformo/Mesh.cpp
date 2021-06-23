@@ -50,8 +50,6 @@ Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
         const float volume = utils::ComputeTetrahedraElementVolume(
             position_one, position_two, position_three, position_four);
 
-        std::cout << "VOLUME: " << volume << std::endl;
-
         assert(volume > 0);
     }
 

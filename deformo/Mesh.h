@@ -14,7 +14,7 @@ CutPlaneAxis StringToCutPlaneAxis(const std::string& input);
 
 class Mesh {
   public:
-    constexpr static float kNoCutPlane = 1.01f;
+    constexpr static float kNoCutPlane = 0.f;
     inline const static Eigen::Vector4f kMeshDefaultColor =
         Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
     inline const static Eigen::Vector4f kMeshDefaultColorInvisible =

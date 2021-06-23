@@ -60,7 +60,22 @@ class Simulation {
     void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
 
     // Getters
+    [[nodiscard]] float SliceValue() const { return mesh_->cut_plane; }
+    [[nodiscard]] float NodalMass() const { return integrator_->NodalMass(); }
+    [[nodiscard]] float PoissonsRatio() const {
+        return engine_->poissons_ratio;
+    }
+    [[nodiscard]] float YoungsModulus() const {
+        return engine_->youngs_modulus;
+    }
+    [[nodiscard]] float TimestepSize() const { return dt; }
 
+    [[nodiscard]] float RayleighLambda() const { return rayleigh_lambda; }
+    [[nodiscard]] float RayleighMu() const { return rayleigh_mu; }
+
+    [[nodiscard]] std::string TetgenFlags() const {
+        return mesh_->tetgen_flags;
+    }
 
   private:
     float rayleigh_mu = 0.5f;

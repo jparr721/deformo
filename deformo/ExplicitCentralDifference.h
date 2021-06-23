@@ -41,9 +41,13 @@ class ExplicitCentralDifferenceMethod {
         const Eigen::VectorXf& initial_displacements,
         const Eigen::VectorXf& initial_forces);
 
+    // Setters
     void SetDamping(float mu = 0.5f, float lambda = 0.5f);
     void SetMassMatrix(float point_mass);
     void SetIntegrationConstants(float dt) noexcept;
+
+    // Getters
+    [[nodiscard]] float NodalMass() { return mass_matrix_.coeff(0, 0); }
 
     /**
     \brief Calculates the explicit Central Difference Method integration

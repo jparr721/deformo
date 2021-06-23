@@ -3,7 +3,8 @@
 Simulation::Simulation(
     float youngs_modulus, float poissons_ratio, float point_mass,
     const std::shared_ptr<Mesh>& mesh,
-    const std::vector<BoundaryCondition>& boundary_conditions) {
+    const std::vector<BoundaryCondition>& boundary_conditions)
+    : mesh_(mesh) {
     engine_ = std::make_unique<LinearTetrahedral>(
         youngs_modulus, poissons_ratio, mesh, boundary_conditions);
     integrator_ = std::make_unique<ExplicitCentralDifferenceMethod>(

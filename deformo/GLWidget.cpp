@@ -104,6 +104,7 @@ void GLWidget::initializeGL() {
 
     BuildMesh();
     BuildPhysicsEngine();
+    ConfigureUiPanels();
 
     renderer = std::make_unique<Renderer>(mesh, shader_program, camera_);
 
@@ -146,7 +147,17 @@ void GLWidget::BuildPhysicsEngine() {
                                        boundary_conditions);
 }
 
-void GLWidget::ConfigureUiPanels() {}
+void GLWidget::ConfigureUiPanels() {
+    SetSliceValue(sim->SliceValue());
+    SetNodalMass(sim->NodalMass());
+    SetPoissonsRatio(sim->PoissonsRatio());
+    SetYoungsModulus(sim->YoungsModulus());
+    SetTimestepSize(sim->TimestepSize());
+    SetTetgenFlags(QString::fromUtf8(sim->TetgenFlags().c_str()));
+
+    SetRayleighLambda(sim->RayleighLambda());
+    SetRayleighMu(sim->RayleighMu());
+}
 
 void GLWidget::Reset() {
     BuildMesh();
