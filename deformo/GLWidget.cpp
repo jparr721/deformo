@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 
 #include "GLWidget.h"
+#include "QTUtils.h"
 #include "Utils.h"
 
 #include <Eigen/Dense>
@@ -184,7 +185,7 @@ void GLWidget::resizeGL(int width, int height) {}
 
 // SLOTS ====================
 void GLWidget::SetSliceAxis(const QString& value) {
-    sim->SetSliceAxis(utils::QStringToString(value));
+    sim->SetSliceAxis(utils::qt::QStringToString(value));
     emit OnSliceAxisChange(value);
 }
 
@@ -228,7 +229,7 @@ void GLWidget::RunSimulationButtonPressed() {
 }
 
 void GLWidget::SetTetgenFlags(const QString& value) {
-    sim->SetTetgenFlags(utils::QStringToString(value));
+    sim->SetTetgenFlags(utils::qt::QStringToString(value));
     emit OnTetgenFlagsChange(value);
 }
 

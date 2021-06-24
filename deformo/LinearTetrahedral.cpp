@@ -7,13 +7,6 @@
 
 #include "Utils.h"
 
-#include <igl/barycenter.h>
-#include <igl/barycenter.h>
-#include <igl/barycenter.h>
-#include <igl/barycenter.h>
-#include <igl/barycenter.h>
-#include <igl/barycenter.h>
-
 LinearTetrahedral::LinearTetrahedral(
     const float youngs_modulus, const float poissons_ratio,
     const std::shared_ptr<Mesh>& mesh,
@@ -103,6 +96,7 @@ Eigen::MatrixXf
 LinearTetrahedral::AssembleElementPlaneStresses(const Eigen::MatrixXf& sigmas) {
     Eigen::MatrixXf plane_stresses;
     plane_stresses.resize(sigmas.rows(), 3);
+    utils::GTestDebugPrint(sigmas);
 
     for (int row = 0; row < sigmas.rows(); ++row) {
         const Eigen::VectorXf sigma = sigmas.row(row);
@@ -420,6 +414,8 @@ LinearTetrahedral::ComputeRenderedDisplacements(int displacements_size) {
 Eigen::MatrixXf LinearTetrahedral::Solve(float youngs_modulus,
                                          float poissons_ratio, const std::shared_ptr<Mesh>& mesh) {
     const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements(mesh->Size());
+    utils::GTestDebugPrint(solved_displacement);
+    utils::GTestDebugPrint("===");
 
     Eigen::MatrixXf element_stresses;
     element_stresses.resize(mesh->SimNodesSize() / Mesh::FacesStride(), 6);

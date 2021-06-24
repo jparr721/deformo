@@ -1,11 +1,9 @@
 #pragma once
 
-#include <Eigen/Sparse>
 #include <vector>
 
 #include "BoundaryCondition.h"
 #include "EigenTypes.h"
-#include "ExplicitCentralDifference.h"
 #include "Mesh.h"
 
 /**

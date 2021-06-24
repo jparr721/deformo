@@ -1,7 +1,6 @@
 #pragma once
 
 #include "EigenTypes.h"
-#include <utility>
 
 class ExplicitCentralDifferenceMethod {
   public:
@@ -35,15 +34,20 @@ class ExplicitCentralDifferenceMethod {
      */
     Eigen::VectorXf previous_position;
 
-    // TODO(@jpar721) - Add damping to effective matrix calc.
     ExplicitCentralDifferenceMethod(
         float dt, float point_mass, Eigen::MatrixXf stiffness,
         const Eigen::VectorXf& initial_displacements,
         const Eigen::VectorXf& initial_forces);
 
+    ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
+        const float dt, const Eigen::SparseMatrixXf mass_matrix,
+        Eigen::MatrixXf stiffness, const Eigen::VectorXf& initial_displacements,
+        const Eigen::VectorXf& initial_forces);
+
     // Setters
     void SetDamping(float mu = 0.5f, float lambda = 0.5f);
     void SetMassMatrix(float point_mass);
+    void SetMassMatrix(const Eigen::SparseMatrixXf& m);
     void SetIntegrationConstants(float dt) noexcept;
 
     // Getters

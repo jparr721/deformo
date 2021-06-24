@@ -39,6 +39,9 @@
     <Filter Include="Windowing">
       <UniqueIdentifier>{2afecee1-3fa4-4e6f-8096-18379fdd8be5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Utilities">
+      <UniqueIdentifier>{bcebcf8d-e477-453e-971b-9e0934b80d23}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -54,9 +57,6 @@
     </ClCompile>
     <ClCompile Include="LinearTetrahedral.cpp">
       <Filter>Physics</Filter>
-    </ClCompile>
-    <ClCompile Include="Utils.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BoundaryCondition.cpp">
       <Filter>Physics</Filter>
@@ -103,12 +103,15 @@
     <ClCompile Include="Simulation.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
+    <ClCompile Include="Utils.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="QTUtils.cpp">
+      <Filter>Utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="LinearTetrahedral.h">
@@ -164,6 +167,12 @@
     </ClInclude>
     <ClInclude Include="Simulation.h">
       <Filter>Physics</Filter>
+    </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="QTUtils.h">
+      <Filter>Utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -2,13 +2,14 @@
 
 #include <memory>
 
-
 #define TETLIBRARY
 #include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/LinearTetrahedral.cpp"
 #include "../deformo/LinearTetrahedral.h"
 #include "../deformo/Mesh.cpp"
 #include "../deformo/Mesh.h"
+#include "../deformo/MeshGenerator.h"
+#include "../deformo/MeshGenerator.cpp"
 #include "tetgen.h"
 
 auto MakeBasicMesh() -> std::shared_ptr<Mesh> {
@@ -33,15 +34,19 @@ auto MakeBasicMesh() -> std::shared_ptr<Mesh> {
 }
 
 TEST(TestLinearTetrahedral, TestConstructor) {
+  const float youngs_modulus = 210e6;
+  const float poissons_ratio = 0.3;
   const auto mesh = MakeBasicMesh();
   const auto lt = std::make_unique<LinearTetrahedral>(
-      0.1f, 0.1f, 1.f, mesh,
+      youngs_modulus, poissons_ratio, mesh,
       std::vector<BoundaryCondition>{{1, Eigen::Vector3f(0, 0, 0)}});
 
   EXPECT_TRUE(lt.get() != nullptr);
 }
 
 TEST(TestLinearTetrahedral, TestElementStiffness) {
+  const float youngs_modulus = 210e6;
+  const float poissons_ratio = 0.3;
   const auto mesh = MakeBasicMesh();
 
   const auto bc_1 = BoundaryCondition{
@@ -66,16 +71,14 @@ TEST(TestLinearTetrahedral, TestElementStiffness) {
 
   const std::vector bcs{{bc_1, bc_2, bc_3, bc_4}};
 
-  const auto lt =
-      std::make_unique<LinearTetrahedral>(210e6, 0.3, 1.f, mesh, bcs);
+  const auto lt = std::make_unique<LinearTetrahedral>(
+      youngs_modulus, poissons_ratio, mesh, bcs);
 
-  lt->Solve();
+  const Eigen::MatrixXf plane_stresses =
+      lt->Solve(youngs_modulus, poissons_ratio, mesh);
 
-  Eigen::VectorXf force_compare(24);
-  force_compare << -31.3293f, -5.34904f, -9.32853f, 30.7042f, -4.02576f,
-      -3.07762f, 0.f, 3.12495f, 0.f, 0.f, 6.24987f, 0.f, -30.7042f, -4.02584f,
-      3.07763f, 31.3293f, -5.34919f, 9.32853f, 0.f, 6.24997f, 0.f, 0.f,
-      3.12509f, 0.f;
-  ASSERT_TRUE(lt->global_force.isApprox(force_compare));
-
+  Eigen::VectorXf p1_compare(3);
+  p1_compare << 0, 0.123f, 7.4534f;
+  p1_compare *= 1e9;
+  ASSERT_TRUE(plane_stresses.row(0).isApprox(p1_compare));
 }

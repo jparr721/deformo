@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include <QString>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -151,8 +150,6 @@ template <typename Derived>
 
     return V.determinant() / 6;
 }
-
-[[nodiscard]] std::string QStringToString(const QString& string);
 
 template <typename T> void GTestDebugPrint(T value) {
     std::cerr << value << std::endl;

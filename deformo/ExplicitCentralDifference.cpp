@@ -3,6 +3,19 @@
 #include "Utils.h"
 
 ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
+    const float dt, const Eigen::SparseMatrixXf mass_matrix,
+    Eigen::MatrixXf stiffness, const Eigen::VectorXf& initial_displacements,
+    const Eigen::VectorXf& initial_forces)
+    : dt(dt), stiffness_(std::move(stiffness)) {
+    SetMassMatrix(mass_matrix);
+    SetDamping(0.5f, 0.5f);
+    SetIntegrationConstants(dt);
+    SetEffectiveMassMatrix();
+    SetMovementVectors(initial_displacements, initial_forces, mass_matrix_);
+    SetLastPosition(initial_displacements);
+}
+
+ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
     const float dt, const float point_mass, Eigen::MatrixXf stiffness,
     const Eigen::VectorXf& initial_displacements,
     const Eigen::VectorXf& initial_forces)
@@ -44,6 +57,11 @@ void ExplicitCentralDifferenceMethod::SetMassMatrix(float point_mass) {
     mass_matrix_.resize(stiffness_.rows(), stiffness_.cols());
     mass_matrix_.setIdentity();
     mass_matrix_ *= point_mass;
+}
+
+void ExplicitCentralDifferenceMethod::SetMassMatrix(
+    const Eigen::SparseMatrixXf& m) {
+    mass_matrix_ = m;
 }
 
 void ExplicitCentralDifferenceMethod::SetEffectiveMassMatrix() {

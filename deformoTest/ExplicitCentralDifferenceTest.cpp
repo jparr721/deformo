@@ -8,6 +8,8 @@
 #include "../deformo/ExplicitCentralDifference.cpp"
 #include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/LinearTetrahedral.h"
+#include "../deformo/Rayleigh.cpp"
+#include "../deformo/Rayleigh.h"
 
 auto MakeStiffnessMatrix() -> Eigen::Matrix2f {
   Eigen::Matrix2f stiffness;
@@ -36,7 +38,7 @@ TEST(TestExplicitCentralDifference, TestConstructor) {
   const Eigen::SparseMatrixXf mass_matrix = MakeMassMatrix();
 
   const auto integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-      0.28, initial_displacement, stiffness, mass_matrix, initial_forces);
+      .28, 1, stiffness, initial_displacement, initial_forces);
 
   std::cout << integrator->Acceleration() << std::endl;
   ASSERT_TRUE(integrator->Acceleration().isApprox(Eigen::Vector2f(0, 10)));
@@ -51,10 +53,14 @@ TEST(TestExplicitCentralDifference, TestSolver) {
   const Eigen::SparseMatrixXf mass_matrix = MakeMassMatrix();
 
   const auto integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
-      .28, displacement, stiffness, mass_matrix, forces);
+      .28, mass_matrix, stiffness, displacement, forces);
+  integrator->SetDamping(0, 0);
 
   for (int i = 0; i < 12; ++i) {
     integrator->Solve(displacement, forces);
+    std::cerr << "displacement: " << std::endl;
+    std::cerr << displacement << std::endl;
+    std::cerr << "===" << std::endl;
     if (i == 0) {
       Eigen::VectorXf compare(2);
       compare << 0, 0.392f;
