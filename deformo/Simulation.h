@@ -26,26 +26,26 @@ class Simulation {
         const std::vector<BoundaryCondition>& boundary_conditions) {
         engine_->boundary_conditions = boundary_conditions;
     }
-    void SetYoungsModulus(float E) const { engine_->youngs_modulus = E; }
-    void SetPoissonsRatio(float v) const { engine_->poissons_ratio = v; }
+    void SetYoungsModulus(float E) { youngs_modulus_ = E; }
+    void SetPoissonsRatio(float v) { poissons_ratio_ = v; }
     void SetMass(float mass) const { integrator_->SetMassMatrix(mass); }
     void SetNodalMass(float mass) const { integrator_->SetMassMatrix(mass); }
     void SetTimestepSize(float dt) { this->dt = dt; }
 
     void SetRayleighMu(float mu) {
-        rayleigh_mu = mu;
-        integrator_->SetDamping(rayleigh_mu, rayleigh_lambda);
+        rayleigh_mu_ = mu;
+        integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
     }
 
     void SetRayleighLambda(float lambda) {
-        rayleigh_lambda = lambda;
-        integrator_->SetDamping(rayleigh_mu, rayleigh_lambda);
+        rayleigh_lambda_ = lambda;
+        integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
     }
 
     void SetDampingMatrix(float mu, float lambda) {
-        rayleigh_mu = mu;
-        rayleigh_lambda = lambda;
-        integrator_->SetDamping(rayleigh_mu, rayleigh_lambda);
+        rayleigh_mu_ = mu;
+        rayleigh_lambda_ = lambda;
+        integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
     }
 
     void SetTetgenFlags(const std::string& value) const {
@@ -62,24 +62,23 @@ class Simulation {
     // Getters
     [[nodiscard]] float SliceValue() const { return mesh_->cut_plane; }
     [[nodiscard]] float NodalMass() const { return integrator_->NodalMass(); }
-    [[nodiscard]] float PoissonsRatio() const {
-        return engine_->poissons_ratio;
-    }
-    [[nodiscard]] float YoungsModulus() const {
-        return engine_->youngs_modulus;
-    }
+    [[nodiscard]] float PoissonsRatio() const { return poissons_ratio_; }
+    [[nodiscard]] float YoungsModulus() const { return youngs_modulus_; }
     [[nodiscard]] float TimestepSize() const { return dt; }
 
-    [[nodiscard]] float RayleighLambda() const { return rayleigh_lambda; }
-    [[nodiscard]] float RayleighMu() const { return rayleigh_mu; }
+    [[nodiscard]] float RayleighLambda() const { return rayleigh_lambda_; }
+    [[nodiscard]] float RayleighMu() const { return rayleigh_mu_; }
 
     [[nodiscard]] std::string TetgenFlags() const {
         return mesh_->tetgen_flags;
     }
 
   private:
-    float rayleigh_mu = 0.5f;
-    float rayleigh_lambda = 0.5f;
+    float rayleigh_mu_ = 0.5f;
+    float rayleigh_lambda_ = 0.5f;
+
+    float youngs_modulus_ = 10000.f;
+    float poissons_ratio_ = 0.3f;
 
     std::unique_ptr<LinearTetrahedral> engine_;
     std::unique_ptr<ExplicitCentralDifferenceMethod> integrator_;

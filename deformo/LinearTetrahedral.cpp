@@ -3,48 +3,34 @@
 #include "LinearTetrahedral.h"
 
 #include <Eigen/Core>
-#include <Eigen/SparseCholesky>
 #include <utility>
 
-#include "Rayleigh.h"
 #include "Utils.h"
 
+#include <igl/barycenter.h>
+#include <igl/barycenter.h>
+#include <igl/barycenter.h>
+#include <igl/barycenter.h>
+#include <igl/barycenter.h>
+#include <igl/barycenter.h>
+
 LinearTetrahedral::LinearTetrahedral(
-    const float modulus_of_elasticity, const float poissons_ratio,
-    std::shared_ptr<Mesh> mesh,
+    const float youngs_modulus, const float poissons_ratio,
+    const std::shared_ptr<Mesh>& mesh,
     std::vector<BoundaryCondition> boundary_conditions)
     : integrator_size(boundary_conditions.size()),
-      youngs_modulus(modulus_of_elasticity),
-      poissons_ratio(poissons_ratio), mesh(std::move(mesh)),
       boundary_conditions(std::move(boundary_conditions)) {
-    AssembleElementStiffness();
-    AssembleGlobalStiffness();
+    AssembleElementStiffness(youngs_modulus, poissons_ratio, mesh);
+    AssembleGlobalStiffness(mesh);
     AssembleBoundaryForces();
 
     global_displacement.resize(integrator_size * 3);
     global_displacement.setZero();
 }
 
-void LinearTetrahedral::Update() {
-    mesh->Update(ComputeRenderedDisplacements());
-}
-
-void LinearTetrahedral::ComputeElementStiffness(
-    Eigen::Matrix12f& element_stiffness, const Eigen::Vector3f& shape_one,
-    const Eigen::Vector3f& shape_two, const Eigen::Vector3f& shape_three,
-    const Eigen::Vector3f& shape_four) {
-    const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
-        shape_one, shape_two, shape_three, shape_four);
-
-    const Eigen::Matrix66f D =
-        AssembleStressStrainMatrix(poissons_ratio, youngs_modulus);
-
-    const float V = utils::ComputeTetrahedraElementVolume(
-        shape_one, shape_two, shape_three, shape_four);
-    element_stiffness = V * B.transpose() * D * B;
-}
-
-void LinearTetrahedral::AssembleElementStiffness() {
+void LinearTetrahedral::AssembleElementStiffness(
+    float youngs_modulus, float poissons_ratio,
+    const std::shared_ptr<Mesh>& mesh) {
     for (int i = 0; i < mesh->SimNodesSize(); i += Mesh::FacesStride()) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
@@ -68,25 +54,22 @@ void LinearTetrahedral::AssembleElementStiffness() {
         Eigen::VectorXf shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
 
-        Eigen::Matrix12f element_stiffness_matrix;
-        ComputeElementStiffness(element_stiffness_matrix, shape_one, shape_two,
-                                shape_three, shape_four);
+        const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
+            shape_one, shape_two, shape_three, shape_four);
+
+        const Eigen::Matrix66f D =
+            AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
+
+        const float V = utils::ComputeTetrahedraElementVolume(
+            shape_one, shape_two, shape_three, shape_four);
+        const Eigen::Matrix12f element_stiffness_matrix =
+            V * B.transpose() * D * B;
 
         const ElementStiffness element_stiffness = {element_stiffness_matrix,
                                                     stiffness_coordinates};
 
         element_stiffnesses.emplace_back(element_stiffness);
     }
-}
-
-void LinearTetrahedral::AssembleElementStresses(const Eigen::VectorXf& u,
-                                                const Eigen::MatrixXf& B) {
-    const Eigen::Matrix66f D =
-        AssembleStressStrainMatrix(poissons_ratio, youngs_modulus);
-
-    const Eigen::Vector6f sigma = D * B * u;
-
-    sigmas.emplace_back(sigma);
 }
 
 void LinearTetrahedral::AssembleBoundaryForces() {
@@ -116,8 +99,13 @@ void LinearTetrahedral::AssembleBoundaryForces() {
                           boundary_force_indices, boundary_force_indices);
 }
 
-void LinearTetrahedral::AssembleElementPlaneStresses() {
-    for (const auto& sigma : sigmas) {
+Eigen::MatrixXf
+LinearTetrahedral::AssembleElementPlaneStresses(const Eigen::MatrixXf& sigmas) {
+    Eigen::MatrixXf plane_stresses;
+    plane_stresses.resize(sigmas.rows(), 3);
+
+    for (int row = 0; row < sigmas.rows(); ++row) {
+        const Eigen::VectorXf sigma = sigmas.row(row);
         const float s1 = sigma.sum();
         const float s2 =
             (sigma(0) * sigma(1) + sigma(0) * sigma(2) + sigma(1) * sigma(2)) -
@@ -131,11 +119,14 @@ void LinearTetrahedral::AssembleElementPlaneStresses() {
         const float s3 = ms3.determinant();
 
         const Eigen::Vector3f plane_stress(s1, s2, s3);
-        element_stresses.emplace_back(plane_stress);
+        plane_stresses.row(row) = plane_stress;
     }
+
+    return plane_stresses;
 }
 
-void LinearTetrahedral::AssembleGlobalStiffness() {
+void LinearTetrahedral::AssembleGlobalStiffness(
+    const std::shared_ptr<Mesh>& mesh) {
     // Allocate space in global_stiffness for 3nx3n elements
     const unsigned int size = mesh->Size();
 
@@ -310,8 +301,8 @@ void LinearTetrahedral::AssembleGlobalStiffness() {
 }
 
 Eigen::Matrix66f
-LinearTetrahedral::AssembleStressStrainMatrix(float poissons_ratio,
-                                              float modulus_of_elasticity) {
+LinearTetrahedral::AssembleStressStrainMatrix(float youngs_modulus,
+                                              float poissons_ratio) {
     Eigen::Matrix66f D;
     D.row(0) << 1 - poissons_ratio, poissons_ratio, poissons_ratio, 0, 0, 0;
     D.row(1) << poissons_ratio, 1 - poissons_ratio, poissons_ratio, 0, 0, 0;
@@ -319,7 +310,7 @@ LinearTetrahedral::AssembleStressStrainMatrix(float poissons_ratio,
     D.row(3) << 0, 0, 0, (1 - 2 * poissons_ratio) / 2, 0, 0;
     D.row(4) << 0, 0, 0, 0, (1 - 2 * poissons_ratio) / 2, 0;
     D.row(5) << 0, 0, 0, 0, 0, (1 - 2 * poissons_ratio) / 2;
-    D *= modulus_of_elasticity /
+    D *= youngs_modulus /
          ((1 + poissons_ratio) * (1 - 2 * poissons_ratio));
     return D;
 }
@@ -328,8 +319,8 @@ Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
     const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
     const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four) {
     Eigen::MatrixXf strain_relationship;
-    const float V =
-        utils::ComputeTetrahedraElementVolume(shape_one, shape_two, shape_three, shape_four);
+    const float V = utils::ComputeTetrahedraElementVolume(
+        shape_one, shape_two, shape_three, shape_four);
     const auto create_beta_submatrix = [](float beta, float gamma,
                                           float delta) -> BetaSubMatrixXf {
         BetaSubMatrixXf B;
@@ -411,9 +402,10 @@ float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
     return parameter.determinant();
 }
 
-Eigen::VectorXf LinearTetrahedral::ComputeRenderedDisplacements() {
+Eigen::VectorXf
+LinearTetrahedral::ComputeRenderedDisplacements(int displacements_size) {
     assert(!boundary_conditions.empty() && "NO BOUNDARY CONDITIONS");
-    Eigen::VectorXf output = Eigen::VectorXf::Zero(mesh->Size());
+    Eigen::VectorXf output = Eigen::VectorXf::Zero(displacements_size);
 
     int i = 0;
     for (const auto& [node, _] : boundary_conditions) {
@@ -425,8 +417,13 @@ Eigen::VectorXf LinearTetrahedral::ComputeRenderedDisplacements() {
     return output;
 }
 
-void LinearTetrahedral::Solve() {
-    const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements();
+Eigen::MatrixXf LinearTetrahedral::Solve(float youngs_modulus,
+                                         float poissons_ratio, const std::shared_ptr<Mesh>& mesh) {
+    const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements(mesh->Size());
+
+    Eigen::MatrixXf element_stresses;
+    element_stresses.resize(mesh->SimNodesSize() / Mesh::FacesStride(), 6);
+
     for (int i = 0; i < mesh->SimNodesSize(); i += Mesh::FacesStride()) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
@@ -462,9 +459,10 @@ void LinearTetrahedral::Solve() {
         Eigen::VectorXf u(12);
         u << displacement_one, displacement_two, displacement_three,
             displacement_four;
-        AssembleElementStresses(u, B);
+        const Eigen::Matrix66f D =
+            AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
+        element_stresses.row(i / Mesh::FacesStride()) = D * B * u;
     }
 
-    AssembleElementPlaneStresses();
-    Update();
+    return AssembleElementPlaneStresses(element_stresses);
 }

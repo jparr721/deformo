@@ -21,17 +21,8 @@ class LinearTetrahedral {
   public:
     const unsigned int integrator_size;
 
-    // Modulus of Elasticity
-    float youngs_modulus;
-
-    // Poisson's Ratio
-    float poissons_ratio;
-
     // The boundary forces
     Eigen::VectorXf boundary_forces;
-
-    // Global stacked vertex vector (xy) with index mapping of node orientations
-    std::shared_ptr<Mesh> mesh;
 
     // The Per-Element Stiffness Matrix
     Eigen::MatrixXf per_element_stiffness;
@@ -45,53 +36,32 @@ class LinearTetrahedral {
     // Element stiffness matrices and mapped coordinates
     std::vector<ElementStiffness> element_stiffnesses;
 
-    // Element Stress vectors for each group of points
-    std::vector<Eigen::Vector6f> sigmas;
-
-    // The Element Stresses from each stress vector
-    std::vector<Eigen::Vector3f> element_stresses;
-
     // Boundary conditions on nodes in the mesh
     std::vector<BoundaryCondition> boundary_conditions;
 
-    LinearTetrahedral(float modulus_of_elasticity, float poissons_ratio,
-                      std::shared_ptr<Mesh> mesh,
+    LinearTetrahedral(float youngs_modulus, float poissons_ratio,
+                      const std::shared_ptr<Mesh>& mesh,
                       std::vector<BoundaryCondition> boundary_conditions);
 
-    // ===========================
-    void Update();
-
-    void AssembleGlobalStiffness();
+    void AssembleGlobalStiffness(const std::shared_ptr<Mesh>& mesh);
 
     /**
     @brief Assemble 12x12 element stiffness matrix. Given by [k] = V[B]^T[D][B]
     where V is the volume of the element
     **/
-    void AssembleElementStiffness();
-
-    void ComputeElementStiffness(Eigen::Matrix12f& element_stiffness,
-                                 const Eigen::Vector3f& shape_one,
-                                 const Eigen::Vector3f& shape_two,
-                                 const Eigen::Vector3f& shape_three,
-                                 const Eigen::Vector3f& shape_four);
-
-    /*
-    @brief Calculates the per-element stresses using our tensile parameters
-    */
-    void AssembleElementStresses(const Eigen::VectorXf& u,
-                                 const Eigen::MatrixXf& B);
+    void AssembleElementStiffness(float youngs_modulus, float poissons_ratio, const std::shared_ptr<Mesh>& mesh);
 
     void AssembleBoundaryForces();
 
     /*
-    @bried Calculates the element plane stresses
+    @brief Calculates the element plane stresses
     */
-    void AssembleElementPlaneStresses();
+    Eigen::MatrixXf AssembleElementPlaneStresses(const Eigen::MatrixXf& sigmas);
 
     /*
     @brief Applies the vector of boundary conditions to the nodes and solves
     */
-    void Solve();
+    Eigen::MatrixXf Solve(float youngs_modulus, float poissons_ratio, const std::shared_ptr<Mesh>& mesh);
 
     /*
     @brief Construct the shape function parameter matrix determinant.
@@ -107,11 +77,11 @@ class LinearTetrahedral {
                                                         float p3, float p4,
                                                         float p5, float p6);
 
-    [[nodiscard]] Eigen::VectorXf ComputeRenderedDisplacements();
+    [[nodiscard]] Eigen::VectorXf ComputeRenderedDisplacements(int displacements_size);
 
     [[nodiscard]] Eigen::Matrix66f
-    AssembleStressStrainMatrix(float poissons_ratio,
-                               float modulus_of_elasticity);
+    AssembleStressStrainMatrix(float youngs_modulus,
+                               float poissons_ratio);
     [[nodiscard]] Eigen::MatrixXf AssembleStrainRelationshipMatrix(
         const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
         const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four);

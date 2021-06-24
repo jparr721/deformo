@@ -8,7 +8,7 @@ ExplicitCentralDifferenceMethod::ExplicitCentralDifferenceMethod(
     const Eigen::VectorXf& initial_forces)
     : dt(dt), stiffness_(std::move(stiffness)) {
     SetMassMatrix(point_mass);
-    SetDamping();
+    SetDamping(0.5f, 0.5f);
     SetIntegrationConstants(dt);
     SetEffectiveMassMatrix();
     SetMovementVectors(initial_displacements, initial_forces, mass_matrix_);
