@@ -2,6 +2,9 @@
 
 Window::Window(QWidget* parent) : QMainWindow(parent) {
     ui.setupUi(this);
+    window_controller_ = new WindowController(ui, "cube.ply");
+    connect(ui.sim_settings_run_button, &QPushButton::released,
+            window_controller_, &WindowController::RunSimulationButtonPressed);
 
     // Slice Axis Combo Box
     ui.slice_axis_combo_box->addItem("X-Axis");
@@ -62,8 +65,9 @@ Window::Window(QWidget* parent) : QMainWindow(parent) {
             ui.rayleigh_mu_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Run Simulation Button (Right Pane, Sim Settings)
-    connect(ui.sim_settings_run_button, &QPushButton::released, ui.openGLWidget,
-            &GLWidget::RunSimulationButtonPressed);
+    // connect(ui.sim_settings_run_button, &QPushButton::released,
+    // ui.openGLWidget,
+    //        &GLWidget::RunSimulationButtonPressed);
 
     // Render Parameters
     connect(ui.tetgen_flags_line_edit, &QLineEdit::textChanged, ui.openGLWidget,
@@ -75,3 +79,5 @@ Window::Window(QWidget* parent) : QMainWindow(parent) {
     connect(ui.render_properties_render_button, &QPushButton::released,
             ui.openGLWidget, &GLWidget::RenderSimulationButtonPressed);
 }
+
+Window::~Window() { delete window_controller_; }

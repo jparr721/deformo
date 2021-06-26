@@ -1,6 +1,6 @@
 #include "Renderer.h"
 
-#include "Configuration.h"
+#include "Dotenv.h"
 #include "Vao.h"
 #include "Vbo.h"
 

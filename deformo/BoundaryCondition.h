@@ -11,6 +11,8 @@ struct BoundaryCondition {
     Eigen::Vector3f force;
 };
 
-std::vector<BoundaryCondition> AssignBoundaryConditionToFixedNodes(
+using BoundaryConditions = std::vector<BoundaryCondition>;
+
+BoundaryConditions AssignBoundaryConditionToFixedNodes(
     const std::vector<unsigned int>& face_indices,
     const Eigen::Vector3f& force);

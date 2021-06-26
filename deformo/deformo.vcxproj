@@ -114,13 +114,14 @@
   <ItemGroup>
     <ClCompile Include="BoundaryCondition.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="Configuration.cpp" />
+    <ClCompile Include="Dotenv.cpp" />
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="ExplicitCentralDifference.cpp" />
     <ClCompile Include="LinearTetrahedral.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="WindowController.cpp" />
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
     <QtMoc Include="Window.h" />
@@ -138,7 +139,7 @@
   <ItemGroup>
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="Configuration.h" />
+    <ClInclude Include="Dotenv.h" />
     <ClInclude Include="EigenTypes.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="ExplicitCentralDifference.h" />
@@ -157,6 +158,7 @@
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Vao.h" />
     <ClInclude Include="Vbo.h" />
+    <QtMoc Include="WindowController.h" />
     <QtMoc Include="GLWidget.h" />
   </ItemGroup>
   <ItemGroup>

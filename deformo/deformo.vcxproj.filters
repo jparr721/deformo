@@ -91,7 +91,7 @@
     <ClCompile Include="ShaderProgram.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
-    <ClCompile Include="Configuration.cpp">
+    <ClCompile Include="Dotenv.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Rayleigh.cpp">
@@ -108,6 +108,9 @@
     </ClCompile>
     <ClCompile Include="QTUtils.cpp">
       <Filter>Utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowController.cpp">
+      <Filter>Windowing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -156,7 +159,7 @@
     <ClInclude Include="ShaderProgram.h">
       <Filter>Renderer</Filter>
     </ClInclude>
-    <ClInclude Include="Configuration.h">
+    <ClInclude Include="Dotenv.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Rayleigh.h">
@@ -218,6 +221,9 @@
       <Filter>Windowing</Filter>
     </QtMoc>
     <QtMoc Include="Window.h">
+      <Filter>Windowing</Filter>
+    </QtMoc>
+    <QtMoc Include="WindowController.h">
       <Filter>Windowing</Filter>
     </QtMoc>
   </ItemGroup>
