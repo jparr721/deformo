@@ -63,7 +63,7 @@ void GLWidget::Update() {
     }
 
     if (input_->KeyPressed(Qt::Key_R)) {
-        Reset();
+        controller_->Reset();
     }
 
     if (input_->KeyPressed(Qt::Key_Space)) {
@@ -108,11 +108,6 @@ void GLWidget::paintGL() {
     }
 
     LogErrors("paintGL");
-}
-
-void GLWidget::Reset() {
-    BuildMesh();
-    BuildPhysicsEngine();
 }
 
 void GLWidget::keyPressEvent(QKeyEvent* event) {

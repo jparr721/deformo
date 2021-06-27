@@ -66,9 +66,4 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     std::shared_ptr<Camera> camera_;
     std::shared_ptr<WindowController> controller_;
     bool simulating_ = false;
-
-    void BuildMesh(float cut_plane = Mesh::kNoCutPlane);
-    void BuildPhysicsEngine();
-
-    void Reset();
 };
