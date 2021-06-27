@@ -12,7 +12,19 @@
 class WindowController : public QObject {
     Q_OBJECT
   public:
-    WindowController(Ui::deformoClass ui, const std::string& mesh_path);
+    unsigned int steps_taken = 0;
+    unsigned int max_steps = 0;
+
+    std::shared_ptr<Mesh> mesh;
+
+    BoundaryConditions boundary_conditions;
+
+    WindowController(Ui::deformoClass& ui, const std::string& mesh_path);
+
+    void StepForward();
+    void StepBackward();
+
+    void Reset();
 
   public slots:
     // Simulation Settings Window
@@ -37,7 +49,7 @@ class WindowController : public QObject {
     // Render Properties Window -- Re Render Button
     void RenderSimulationButtonPressed();
 
-signals:
+  signals:
     // Simulation Settings Window
     // Simulation Settings -- FEA Parameters
     void OnSliceAxisChange(const QString& value);
@@ -53,7 +65,6 @@ signals:
 
     // Render Properties Window
     void OnTetgenFlagsChange(const QString& value);
-
 
   private:
     // Simulation Runtime Parameters
@@ -81,4 +92,7 @@ signals:
 
     BoundaryConditions
     GenerateDefaultBoundaryConditions(const std::shared_ptr<Mesh>& mesh);
+
+  private:
+    void ConnectUiElementsToSimulation(Ui::deformoClass& ui);
 };

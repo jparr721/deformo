@@ -1,8 +1,7 @@
 #pragma once
 
 #include <string>
-
-#include "EigenTypes.h"
+#include <Eigen/Dense>
 
 enum class CutPlaneAxis {
     x_axis = 0,

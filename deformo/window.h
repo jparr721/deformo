@@ -1,7 +1,8 @@
 #pragma once
 
-#include <QtWidgets/QMainWindow>
 #include "WindowController.h"
+#include <QtWidgets/QMainWindow>
+#include <memory>
 
 #include "ui_deformo.h"
 
@@ -10,9 +11,8 @@ class Window : public QMainWindow {
 
   public:
     Window(QWidget* parent = Q_NULLPTR);
-    ~Window();
 
   private:
     Ui::deformoClass ui;
-    WindowController* window_controller_;
+    std::shared_ptr<WindowController> controller_;
 };
