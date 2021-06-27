@@ -4,8 +4,8 @@ Simulation::Simulation(
     float youngs_modulus, float poissons_ratio, float point_mass,
     const std::shared_ptr<Mesh>& mesh,
     const std::vector<BoundaryCondition>& boundary_conditions)
-    : mesh_(mesh), youngs_modulus_(youngs_modulus),
-      poissons_ratio_(poissons_ratio) {
+    : youngs_modulus_(youngs_modulus), poissons_ratio_(poissons_ratio),
+      mesh_(mesh) {
     engine_ = std::make_unique<LinearTetrahedral>(
         youngs_modulus_, poissons_ratio_, mesh, boundary_conditions);
     integrator_ = std::make_unique<ExplicitCentralDifferenceMethod>(
@@ -20,7 +20,10 @@ void Simulation::Solve() {
     engine_->Solve(youngs_modulus_, poissons_ratio_, mesh_);
 }
 
-void Simulation::Integrate() const {
+Eigen::VectorXf Simulation::Integrate() const {
     integrator_->Solve(engine_->global_displacement, engine_->boundary_forces);
-    mesh_->Update(engine_->ComputeRenderedDisplacements(mesh_->Size()));
+    const Eigen::VectorXf displacements =
+        engine_->ComputeRenderedDisplacements(mesh_->Size());
+    mesh_->Update(displacements);
+    return displacements;
 }

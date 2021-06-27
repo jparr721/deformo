@@ -103,7 +103,7 @@ void GLWidget::initializeGL() {
 void GLWidget::paintGL() {
     renderer->Render();
 
-    if (simulating_) {
+    if (controller_->IsSimulating()) {
         controller_->StepForward();
     }
 

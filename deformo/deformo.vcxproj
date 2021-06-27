@@ -173,6 +173,7 @@
     <None Include="core.frag.glsl" />
     <None Include="core.vs.glsl" />
     <None Include="cube.ply" />
+    <None Include="styles.stylesheet" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="deformo.rc" />

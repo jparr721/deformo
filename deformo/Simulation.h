@@ -19,7 +19,7 @@ class Simulation {
                const std::vector<BoundaryCondition>& boundary_conditions);
 
     void Solve();
-    void Integrate() const;
+    Eigen::VectorXf Integrate() const;
 
     // Setters
     void SetBoundaryConditions(

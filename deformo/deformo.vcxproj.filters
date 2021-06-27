@@ -210,6 +210,9 @@
       <Filter>Assets</Filter>
     </None>
     <None Include=".env" />
+    <None Include="styles.stylesheet">
+      <Filter>Assets</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="deformo.rc">

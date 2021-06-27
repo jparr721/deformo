@@ -4,9 +4,10 @@
 #include "Utils.h"
 
 WindowController::WindowController(Ui::deformoClass& ui,
-                                   const std::string& mesh_path) {
+                                   const std::string& mesh_path)
+    : ui_(ui) {
     const std::string suffix = ".ply";
-    // TODO (@jparr721) - Make this a ui error
+    // TODO (@jparr721) - Make this a ui_ error
     assert(0 == mesh_path.compare(mesh_path.size() - suffix.size(),
                                   suffix.size(), suffix) &&
            "YOU CAN ONLY LOAD .PLY FILES");
@@ -17,21 +18,23 @@ WindowController::WindowController(Ui::deformoClass& ui,
         std::make_unique<Simulation>(youngs_modulus_, poissons_ratio_,
                                      nodal_mass_, mesh, boundary_conditions);
 
-    ConnectUiElementsToSimulation(ui);
+    ConnectUiElementsToSimulation();
 }
+
+bool WindowController::IsSimulating() { return simulating_; }
 
 void WindowController::StepForward() {
     simulation_->Solve();
-    simulation_->Integrate();
+    recorded_displacements_.push_back(simulation_->Integrate());
 }
-
-void WindowController::StepBackward() {}
 
 void WindowController::Reset() {
     mesh->Reset();
     simulation_ =
         std::make_unique<Simulation>(youngs_modulus_, poissons_ratio_,
                                      nodal_mass_, mesh, boundary_conditions);
+    simulation_->dt = dt_;
+    simulation_->current_time = 0.f;
     steps_taken = 0;
     max_steps = 0;
 }
@@ -76,9 +79,7 @@ void WindowController::SetRayleighMu(double value) {
     emit OnRayleighMuChange(value);
 }
 
-void WindowController::RunSimulationButtonPressed() {
-    std::cout << "Run Simulation Pressed" << std::endl;
-}
+void WindowController::RunSimulationButtonPressed() { Reset(); }
 
 void WindowController::SetTetgenFlags(const QString& value) {
     tetgen_flags_ = utils::qt::QStringToString(value);
@@ -87,6 +88,25 @@ void WindowController::SetTetgenFlags(const QString& value) {
 
 void WindowController::RenderSimulationButtonPressed() {
     std::cout << "Render Button Pressed" << std::endl;
+}
+
+void WindowController::PlaybackSkipStartButtonPressed() {
+    ui_.playback_controller->setValue(0);
+}
+
+void WindowController::PlaybackSkipEndButtonPressed() {
+    ui_.playback_controller->setValue(recorded_displacements_.size() - 1);
+}
+
+void WindowController::PlaybackPauseButtonPressed() {
+    ui_.playback_controller->setMaximum(recorded_displacements_.size() - 1);
+    simulating_ = false;
+}
+
+void WindowController::PlaybackPlayButtonPressed() { simulating_ = true; }
+
+void WindowController::PlaybackSliderChanged(int value) {
+    mesh->Update(recorded_displacements_.at(value));
 }
 
 BoundaryConditions WindowController::GenerateDefaultBoundaryConditions(
@@ -98,79 +118,96 @@ BoundaryConditions WindowController::GenerateDefaultBoundaryConditions(
     return AssignBoundaryConditionToFixedNodes(indices, force);
 }
 
-void WindowController::ConnectUiElementsToSimulation(Ui::deformoClass& ui) {
+void WindowController::ConnectUiElementsToSimulation() {
     // Slice Axis Combo Box
-    ui.slice_axis_combo_box->addItem("X-Axis");
-    ui.slice_axis_combo_box->addItem("Y-Axis");
-    ui.slice_axis_combo_box->addItem("Z-Axis");
-    connect(ui.slice_axis_combo_box, &QComboBox::currentTextChanged, this,
+    ui_.slice_axis_combo_box->addItem("X-Axis");
+    ui_.slice_axis_combo_box->addItem("Y-Axis");
+    ui_.slice_axis_combo_box->addItem("Z-Axis");
+    connect(ui_.slice_axis_combo_box, &QComboBox::currentTextChanged, this,
             &WindowController::SetSliceAxis);
-    connect(this, &WindowController::OnSliceAxisChange, ui.slice_axis_combo_box,
-            &QComboBox::setCurrentText);
+    connect(this, &WindowController::OnSliceAxisChange,
+            ui_.slice_axis_combo_box, &QComboBox::setCurrentText);
 
     // Slice Axis Slider
-    connect(ui.slice_value_slider, &QSlider::valueChanged, this,
+    connect(ui_.slice_value_slider, &QSlider::valueChanged, this,
             &WindowController::SetSliceValue);
-    connect(this, &WindowController::OnSliceValueChange, ui.slice_value_slider,
+    connect(this, &WindowController::OnSliceValueChange, ui_.slice_value_slider,
             &QSlider::setValue);
 
     // Timestep Spin Box
-    connect(ui.timestep_double_spin_box,
+    connect(ui_.timestep_double_spin_box,
             QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
             &WindowController::SetTimestepSize);
     connect(this, &WindowController::OnTimestepSizeChange,
-            ui.timestep_double_spin_box, &QDoubleSpinBox::setValue);
+            ui_.timestep_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Nodal Mass Spin Box
-    connect(ui.nodal_mass_double_spin_box,
+    connect(ui_.nodal_mass_double_spin_box,
             QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
             &WindowController::SetNodalMass);
     connect(this, &WindowController::OnNodalMassChange,
-            ui.nodal_mass_double_spin_box, &QDoubleSpinBox::setValue);
+            ui_.nodal_mass_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Poissons Ratio Spin Box
-    connect(ui.poissons_ratio_double_spin_box,
+    connect(ui_.poissons_ratio_double_spin_box,
             QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
             &WindowController::SetPoissonsRatio);
     connect(this, &WindowController::OnPoissonsRatioChange,
-            ui.poissons_ratio_double_spin_box, &QDoubleSpinBox::setValue);
+            ui_.poissons_ratio_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Young's Modulus Spin Box
-    connect(ui.youngs_modulus_double_spin_box,
+    connect(ui_.youngs_modulus_double_spin_box,
             QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
             &WindowController::SetYoungsModulus);
     connect(this, &WindowController::OnYoungsModulusChange,
-            ui.youngs_modulus_double_spin_box, &QDoubleSpinBox::setValue);
+            ui_.youngs_modulus_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Damping Parameters
     // Rayleigh Damping Lambda
-    connect(ui.rayleigh_lambda_double_spin_box,
+    connect(ui_.rayleigh_lambda_double_spin_box,
             QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
             &WindowController::SetRayleighLambda);
     connect(this, &WindowController::OnRayleighLambdaChange,
-            ui.rayleigh_lambda_double_spin_box, &QDoubleSpinBox::setValue);
+            ui_.rayleigh_lambda_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Rayleigh Damping Mu
-    connect(ui.rayleigh_mu_double_spin_box,
+    connect(ui_.rayleigh_mu_double_spin_box,
             QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
             &WindowController::SetRayleighMu);
     connect(this, &WindowController::OnRayleighMuChange,
-            ui.rayleigh_mu_double_spin_box, &QDoubleSpinBox::setValue);
+            ui_.rayleigh_mu_double_spin_box, &QDoubleSpinBox::setValue);
 
     // Run Simulation Button (Right Pane, Sim Settings)
-    connect(ui.sim_settings_run_button, &QPushButton::released, this,
+    connect(ui_.sim_settings_run_button, &QPushButton::released, this,
             &WindowController::RunSimulationButtonPressed);
 
     // Render Parameters
-    connect(ui.tetgen_flags_line_edit, &QLineEdit::textChanged, this,
+    connect(ui_.tetgen_flags_line_edit, &QLineEdit::textChanged, this,
             &WindowController::SetTetgenFlags);
     connect(this, &WindowController::OnTetgenFlagsChange,
-            ui.tetgen_flags_line_edit, &QLineEdit::setText);
+            ui_.tetgen_flags_line_edit, &QLineEdit::setText);
 
     // Re Render Simulation (Right Pane, Render Settings)
-    connect(ui.render_properties_render_button, &QPushButton::released, this,
+    connect(ui_.render_properties_render_button, &QPushButton::released, this,
             &WindowController::RenderSimulationButtonPressed);
 
+    // Playback Buttons
+    connect(ui_.play_push_button, &QPushButton::released, this,
+            &WindowController::PlaybackPlayButtonPressed);
+    connect(ui_.pause_push_button, &QPushButton::released, this,
+            &WindowController::PlaybackPauseButtonPressed);
+    connect(ui_.skip_beginning_push_button, &QPushButton::released, this,
+            &WindowController::PlaybackSkipStartButtonPressed);
+    connect(ui_.skip_end_push_button, &QPushButton::released, this,
+            &WindowController::PlaybackSkipEndButtonPressed);
+
+    // Playback Slider
+    connect(ui_.playback_controller, &QSlider::valueChanged, this,
+            &WindowController::PlaybackSliderChanged);
+    connect(this, &WindowController::OnPlaybackSliderChange,
+            ui_.playback_controller, &QSlider::setValue);
+
+    // Initializers for UI Components
     SetSliceValue(simulation_->SliceValue());
     SetNodalMass(simulation_->NodalMass());
     SetPoissonsRatio(simulation_->PoissonsRatio());

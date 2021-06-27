@@ -22,9 +22,10 @@ class WindowController : public QObject {
     WindowController(Ui::deformoClass& ui, const std::string& mesh_path);
 
     void StepForward();
-    void StepBackward();
 
     void Reset();
+
+    bool IsSimulating();
 
   public slots:
     // Simulation Settings Window
@@ -49,6 +50,13 @@ class WindowController : public QObject {
     // Render Properties Window -- Re Render Button
     void RenderSimulationButtonPressed();
 
+    // Playback Controls
+    void PlaybackSkipStartButtonPressed();
+    void PlaybackSkipEndButtonPressed();
+    void PlaybackPauseButtonPressed();
+    void PlaybackPlayButtonPressed();
+    void PlaybackSliderChanged(int value);
+
   signals:
     // Simulation Settings Window
     // Simulation Settings -- FEA Parameters
@@ -66,12 +74,16 @@ class WindowController : public QObject {
     // Render Properties Window
     void OnTetgenFlagsChange(const QString& value);
 
+    // Playback Controls
+    void OnPlaybackSliderChange(int value);
+
   private:
+    bool simulating_ = false;
     // Simulation Runtime Parameters
     float dt_ = 0.01f;
 
     // Physical Parameters
-    float nodal_mass_ = 1.f;
+    float nodal_mass_ = 5.f;
 
     // Damping Parameters
     float rayleigh_mu_ = 0.5f;
@@ -90,9 +102,13 @@ class WindowController : public QObject {
 
     std::unique_ptr<Simulation> simulation_;
 
+    std::vector<Eigen::VectorXf> recorded_displacements_;
+
     BoundaryConditions
     GenerateDefaultBoundaryConditions(const std::shared_ptr<Mesh>& mesh);
 
+    Ui::deformoClass ui_;
+
   private:
-    void ConnectUiElementsToSimulation(Ui::deformoClass& ui);
+    void ConnectUiElementsToSimulation();
 };
