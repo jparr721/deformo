@@ -1,38 +1,25 @@
 #pragma once
 
-#include <QCursor>
-#include <QPoint>
-#include <Qt>
-#include <algorithm>
-#include <optional>
-#include <utility>
-#include <vector>
-#include <unordered_map>
+#include "Camera.h"
+
+#include <Eigen/Dense>
+#include <QMouseEvent>
+#include <QWheelEvent>
 
 class Input {
- public:
-  QPoint mouse_cursor_pos;
-  QPoint last_mouse_cursor_pos;
-  QPoint mouse_pos_delta;
+  public:
+    Eigen::Vector2i current_mouse_position = Eigen::Vector2i::Zero();
+    Eigen::Vector2i last_mouse_position = Eigen::Vector2i::Zero();
 
-  std::unordered_map<Qt::Key, bool> keys;
-  std::unordered_map<Qt::MouseButton, bool> mouse_buttons;
+    // Mouse Wheel
+    void WheelEvent(QWheelEvent* e,
+                    const std::shared_ptr<Camera<Real>>& camera);
 
-  void Update();
-
-  // State Checks
-  [[nodiscard]] bool KeyPressed(Qt::Key key);
-  [[nodiscard]] bool MouseButtonPressed(Qt::MouseButton button);
-
-  // Keyboard State Changes
-  void RegisterKeyPress(int key);
-  void RegisterKeyRelease(int key);
-
-  // Mouse State Changes
-  void RegisterMouseButtonPress(Qt::MouseButton button);
-  void RegisterMouseButtonRelease(Qt::MouseButton button);
-
-  // Mouse Position Handlers
-  [[nodiscard]] QPoint MousePosition();
-  [[nodiscard]] QPoint MouseDelta();
+    // Mouse Buttons
+    void MouseMoveEvent(QMouseEvent* e,
+                        const std::shared_ptr<Camera<Real>>& camera);
+    void MousePressEvent(QMouseEvent* e,
+                         const std::shared_ptr<Camera<Real>>& camera);
+    void MouseReleaseEvent(QMouseEvent* e,
+                           const std::shared_ptr<Camera<Real>>& camera);
 };

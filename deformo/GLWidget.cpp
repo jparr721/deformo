@@ -21,63 +21,12 @@ GLWidget::GLWidget(QWidget* parent) : QOpenGLWidget(parent) {
     draw_timer_->start(30);
 
     input_ = std::make_unique<Input>();
-    camera_ = std::make_shared<Camera>();
+    camera_ = std::make_shared<Camera<Real>>();
 }
 
-GLWidget::~GLWidget() {
-    delete draw_timer_;
-}
+GLWidget::~GLWidget() { delete draw_timer_; }
 
-void GLWidget::Update() {
-    input_->Update();
-
-    if (input_->MouseButtonPressed(Qt::RightButton)) {
-        camera_->Rotate(camera_->kRotationSpeed * input_->MouseDelta().x(),
-                        camera_->kUp);
-        camera_->Rotate(camera_->kRotationSpeed * input_->MouseDelta().y(),
-                        camera_->rotation.rotatedVector(camera_->kRight));
-    }
-
-    if (input_->KeyPressed(Qt::Key_W)) {
-        camera_->Forward();
-    }
-
-    if (input_->KeyPressed(Qt::Key_S)) {
-        camera_->Backward();
-    }
-
-    if (input_->KeyPressed(Qt::Key_A)) {
-        camera_->Left();
-    }
-
-    if (input_->KeyPressed(Qt::Key_D)) {
-        camera_->Right();
-    }
-
-    if (input_->KeyPressed(Qt::Key_Q)) {
-        camera_->Up();
-    }
-
-    if (input_->KeyPressed(Qt::Key_E)) {
-        camera_->Down();
-    }
-
-    if (input_->KeyPressed(Qt::Key_R)) {
-        controller_->Reset();
-    }
-
-    if (input_->KeyPressed(Qt::Key_Space)) {
-        camera_->Reset();
-    }
-
-    if (input_->KeyPressed(Qt::Key_G)) {
-        simulating_ = !simulating_;
-    }
-
-    if (input_->KeyPressed(Qt::Key_M)) {
-        renderer->SetRenderMode();
-    }
-}
+void GLWidget::Update() {}
 
 void GLWidget::initializeGL() {
     initializeOpenGLFunctions();
@@ -95,7 +44,8 @@ void GLWidget::initializeGL() {
 
     shader_program = std::make_shared<ShaderProgram>();
 
-    renderer = std::make_unique<Renderer>(controller_->mesh, shader_program, camera_);
+    renderer =
+        std::make_unique<Renderer>(controller_->mesh, shader_program, camera_);
 
     LogErrors("initializeGL");
 }
@@ -110,20 +60,22 @@ void GLWidget::paintGL() {
     LogErrors("paintGL");
 }
 
-void GLWidget::keyPressEvent(QKeyEvent* event) {
-    input_->RegisterKeyPress(event->key());
-}
-
-void GLWidget::keyReleaseEvent(QKeyEvent* event) {
-    input_->RegisterKeyRelease(event->key());
-}
-
 void GLWidget::mousePressEvent(QMouseEvent* event) {
-    input_->RegisterMouseButtonPress(event->button());
+    input_->MousePressEvent(event, camera_);
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent* event) {
-    input_->RegisterMouseButtonRelease(event->button());
+    input_->MouseReleaseEvent(event, camera_);
 }
 
-void GLWidget::resizeGL(int width, int height) {}
+void GLWidget::mouseMoveEvent(QMouseEvent* event) {
+    input_->MouseMoveEvent(event, camera_);
+}
+
+void GLWidget::wheelEvent(QWheelEvent* event) {
+    input_->WheelEvent(event, camera_);
+}
+
+void GLWidget::resizeGL(int width, int height) {
+    renderer->Resize(width, height);
+}

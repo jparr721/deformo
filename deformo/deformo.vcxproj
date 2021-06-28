@@ -113,7 +113,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BoundaryCondition.cpp" />
-    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Dotenv.cpp" />
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Input.cpp" />

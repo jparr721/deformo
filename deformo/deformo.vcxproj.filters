@@ -61,9 +61,6 @@
     <ClCompile Include="BoundaryCondition.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Engine</Filter>
-    </ClCompile>
     <ClCompile Include="GLWidget.cpp">
       <Filter>Windowing</Filter>
     </ClCompile>

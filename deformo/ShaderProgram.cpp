@@ -24,15 +24,12 @@ ShaderProgram::~ShaderProgram() {
 
 auto ShaderProgram::Release() const -> void { glUseProgram(0); }
 
+auto ShaderProgram::SetMatrixUniformIdentity() -> void { glLoadIdentity(); }
+
 auto ShaderProgram::Bind() const -> void { glUseProgram(id); }
 
 auto ShaderProgram::SetMatrixUniform(int location,
                                      const Eigen::MatrixXf& uniform) -> void {
-    glUniformMatrix4fv(location, 1, GL_FALSE, uniform.data());
-}
-
-auto ShaderProgram::SetMatrixUniform(int location, const QMatrix4x4& uniform)
-    -> void {
     glUniformMatrix4fv(location, 1, GL_FALSE, uniform.data());
 }
 

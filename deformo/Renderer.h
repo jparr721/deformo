@@ -29,10 +29,11 @@ class Renderer {
 
     Renderer(std::shared_ptr<Mesh> mesh,
              std::shared_ptr<ShaderProgram> shader_program,
-             std::shared_ptr<Camera> camera);
+             std::shared_ptr<Camera<Real>> camera);
     ~Renderer();
 
     auto Render() -> void;
+    auto Resize(int width, int height) -> void;
     auto SetPositionDisplacement(const Eigen::VectorXf& positions) -> void;
     auto SetColors(const Eigen::VectorXf& colors) -> void;
     auto SetRenderMode() -> void;
@@ -45,7 +46,7 @@ class Renderer {
 
     std::bitset<4> dirty_;
 
-    std::shared_ptr<Camera> camera_;
+    std::shared_ptr<Camera<Real>> camera_;
     std::shared_ptr<Mesh> mesh_;
     std::shared_ptr<ShaderProgram> shader_program_;
 

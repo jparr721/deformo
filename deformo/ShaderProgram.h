@@ -21,8 +21,9 @@ class ShaderProgram {
     auto Link() const -> void;
     auto Bind() const -> void;
     auto Release() const -> void;
+
+    auto SetMatrixUniformIdentity() -> void;
     auto SetMatrixUniform(int location, const Eigen::MatrixXf& uniform) -> void;
-    auto SetMatrixUniform(int location, const QMatrix4x4& uniform) -> void;
 
     auto UniformLocation(const std::string& name) -> int;
 };

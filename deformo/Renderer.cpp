@@ -8,7 +8,7 @@
 
 Renderer::Renderer(std::shared_ptr<Mesh> mesh,
                    std::shared_ptr<ShaderProgram> shader_program,
-                   std::shared_ptr<Camera> camera)
+                   std::shared_ptr<Camera<Real>> camera)
     : camera_(std::move(camera)), mesh_(std::move(mesh)),
       shader_program_(std::move(shader_program)) {
     shader_program_->AddShader(
@@ -20,6 +20,11 @@ Renderer::Renderer(std::shared_ptr<Mesh> mesh,
 
     shader_program_->Link();
     shader_program_->Bind();
+
+    m = shader_program_->UniformLocation("m");
+    v = shader_program_->UniformLocation("v");
+    p = shader_program_->UniformLocation("p");
+
     BuildBuffers();
     shader_program_->Release();
 
@@ -42,7 +47,8 @@ auto Renderer::Render() -> void {
 
     shader_program_->Bind();
 
-    shader_program_->SetMatrixUniform(0, camera_->Matrix());
+    shader_program_->SetMatrixUniformIdentity();
+    shader_program_->SetMatrixUniform(p, camera_->toViewMatrix());
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, mesh_->FacesSize(), GL_UNSIGNED_INT, nullptr);
@@ -50,10 +56,16 @@ auto Renderer::Render() -> void {
 
     shader_program_->Release();
 
-    m = shader_program_->UniformLocation("m");
-    v = shader_program_->UniformLocation("v");
-    p = shader_program_->UniformLocation("p");
     LogErrors("Renderer::Render");
+}
+
+auto Renderer::Resize(int width, int height) -> void {
+    glViewport(0, 0, width, height);
+    shader_program_->Bind();
+    camera_->Resize(width, height);
+    shader_program_->SetMatrixUniform(p, camera_->getProjectionMatrix());
+    shader_program_->Release();
+    LogErrors("Renderer::Resize");
 }
 
 auto Renderer::SetPositionDisplacement(const Eigen::VectorXf& positions)

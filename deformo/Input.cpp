@@ -1,39 +1,57 @@
 #include "Input.h"
-#include <iostream>
 
-void Input::Update() {
-  last_mouse_cursor_pos = mouse_cursor_pos;
-  mouse_cursor_pos = QCursor::pos();
-  mouse_pos_delta = mouse_cursor_pos - last_mouse_cursor_pos;
+void Input::WheelEvent(QWheelEvent* e,
+                       const std::shared_ptr<Camera<Real>>& camera) {
+    const auto dt = e->delta();
+    constexpr Real zoom_inverse = -0.01;
+    camera->zoom(dt * zoom_inverse);
 }
 
-bool Input::KeyPressed(Qt::Key key) {
-  return keys.find(key) != keys.end() && keys[key];
+void Input::MouseMoveEvent(QMouseEvent* e,
+                           const std::shared_ptr<Camera<Real>>& camera) {
+    current_mouse_position.x() = e->x();
+    current_mouse_position.y() = e->y();
+
+    const Real x_diff = last_mouse_position.x() - current_mouse_position.x();
+    const Real y_diff = last_mouse_position.y() - current_mouse_position.y();
+
+    if (camera->is_panning) {
+        camera->pan(x_diff, y_diff);
+    }
+
+    if (camera->is_rotating) {
+        camera->rotate(x_diff, y_diff);
+    }
+
+    if (camera->is_zooming) {
+        camera->zoom(y_diff);
+    }
+
+    last_mouse_position = current_mouse_position;
 }
 
-bool Input::MouseButtonPressed(Qt::MouseButton button) {
-  return mouse_buttons.find(button) != mouse_buttons.end() &&
-         mouse_buttons[button];
+void Input::MousePressEvent(QMouseEvent* e,
+                            const std::shared_ptr<Camera<Real>>& camera) {
+    if (e->button() == Qt::MiddleButton)
+        camera->is_panning = true;
+    else if (e->button() == Qt::LeftButton)
+        camera->is_rotating = true;
+    else if (e->button() == Qt::RightButton)
+        camera->is_zooming = true;
+
+    last_mouse_position.x() = e->x();
+    last_mouse_position.y() = e->y();
 }
 
-void Input::RegisterKeyPress(int key) {
-  const auto k = static_cast<Qt::Key>(key);
-  keys[k] = true;
+void Input::MouseReleaseEvent(QMouseEvent* e,
+                              const std::shared_ptr<Camera<Real>>& camera) {
+    if (e->button() == Qt::MiddleButton)
+        camera->is_panning = false;
+    else if (e->button() == Qt::LeftButton)
+        camera->is_rotating = false;
+    else if (e->button() == Qt::RightButton)
+        camera->is_zooming = false;
+
+    last_mouse_position.x() = e->x();
+    last_mouse_position.y() = e->y();
 }
-
-void Input::RegisterKeyRelease(int key) {
-  const auto k = static_cast<Qt::Key>(key);
-  keys[k] = false;
-}
-
-void Input::RegisterMouseButtonPress(Qt::MouseButton button) {
-  mouse_buttons[button] = true;
-}
-
-void Input::RegisterMouseButtonRelease(Qt::MouseButton button) {
-  mouse_buttons[button] = false;
-}
-
-QPoint Input::MousePosition() { return QCursor::pos(); }
-
-QPoint Input::MouseDelta() { return mouse_pos_delta; }

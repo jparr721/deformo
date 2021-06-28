@@ -52,18 +52,16 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     void initializeGL() override;
     void paintGL() override;
 
-    // Keyboard Shenanigans
-    void keyPressEvent(QKeyEvent* event) override;
-    void keyReleaseEvent(QKeyEvent* event) override;
-
     // Mouse Shenanigans
     void mousePressEvent(QMouseEvent* event) override;
     void mouseReleaseEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
   private:
     QTimer* draw_timer_;
     std::unique_ptr<Input> input_;
-    std::shared_ptr<Camera> camera_;
+    std::shared_ptr<Camera<Real>> camera_;
     std::shared_ptr<WindowController> controller_;
     bool simulating_ = false;
 };
