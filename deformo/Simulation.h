@@ -69,10 +69,6 @@ class Simulation {
     [[nodiscard]] float RayleighLambda() const { return rayleigh_lambda_; }
     [[nodiscard]] float RayleighMu() const { return rayleigh_mu_; }
 
-    [[nodiscard]] std::string TetgenFlags() const {
-        return mesh_->tetgen_flags;
-    }
-
   private:
     float rayleigh_mu_ = 0.5f;
     float rayleigh_lambda_ = 0.5f;

@@ -45,7 +45,8 @@ void GLWidget::initializeGL() {
     shader_program = std::make_shared<ShaderProgram>();
 
     renderer =
-        std::make_unique<Renderer>(controller_->mesh, shader_program, camera_);
+        std::make_shared<Renderer>(controller_->mesh, shader_program, camera_);
+    controller_->SetRenderer(renderer);
 
     LogErrors("initializeGL");
 }

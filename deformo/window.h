@@ -10,7 +10,7 @@ class Window : public QMainWindow {
     Q_OBJECT
 
   public:
-    Window(QWidget* parent = Q_NULLPTR);
+    explicit Window(QWidget* parent = Q_NULLPTR);
 
   private:
     Ui::deformoClass ui;

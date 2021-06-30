@@ -32,12 +32,11 @@ void Input::MouseMoveEvent(QMouseEvent* e,
 
 void Input::MousePressEvent(QMouseEvent* e,
                             const std::shared_ptr<Camera<Real>>& camera) {
-    if (e->button() == Qt::MiddleButton)
-        camera->is_panning = true;
-    else if (e->button() == Qt::LeftButton)
+    if (e->button() == Qt::LeftButton) {
         camera->is_rotating = true;
-    else if (e->button() == Qt::RightButton)
-        camera->is_zooming = true;
+    } else if (e->button() == Qt::RightButton) {
+        camera->is_panning = true;
+    }
 
     last_mouse_position.x() = e->x();
     last_mouse_position.y() = e->y();
@@ -45,12 +44,11 @@ void Input::MousePressEvent(QMouseEvent* e,
 
 void Input::MouseReleaseEvent(QMouseEvent* e,
                               const std::shared_ptr<Camera<Real>>& camera) {
-    if (e->button() == Qt::MiddleButton)
-        camera->is_panning = false;
-    else if (e->button() == Qt::LeftButton)
+    if (e->button() == Qt::LeftButton) {
         camera->is_rotating = false;
-    else if (e->button() == Qt::RightButton)
-        camera->is_zooming = false;
+    } else if (e->button() == Qt::RightButton) {
+        camera->is_panning = false;
+    }
 
     last_mouse_position.x() = e->x();
     last_mouse_position.y() = e->y();

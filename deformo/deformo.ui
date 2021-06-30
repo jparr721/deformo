@@ -411,15 +411,15 @@ QMenu::separator {
         </font>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="sim_settings_page">
         <property name="geometry">
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>405</width>
-          <height>603</height>
+          <width>98</width>
+          <height>28</height>
          </rect>
         </property>
         <attribute name="label">
@@ -881,8 +881,8 @@ QMenu::separator {
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>98</width>
-          <height>28</height>
+          <width>405</width>
+          <height>603</height>
          </rect>
         </property>
         <property name="font">
@@ -907,12 +907,12 @@ QMenu::separator {
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
+           <layout class="QHBoxLayout" name="horizontalLayout_14">
             <property name="sizeConstraint">
              <enum>QLayout::SetNoConstraint</enum>
             </property>
             <item>
-             <widget class="QLabel" name="label_9">
+             <widget class="QLabel" name="label_13">
               <property name="minimumSize">
                <size>
                 <width>100</width>
@@ -945,6 +945,29 @@ QMenu::separator {
                 <width>110</width>
                 <height>16777215</height>
                </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_5">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetNoConstraint</enum>
+            </property>
+            <item>
+             <widget class="QRadioButton" name="render_filled_radio_button">
+              <property name="font">
+               <font>
+                <family>Segoe UI</family>
+                <pointsize>10</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Whether or not to render just the mesh</string>
+              </property>
+              <property name="text">
+               <string>Render Filled</string>
               </property>
              </widget>
             </item>

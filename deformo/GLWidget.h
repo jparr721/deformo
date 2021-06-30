@@ -32,7 +32,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions {
     std::shared_ptr<Mesh> mesh;
 
     // Renderer for loading the sim geometry
-    std::unique_ptr<Renderer> renderer;
+    std::shared_ptr<Renderer> renderer;
 
     // LinearTetrahedral Object
     std::unique_ptr<Simulation> sim;

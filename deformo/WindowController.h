@@ -21,6 +21,8 @@ class WindowController : public QObject {
 
     WindowController(Ui::deformoClass& ui, const std::string& mesh_path);
 
+    void SetRenderer(const std::shared_ptr<Renderer> renderer);
+
     void StepForward();
 
     void Reset();
@@ -46,6 +48,9 @@ class WindowController : public QObject {
 
     // Render Properties Window -- Tetgen Flags
     void SetTetgenFlags(const QString& value);
+
+    // Render Properties Window -- Render Mode
+    void SetRenderMode(bool checked);
 
     // Render Properties Window -- Re Render Button
     void RenderSimulationButtonPressed();
@@ -93,14 +98,17 @@ class WindowController : public QObject {
     float youngs_modulus_ = 10000.f;
     float poissons_ratio_ = 0.3f;
 
-    // Render Parameters
-    std::string tetgen_flags_;
+    GLenum render_mode_ = GL_LINES;
 
+    // Render Parameters
+    std::string tetgen_flags_ = "zpq";
     // Render-Mutation Parameters
     float slice_value_;
     std::string slice_axis_;
 
     std::unique_ptr<Simulation> simulation_;
+
+    std::shared_ptr<Renderer> renderer_;
 
     std::vector<Eigen::VectorXf> recorded_displacements_;
 
@@ -111,4 +119,5 @@ class WindowController : public QObject {
 
   private:
     void ConnectUiElementsToSimulation();
+    void ResetPlaybackControls();
 };

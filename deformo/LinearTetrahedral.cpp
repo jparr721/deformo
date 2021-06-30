@@ -24,7 +24,7 @@ LinearTetrahedral::LinearTetrahedral(
 void LinearTetrahedral::AssembleElementStiffness(
     float youngs_modulus, float poissons_ratio,
     const std::shared_ptr<Mesh>& mesh) {
-    for (int i = 0; i < mesh->SimNodesSize(); i += Mesh::FacesStride()) {
+    for (int i = 0; i < mesh->TetrahedralElementsSize(); i += Mesh::FacesStride()) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
         int index = mesh->GetPositionAtFaceIndex(i);
@@ -415,9 +415,9 @@ Eigen::MatrixXf LinearTetrahedral::Solve(float youngs_modulus,
     const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements(mesh->Size());
 
     Eigen::MatrixXf element_stresses;
-    element_stresses.resize(mesh->SimNodesSize() / Mesh::FacesStride(), 6);
+    element_stresses.resize(mesh->TetrahedralElementsSize() / Mesh::FacesStride(), 6);
 
-    for (int i = 0; i < mesh->SimNodesSize(); i += Mesh::FacesStride()) {
+    for (int i = 0; i < mesh->TetrahedralElementsSize(); i += Mesh::FacesStride()) {
         int index = mesh->GetPositionAtFaceIndex(i);
         Eigen::VectorXf shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);

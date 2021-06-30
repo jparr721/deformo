@@ -21,9 +21,7 @@ Renderer::Renderer(std::shared_ptr<Mesh> mesh,
     shader_program_->Link();
     shader_program_->Bind();
 
-    m = shader_program_->UniformLocation("m");
-    v = shader_program_->UniformLocation("v");
-    p = shader_program_->UniformLocation("p");
+    mvp = shader_program_->UniformLocation("mvp");
 
     BuildBuffers();
     shader_program_->Release();
@@ -48,7 +46,7 @@ auto Renderer::Render() -> void {
     shader_program_->Bind();
 
     shader_program_->SetMatrixUniformIdentity();
-    shader_program_->SetMatrixUniform(p, camera_->toViewMatrix());
+    shader_program_->SetMatrixUniform(mvp, camera_->toViewMatrix());
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, mesh_->FacesSize(), GL_UNSIGNED_INT, nullptr);
@@ -60,10 +58,11 @@ auto Renderer::Render() -> void {
 }
 
 auto Renderer::Resize(int width, int height) -> void {
+    std::cout << width << " " << height << std::endl;
     glViewport(0, 0, width, height);
     shader_program_->Bind();
     camera_->Resize(width, height);
-    shader_program_->SetMatrixUniform(p, camera_->getProjectionMatrix());
+    shader_program_->SetMatrixUniform(mvp, camera_->getProjectionMatrix());
     shader_program_->Release();
     LogErrors("Renderer::Resize");
 }
@@ -79,13 +78,12 @@ auto Renderer::SetColors(const Eigen::VectorXf& colors) -> void {
     dirty_.set(DirtyStatus::colors);
 }
 
-auto Renderer::SetRenderMode() -> void {
-    render_mode_ = render_mode_ == GL_LINE ? GL_FILL : GL_LINE;
+auto Renderer::SetRenderMode(const GLenum mode) -> void {
+    render_mode_ = mode;
     dirty_.set(DirtyStatus::render_mode);
 }
 
-void Renderer::SetTetgenFlags(const std::string& flags) {
-}
+void Renderer::SetTetgenFlags(const std::string& flags) {}
 
 void Renderer::SetCutPlane(float cut_plane) { mesh_->SetCutPlane(cut_plane); }
 

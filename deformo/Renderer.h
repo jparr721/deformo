@@ -23,9 +23,7 @@ class Renderer {
     unsigned int ibo = 0;
 
     // View Coordinate System
-    int m = -1;
-    int v = -1;
-    int p = -1;
+    int mvp = -1;
 
     Renderer(std::shared_ptr<Mesh> mesh,
              std::shared_ptr<ShaderProgram> shader_program,
@@ -36,7 +34,7 @@ class Renderer {
     auto Resize(int width, int height) -> void;
     auto SetPositionDisplacement(const Eigen::VectorXf& positions) -> void;
     auto SetColors(const Eigen::VectorXf& colors) -> void;
-    auto SetRenderMode() -> void;
+    auto SetRenderMode(GLenum mode) -> void;
     void SetTetgenFlags(const std::string& flags);
     void SetCutPlane(float cut_plane);
     void SetCutPlaneAxis(CutPlaneAxis cut_plane_axis);

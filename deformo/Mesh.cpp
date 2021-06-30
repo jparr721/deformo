@@ -28,51 +28,13 @@ CutPlaneAxis StringToCutPlaneAxis(const std::string& input) {
     return CutPlaneAxis::x_axis;
 }
 
-Mesh::Mesh(const std::string& ply_path, const float cut_plane = kNoCutPlane)
-    : cut_plane(cut_plane) {
-    assert(std::filesystem::path(ply_path).extension() == ".ply" &&
-           "INVALID PLY FILE");
-    Eigen::MatrixXf V;
-    Eigen::MatrixXi F;
-    igl::readPLY(ply_path, V, F);
-
-    Eigen::MatrixXf TV;
-    Eigen::MatrixXi TF;
-    Eigen::MatrixXi TT;
-
-    ConstructMesh(V, F, TV, TF, TT);
-
-    for (int row = 0; row < TT.rows(); ++row) {
-        const Eigen::Vector3f position_one = TV.row(TT(row, 0));
-        const Eigen::Vector3f position_two = TV.row(TT(row, 1));
-        const Eigen::Vector3f position_three = TV.row(TT(row, 2));
-        const Eigen::Vector3f position_four = TV.row(TT(row, 3));
-        const float volume = utils::ComputeTetrahedraElementVolume(
-            position_one, position_two, position_three, position_four);
-
-        assert(volume > 0);
-    }
-
-    Vectorize(sim_nodes, TT);
-
-    // Convert TT for the matrix union
-    Eigen::MatrixXi TTF;
-    TTF.resize(sim_nodes.rows() / 3, 3);
-
-    for (int i = 0; i < TTF.rows(); ++i) {
-        TTF.row(i) << sim_nodes(i * 3), sim_nodes(i * 3 + 1),
-            sim_nodes(i * 3 + 2);
-    }
-
-    Eigen::MatrixXi all_faces;
-    utils::MatrixUnion(all_faces, TTF, TF);
-
-    InitializeRenderableSurfaces(TV, all_faces);
+Mesh::Mesh(const std::string& ply_path, const std::string& tetgen_flags)
+    : current_file_path_(ply_path) {
+    InitializeFromTetgenFlagsAndFile(ply_path, tetgen_flags);
 }
 
-Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T, float cut_plane)
-    : cut_plane(cut_plane) {
-    Vectorize(sim_nodes, T);
+Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T) {
+    Vectorize(tetrahedral_elements, T);
     InitializeRenderableSurfaces(V, T);
 }
 
@@ -88,8 +50,8 @@ void Mesh::Reset() {
 }
 
 int Mesh::GetPositionAtFaceIndex(const int face_index) const {
-    assert(face_index < sim_nodes.size());
-    return sim_nodes(face_index) * 3;
+    assert(face_index < tetrahedral_elements.size());
+    return tetrahedral_elements(face_index) * 3;
 }
 
 void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
@@ -103,13 +65,50 @@ void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
     }
 }
 
-void Mesh::ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                         Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
-                         Eigen::MatrixXi& TT) const {
+void Mesh::ConstructMesh(Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
+                         Eigen::MatrixXi& TT, const Eigen::MatrixXf& V,
+                         const Eigen::MatrixXi& F,
+                         const std::string& tetgen_flags) const {
     tetgenio out;
-    // const std::string tetgen_flags = "zpqa1e-1";
     Tetrahedralize(out, V, F, tetgen_flags);
     assert(TetgenioToMesh(TV, TF, TT, out));
+}
+
+Eigen::MatrixXi
+Mesh::ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
+                                                    const Eigen::VectorXi& T) {
+    Eigen::MatrixXi TTF;
+    TTF.resize(T.rows() / 3, 3);
+
+    for (int i = 0; i < TTF.rows(); ++i) {
+        TTF.row(i) << T(i * 3), T(i * 3 + 1), T(i * 3 + 2);
+    }
+
+    Eigen::MatrixXi all_faces;
+    utils::MatrixUnion(all_faces, TTF, F);
+    return all_faces;
+}
+
+void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
+                                            const std::string& tetgen_flags) {
+    assert(std::filesystem::path(ply_path).extension() == ".ply" &&
+           "INVALID PLY FILE");
+    Eigen::MatrixXf V;
+    Eigen::MatrixXi F;
+    igl::readPLY(ply_path, V, F);
+
+    Eigen::MatrixXf TV;
+    Eigen::MatrixXi TF;
+    Eigen::MatrixXi TT;
+
+    ConstructMesh(TV, TF, TT, V, F, tetgen_flags);
+    Vectorize(tetrahedral_elements, TT);
+
+    const Eigen::MatrixXi faces =
+        ConstructRenderedFacesFromTetrahedralElements(TF, tetrahedral_elements);
+
+    // Convert TT for the matrix union
+    InitializeRenderableSurfaces(TV, faces);
 }
 
 // ================ SETTERS
@@ -124,5 +123,8 @@ void Mesh::SetCutPlane(float cut_plane) {
         }
     }
 }
-void Mesh::SetCutPlaneAxis(CutPlaneAxis axis) { cut_plane_axis = axis; }
-void Mesh::SetTetgenFlags(const std::string& flags) { tetgen_flags = flags; }
+void Mesh::SetCutPlaneAxis(const CutPlaneAxis axis) { cut_plane_axis = axis; }
+
+void Mesh::SetTetgenFlags(const std::string& flags) {
+    InitializeFromTetgenFlagsAndFile(current_file_path_, flags);
+}

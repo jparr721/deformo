@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string>
 #include <Eigen/Dense>
+#include <string>
 
 enum class CutPlaneAxis {
     x_axis = 0,
@@ -25,8 +25,6 @@ class Mesh {
 
     float cut_plane = kNoCutPlane;
 
-    std::string tetgen_flags = "zpq";
-
     // Geometry Colors
     Eigen::VectorXf colors;
 
@@ -35,14 +33,14 @@ class Mesh {
     Eigen::VectorXf rest_positions;
 
     // Geometry Faces / Tetrahedra
-    Eigen::VectorXi sim_nodes;
+    Eigen::VectorXi tetrahedral_elements;
     Eigen::VectorXi faces;
 
-    Mesh(const std::string& ply_path, const float cut_plane);
-    Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T,
-         float cut_plane = kNoCutPlane);
+    Mesh(const std::string& ply_path, const std::string& tetgen_flags = "zpq");
+    Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T);
 
     void Update(const Eigen::VectorXf& displacements);
+
     void SetCutPlane(float cut_plane);
     void SetCutPlaneAxis(CutPlaneAxis axis);
     void SetTetgenFlags(const std::string& flags);
@@ -51,7 +49,9 @@ class Mesh {
 
     [[nodiscard]] int Size() const { return positions.rows(); }
     [[nodiscard]] int FacesSize() const { return faces.rows(); }
-    [[nodiscard]] int SimNodesSize() const { return sim_nodes.rows(); }
+    [[nodiscard]] int TetrahedralElementsSize() const {
+        return tetrahedral_elements.rows();
+    }
 
     [[nodiscard]] static constexpr int PositionStride() { return 3; }
     [[nodiscard]] static constexpr int FacesStride() { return 4; }
@@ -59,6 +59,8 @@ class Mesh {
     [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
 
   private:
+    std::string current_file_path_;
+
     template <typename In, typename Out>
     void Vectorize(Out& out, const In& in) {
         out.resize(in.rows() * in.cols(), 1);
@@ -68,7 +70,14 @@ class Mesh {
 
     void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
                                       const Eigen::MatrixXi& T);
-    void ConstructMesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& F,
-                       Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
-                       Eigen::MatrixXi& TT) const;
+    void ConstructMesh(Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
+                       Eigen::MatrixXi& TT, const Eigen::MatrixXf& V,
+                       const Eigen::MatrixXi& F,
+                       const std::string& tetgen_flags) const;
+    Eigen::MatrixXi
+    ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
+                                                  const Eigen::VectorXi& T);
+
+    void InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
+                                          const std::string& tetgen_flags);
 };

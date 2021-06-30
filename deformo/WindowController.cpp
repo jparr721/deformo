@@ -12,13 +12,17 @@ WindowController::WindowController(Ui::deformoClass& ui,
                                   suffix.size(), suffix) &&
            "YOU CAN ONLY LOAD .PLY FILES");
 
-    mesh = std::make_shared<Mesh>(mesh_path, 0.f);
+    mesh = std::make_shared<Mesh>(mesh_path, tetgen_flags_);
     boundary_conditions = GenerateDefaultBoundaryConditions(mesh);
     simulation_ =
         std::make_unique<Simulation>(youngs_modulus_, poissons_ratio_,
                                      nodal_mass_, mesh, boundary_conditions);
 
     ConnectUiElementsToSimulation();
+}
+
+void WindowController::SetRenderer(const std::shared_ptr<Renderer> renderer) {
+    renderer_ = renderer;
 }
 
 bool WindowController::IsSimulating() { return simulating_; }
@@ -37,6 +41,7 @@ void WindowController::Reset() {
     simulation_->current_time = 0.f;
     steps_taken = 0;
     max_steps = 0;
+    ResetPlaybackControls();
 }
 
 void WindowController::SetSliceAxis(const QString& value) {
@@ -86,8 +91,20 @@ void WindowController::SetTetgenFlags(const QString& value) {
     emit OnTetgenFlagsChange(value);
 }
 
+void WindowController::SetRenderMode(bool checked) {
+    if (checked) {
+        render_mode_ = GL_FILL;
+    } else {
+        render_mode_ = GL_LINE;
+    }
+}
+
 void WindowController::RenderSimulationButtonPressed() {
-    std::cout << "Render Button Pressed" << std::endl;
+    Reset();
+    renderer_->SetRenderMode(render_mode_);
+
+    // TODO(@jparr721) Re-generate new mesh and sim (more work than I originally thought).
+    //mesh->SetTetgenFlags(tetgen_flags_);
 }
 
 void WindowController::PlaybackSkipStartButtonPressed() {
@@ -187,6 +204,9 @@ void WindowController::ConnectUiElementsToSimulation() {
     connect(this, &WindowController::OnTetgenFlagsChange,
             ui_.tetgen_flags_line_edit, &QLineEdit::setText);
 
+    connect(ui_.render_filled_radio_button, &QRadioButton::clicked, this,
+            &WindowController::SetRenderMode);
+
     // Re Render Simulation (Right Pane, Render Settings)
     connect(ui_.render_properties_render_button, &QPushButton::released, this,
             &WindowController::RenderSimulationButtonPressed);
@@ -213,8 +233,14 @@ void WindowController::ConnectUiElementsToSimulation() {
     SetPoissonsRatio(simulation_->PoissonsRatio());
     SetYoungsModulus(simulation_->YoungsModulus());
     SetTimestepSize(simulation_->TimestepSize());
-    SetTetgenFlags(QString::fromUtf8(simulation_->TetgenFlags().c_str()));
+    SetTetgenFlags(QString::fromUtf8(tetgen_flags_.c_str()));
 
     SetRayleighLambda(simulation_->RayleighLambda());
     SetRayleighMu(simulation_->RayleighMu());
+}
+
+void WindowController::ResetPlaybackControls() {
+    recorded_displacements_.clear();
+    recorded_displacements_.resize(1);
+    PlaybackPauseButtonPressed();
 }
