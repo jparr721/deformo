@@ -119,5 +119,8 @@ class WindowController : public QObject {
 
   private:
     void ConnectUiElementsToSimulation();
+    void DisableStaticUiElements();
+    void EnableStaticUiElements();
     void ResetPlaybackControls();
+    void RecomputeSliceValueRange();
 };

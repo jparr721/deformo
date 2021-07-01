@@ -8,24 +8,24 @@
 #include "MeshGenerator.h"
 #include "Utils.h"
 
-CutPlaneAxis StringToCutPlaneAxis(const std::string& input) {
+SliceAxis StringToSliceAxis(const std::string& input) {
     assert(input == "X-Axis" || input == "Y-Axis" ||
            input == "Z-Axis" && "INVALID CUT PLANE AXIS INPUT");
 
     if (input == "X-Axis") {
-        return CutPlaneAxis::x_axis;
+        return SliceAxis::x_axis;
     }
 
     if (input == "Y-Axis") {
-        return CutPlaneAxis::y_axis;
+        return SliceAxis::y_axis;
     }
 
     if (input == "Z-Axis") {
-        return CutPlaneAxis::z_axis;
+        return SliceAxis::z_axis;
     }
 
     // Unreachable, just want to make the linter happy.
-    return CutPlaneAxis::x_axis;
+    return SliceAxis::x_axis;
 }
 
 Mesh::Mesh(const std::string& ply_path, const std::string& tetgen_flags)
@@ -112,18 +112,27 @@ void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
 }
 
 // ================ SETTERS
-void Mesh::SetCutPlane(float cut_plane) {
-    const int visible_elements = ceil(positions.size() * cut_plane);
+void Mesh::SetSliceValue(float value) {
+    unsigned short mod = 0;
 
-    for (int i = 0; i < colors.size(); i += 4) {
-        if (i < visible_elements) {
-            colors.segment(i, 4) << kMeshDefaultColor;
+    if (slice_axis == SliceAxis::x_axis) {
+        mod = 0;
+    } else if (slice_axis == SliceAxis::y_axis) {
+        mod = 1; 
+    } else if (slice_axis == SliceAxis::z_axis) {
+        mod = 2; 
+    }
+
+    for (int i = mod; i < positions.size(); i += 2) {
+        if (positions(i) >= value) {
+            colors.segment(i - mod, 4) << kMeshDefaultColorInvisible;
         } else {
-            colors.segment(i, 4) << kMeshDefaultColorInvisible;
+            colors.segment(i - mod, 4) << kMeshDefaultColor;
         }
     }
 }
-void Mesh::SetCutPlaneAxis(const CutPlaneAxis axis) { cut_plane_axis = axis; }
+
+void Mesh::SetSliceAxis(const SliceAxis axis) { slice_axis = axis; }
 
 void Mesh::SetTetgenFlags(const std::string& flags) {
     InitializeFromTetgenFlagsAndFile(current_file_path_, flags);

@@ -3,27 +3,25 @@
 #include <Eigen/Dense>
 #include <string>
 
-enum class CutPlaneAxis {
+enum class SliceAxis {
     x_axis = 0,
     y_axis,
     z_axis,
 };
 
-CutPlaneAxis StringToCutPlaneAxis(const std::string& input);
+auto StringToSliceAxis(const std::string& input) -> SliceAxis;
 
 class Mesh {
   public:
-    constexpr static float kNoCutPlane = 0.f;
+    SliceAxis slice_axis = SliceAxis::x_axis;
+    float slice_value = 0;
+
     inline const static Eigen::Vector4f kMeshDefaultColor =
         Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
     inline const static Eigen::Vector4f kMeshDefaultColorInvisible =
-        Eigen::Vector4f(0.f, 0.f, 1.f, 0.f);
+        Eigen::Vector4f(0.f, 0.f, 0.f, 0.f);
     inline const static Eigen::Vector4f kMeshDefaultSelectedColor =
-        Eigen::Vector4f(0.f, 1.f, 0.f, 0.f);
-
-    CutPlaneAxis cut_plane_axis = CutPlaneAxis::x_axis;
-
-    float cut_plane = kNoCutPlane;
+        Eigen::Vector4f(0.f, 1.f, 0.f, 1.f);
 
     // Geometry Colors
     Eigen::VectorXf colors;
@@ -41,22 +39,22 @@ class Mesh {
 
     void Update(const Eigen::VectorXf& displacements);
 
-    void SetCutPlane(float cut_plane);
-    void SetCutPlaneAxis(CutPlaneAxis axis);
+    void SetSliceValue(float value);
+    void SetSliceAxis(SliceAxis axis);
     void SetTetgenFlags(const std::string& flags);
 
     void Reset();
 
-    [[nodiscard]] int Size() const { return positions.rows(); }
-    [[nodiscard]] int FacesSize() const { return faces.rows(); }
-    [[nodiscard]] int TetrahedralElementsSize() const {
+    [[nodiscard]] auto Size() const -> int { return positions.rows(); }
+    [[nodiscard]] auto FacesSize() const -> int { return faces.rows(); }
+    [[nodiscard]] auto TetrahedralElementsSize() const -> int {
         return tetrahedral_elements.rows();
     }
+    [[nodiscard]] static constexpr auto PositionStride() -> int { return 3; }
+    [[nodiscard]] static constexpr auto FacesStride() -> int { return 4; }
 
-    [[nodiscard]] static constexpr int PositionStride() { return 3; }
-    [[nodiscard]] static constexpr int FacesStride() { return 4; }
-
-    [[nodiscard]] int GetPositionAtFaceIndex(const int face_index) const;
+    [[nodiscard]] auto GetPositionAtFaceIndex(const int face_index) const
+        -> int;
 
   private:
     std::string current_file_path_;
@@ -74,10 +72,9 @@ class Mesh {
                        Eigen::MatrixXi& TT, const Eigen::MatrixXf& V,
                        const Eigen::MatrixXi& F,
                        const std::string& tetgen_flags) const;
-    Eigen::MatrixXi
-    ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
-                                                  const Eigen::VectorXi& T);
-
     void InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
                                           const std::string& tetgen_flags);
+    auto ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
+                                                       const Eigen::VectorXi& T)
+        -> Eigen::MatrixXi;
 };

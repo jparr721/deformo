@@ -30,6 +30,7 @@ bool WindowController::IsSimulating() { return simulating_; }
 void WindowController::StepForward() {
     simulation_->Solve();
     recorded_displacements_.push_back(simulation_->Integrate());
+    RecomputeSliceValueRange();
 }
 
 void WindowController::Reset() {
@@ -50,7 +51,7 @@ void WindowController::SetSliceAxis(const QString& value) {
 }
 
 void WindowController::SetSliceValue(float value) {
-    slice_value_ = value;
+    mesh->SetSliceValue(value);
     emit OnSliceValueChange(value);
 }
 
@@ -103,8 +104,9 @@ void WindowController::RenderSimulationButtonPressed() {
     Reset();
     renderer_->SetRenderMode(render_mode_);
 
-    // TODO(@jparr721) Re-generate new mesh and sim (more work than I originally thought).
-    //mesh->SetTetgenFlags(tetgen_flags_);
+    // TODO(@jparr721) Re-generate new mesh and sim (more work than I originally
+    // thought).
+    // mesh->SetTetgenFlags(tetgen_flags_);
 }
 
 void WindowController::PlaybackSkipStartButtonPressed() {
@@ -112,15 +114,23 @@ void WindowController::PlaybackSkipStartButtonPressed() {
 }
 
 void WindowController::PlaybackSkipEndButtonPressed() {
-    ui_.playback_controller->setValue(recorded_displacements_.size() - 1);
+    if (!recorded_displacements_.empty()) {
+        ui_.playback_controller->setValue(recorded_displacements_.size() - 1);
+    }
 }
 
 void WindowController::PlaybackPauseButtonPressed() {
-    ui_.playback_controller->setMaximum(recorded_displacements_.size() - 1);
+    EnableStaticUiElements();
+    if (!recorded_displacements_.empty()) {
+        ui_.playback_controller->setMaximum(recorded_displacements_.size() - 1);
+    }
     simulating_ = false;
 }
 
-void WindowController::PlaybackPlayButtonPressed() { simulating_ = true; }
+void WindowController::PlaybackPlayButtonPressed() {
+    DisableStaticUiElements();
+    simulating_ = true;
+}
 
 void WindowController::PlaybackSliderChanged(int value) {
     mesh->Update(recorded_displacements_.at(value));
@@ -239,8 +249,37 @@ void WindowController::ConnectUiElementsToSimulation() {
     SetRayleighMu(simulation_->RayleighMu());
 }
 
+void WindowController::DisableStaticUiElements() {
+}
+
+void WindowController::EnableStaticUiElements() {
+}
+
 void WindowController::ResetPlaybackControls() {
     recorded_displacements_.clear();
-    recorded_displacements_.resize(1);
+    recorded_displacements_.resize(0);
     PlaybackPauseButtonPressed();
+}
+
+void WindowController::RecomputeSliceValueRange() {
+    unsigned int i = 0;
+
+    if (mesh->slice_axis == SliceAxis::x_axis) {
+        i = 0;
+    } else if (mesh->slice_axis == SliceAxis::y_axis) {
+        i = 1;
+    } else if (mesh->slice_axis == SliceAxis::z_axis) {
+        i = 2;
+    }
+
+    float minimum = 0.f;
+    float maximum = 0.f;
+
+    for (int i = 0; i < mesh->positions.size(); ++i) {
+        minimum = std::fmin(minimum, mesh->positions(i));
+        maximum = std::fmax(maximum, mesh->positions(i));
+    }
+
+    ui_.slice_value_slider->setMinimum(minimum);
+    ui_.slice_value_slider->setMaximum(maximum);
 }

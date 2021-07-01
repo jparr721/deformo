@@ -37,7 +37,7 @@ class Renderer {
     auto SetRenderMode(GLenum mode) -> void;
     void SetTetgenFlags(const std::string& flags);
     void SetCutPlane(float cut_plane);
-    void SetCutPlaneAxis(CutPlaneAxis cut_plane_axis);
+    void SetCutPlaneAxis(SliceAxis cut_plane_axis);
 
   private:
     GLenum render_mode_ = GL_LINE;

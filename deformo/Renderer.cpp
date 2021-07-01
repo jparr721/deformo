@@ -58,7 +58,6 @@ auto Renderer::Render() -> void {
 }
 
 auto Renderer::Resize(int width, int height) -> void {
-    std::cout << width << " " << height << std::endl;
     glViewport(0, 0, width, height);
     shader_program_->Bind();
     camera_->Resize(width, height);
@@ -85,10 +84,10 @@ auto Renderer::SetRenderMode(const GLenum mode) -> void {
 
 void Renderer::SetTetgenFlags(const std::string& flags) {}
 
-void Renderer::SetCutPlane(float cut_plane) { mesh_->SetCutPlane(cut_plane); }
+void Renderer::SetCutPlane(float cut_plane) { mesh_->SetSliceValue(cut_plane); }
 
-void Renderer::SetCutPlaneAxis(CutPlaneAxis cut_plane_axis) {
-    mesh_->SetCutPlaneAxis(cut_plane_axis);
+void Renderer::SetCutPlaneAxis(SliceAxis cut_plane_axis) {
+    mesh_->SetSliceAxis(cut_plane_axis);
 }
 
 auto Renderer::BuildBuffers() -> void {
@@ -116,9 +115,9 @@ auto Renderer::ReloadRenderMode() -> void {
 auto Renderer::ReloadVertexBuffers() -> void {
     BindVertexAttributeArray(shader_program_->id, "position", vbo, 3,
                              mesh_->positions);
-    if (dirty_[DirtyStatus::colors]) {
+    //if (dirty_[DirtyStatus::colors]) {
         BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 4,
                                  mesh_->colors);
-        dirty_.flip(DirtyStatus::colors);
-    }
+    //    dirty_.flip(DirtyStatus::colors);
+    //}
 }

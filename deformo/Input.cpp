@@ -4,7 +4,7 @@ void Input::WheelEvent(QWheelEvent* e,
                        const std::shared_ptr<Camera<Real>>& camera) {
     const auto dt = e->delta();
     constexpr Real zoom_inverse = -0.01;
-    camera->zoom(dt * zoom_inverse);
+    camera->Zoom(dt * zoom_inverse);
 }
 
 void Input::MouseMoveEvent(QMouseEvent* e,
@@ -16,15 +16,15 @@ void Input::MouseMoveEvent(QMouseEvent* e,
     const Real y_diff = last_mouse_position.y() - current_mouse_position.y();
 
     if (camera->is_panning) {
-        camera->pan(x_diff, y_diff);
+        camera->Pan(x_diff, y_diff);
     }
 
     if (camera->is_rotating) {
-        camera->rotate(x_diff, y_diff);
+        camera->Rotate(x_diff, y_diff);
     }
 
     if (camera->is_zooming) {
-        camera->zoom(y_diff);
+        camera->Zoom(y_diff);
     }
 
     last_mouse_position = current_mouse_position;

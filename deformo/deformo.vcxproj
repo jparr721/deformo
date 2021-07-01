@@ -120,6 +120,7 @@
     <ClCompile Include="LinearTetrahedral.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Mesh.cpp" />
+    <ClCompile Include="Numerics.cpp" />
     <ClCompile Include="WindowController.cpp" />
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
@@ -145,6 +146,7 @@
     <ClInclude Include="LinearTetrahedral.h" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Numerics.h" />
     <ClInclude Include="OpenGL.h" />
     <ClInclude Include="QTUtils.h" />
     <ClInclude Include="Rayleigh.h" />

@@ -52,15 +52,15 @@ class Simulation {
         mesh_->SetTetgenFlags(value);
     }
 
-    void SetSliceValue(float value) const { mesh_->SetCutPlane(value); }
+    void SetSliceValue(float value) const { mesh_->SetSliceValue(value); }
     void SetSliceAxis(const std::string& value) const {
-        mesh_->SetCutPlaneAxis(StringToCutPlaneAxis(value));
+        mesh_->SetSliceAxis(StringToSliceAxis(value));
     }
 
     void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
 
     // Getters
-    [[nodiscard]] float SliceValue() const { return mesh_->cut_plane; }
+    [[nodiscard]] float SliceValue() const { return mesh_->slice_value; }
     [[nodiscard]] float NodalMass() const { return integrator_->NodalMass(); }
     [[nodiscard]] float PoissonsRatio() const { return poissons_ratio_; }
     [[nodiscard]] float YoungsModulus() const { return youngs_modulus_; }

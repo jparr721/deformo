@@ -1,5 +1,4 @@
 #pragma once
-#include <iostream>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -25,9 +24,9 @@ template <typename Real> class Camera {
     auto Resize(std::size_t width, std::size_t height, Real near_plane,
                 Real far_plane) -> bool;
 
-    auto rotate(Real du, Real dv) -> bool;
-    auto pan(Real du, Real dv) -> bool;
-    auto zoom(Real du) -> bool;
+    auto Rotate(Real du, Real dv) -> bool;
+    auto Pan(Real du, Real dv) -> bool;
+    auto Zoom(Real dr) -> bool;
 
     void setPerspective(Real fov, std::size_t width, std::size_t height,
                         Real nearPlane, Real farPlane);
@@ -137,8 +136,8 @@ template <typename Real> class Camera {
 
 constexpr Real kPi = static_cast<Real>(3.14159);
 constexpr Real kCameraEpsilon = static_cast<Real>(0.00001);
-constexpr Real kDefaultNearPlane = static_cast<Real>(-1000.0);
-constexpr Real kDefaultFarPlane = static_cast<Real>(10000.0);
+constexpr Real kDefaultNearPlane = static_cast<Real>(0.1);
+constexpr Real kDefaultFarPlane = static_cast<Real>(1000.0);
 constexpr Real kDefaultRotationSensitivity = static_cast<Real>(0.01);
 constexpr Real kDefaultPanSensitivity = static_cast<Real>(0.01);
 constexpr Real kDefaultZoomSensitivity = static_cast<Real>(0.1);
@@ -183,7 +182,6 @@ template <typename Real> Camera<Real>::~Camera() {}
 
 template <typename Real>
 auto Camera<Real>::Resize(std::size_t width, std::size_t height) -> bool {
-    std::cout << "Near: " << near_plane_ << " Far: " << far_plane_ << std::endl;
     setPerspective(fov_, width, height, near_plane_, far_plane_);
     compile();
     return true;
@@ -197,14 +195,14 @@ auto Camera<Real>::Resize(std::size_t width, std::size_t height,
     return true;
 }
 
-template <typename Real> auto Camera<Real>::rotate(Real du, Real dv) -> bool {
+template <typename Real> auto Camera<Real>::Rotate(Real du, Real dv) -> bool {
     theta_ -= (du * rotation_sensitivity_);
     phi_ += (dv * rotation_sensitivity_);
     compile();
     return true;
 }
 
-template <typename Real> auto Camera<Real>::pan(Real du, Real dv) -> bool {
+template <typename Real> auto Camera<Real>::Pan(Real du, Real dv) -> bool {
     Vector3<Real> uDir = getLeftDirection();
     Vector3<Real> vDir = getDownDirection();
 
@@ -217,7 +215,7 @@ template <typename Real> auto Camera<Real>::pan(Real du, Real dv) -> bool {
     return true;
 }
 
-template <typename Real> auto Camera<Real>::zoom(Real dr) -> bool {
+template <typename Real> auto Camera<Real>::Zoom(Real dr) -> bool {
     if (r_ + dr > max_radius_) {
         r_ = max_radius_;
         compile();

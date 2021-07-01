@@ -36,8 +36,7 @@ void GLWidget::initializeGL() {
     }
     connect(this, &QOpenGLWidget::frameSwapped, this, &GLWidget::Update);
 
-    // Face Culling
-    glEnable(GL_DEPTH);
+    glEnable(GL_DEPTH_TEST);
 
     // White background
     glClearColor(255.f, 255.f, 255.f, 1.f);
