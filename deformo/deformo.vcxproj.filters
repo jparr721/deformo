@@ -42,6 +42,12 @@
     <Filter Include="Utilities">
       <UniqueIdentifier>{bcebcf8d-e477-453e-971b-9e0934b80d23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Machine Learning">
+      <UniqueIdentifier>{8982f27e-df27-4895-ae39-abb379316d5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Linear Algebra">
+      <UniqueIdentifier>{b9a09f89-a6f1-4aed-aeff-c7dec041b7b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -109,8 +115,11 @@
     <ClCompile Include="WindowController.cpp">
       <Filter>Windowing</Filter>
     </ClCompile>
+    <ClCompile Include="MeshDiscretizer.cpp">
+      <Filter>Machine Learning</Filter>
+    </ClCompile>
     <ClCompile Include="Numerics.cpp">
-      <Filter>Utilities</Filter>
+      <Filter>Linear Algebra</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -133,9 +142,6 @@
       <Filter>Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
-      <Filter>Engine</Filter>
-    </ClInclude>
-    <ClInclude Include="EigenTypes.h">
       <Filter>Engine</Filter>
     </ClInclude>
     <ClInclude Include="Loader.h">
@@ -177,8 +183,11 @@
     <ClInclude Include="QTUtils.h">
       <Filter>Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="MeshDiscretizer.h">
+      <Filter>Machine Learning</Filter>
+    </ClInclude>
     <ClInclude Include="Numerics.h">
-      <Filter>Utilities</Filter>
+      <Filter>Linear Algebra</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

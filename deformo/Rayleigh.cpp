@@ -1,8 +1,7 @@
 #include "Rayleigh.h"
 
-void ComputeRayleighDamping(Eigen::MatrixXf& out,
-                           const Eigen::MatrixXf& stiffness,
-                           const Eigen::MatrixXf& mass, float mu, float lambda,
-                           float modifier) {
+void ComputeRayleighDamping(MatrixXr& out, const MatrixXr& stiffness,
+                            const MatrixXr& mass, Real mu, Real lambda,
+                            Real modifier) {
     out = modifier * (mu * mass + lambda * stiffness);
 }

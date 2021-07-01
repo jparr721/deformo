@@ -1,7 +1,7 @@
 #include "Simulation.h"
 
 Simulation::Simulation(
-    float youngs_modulus, float poissons_ratio, float point_mass,
+    Real youngs_modulus, Real poissons_ratio, Real point_mass,
     const std::shared_ptr<Mesh>& mesh,
     const std::vector<BoundaryCondition>& boundary_conditions)
     : youngs_modulus_(youngs_modulus), poissons_ratio_(poissons_ratio),
@@ -20,9 +20,9 @@ void Simulation::Solve() {
     engine_->Solve(youngs_modulus_, poissons_ratio_, mesh_);
 }
 
-Eigen::VectorXf Simulation::Integrate() const {
+VectorXr Simulation::Integrate() const {
     integrator_->Solve(engine_->global_displacement, engine_->boundary_forces);
-    const Eigen::VectorXf displacements =
+    const VectorXr displacements =
         engine_->ComputeRenderedDisplacements(mesh_->Size());
     mesh_->Update(displacements);
     return displacements;

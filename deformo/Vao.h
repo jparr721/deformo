@@ -4,7 +4,9 @@
 
 #include <Eigen/Dense>
 
-template <typename Derived> void BindElementArrayObject(unsigned int& buffer, const Eigen::PlainObjectBase<Derived>& data) {
+template <typename Derived>
+void BindElementArrayObject(unsigned int& buffer,
+                            const Eigen::PlainObjectBase<Derived>& data) {
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Derived::Scalar) * data.size(),

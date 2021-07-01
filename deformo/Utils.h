@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Numerics.h"
 #include <Eigen/Dense>
 #include <algorithm>
 #include <array>
@@ -121,26 +122,26 @@ void SliceByIndices(Eigen::PlainObjectBase<Out>& out,
 }
 
 template <typename Derived>
-[[nodiscard]] float ComputeTetrahedraElementVolume(
+[[nodiscard]] Real ComputeTetrahedraElementVolume(
     const Eigen::PlainObjectBase<Derived>& position_one,
     const Eigen::PlainObjectBase<Derived>& position_two,
     const Eigen::PlainObjectBase<Derived>& position_three,
     const Eigen::PlainObjectBase<Derived>& position_four) {
-    const float x1 = position_one.x();
-    const float y1 = position_one.y();
-    const float z1 = position_one.z();
+    const Real x1 = position_one.x();
+    const Real y1 = position_one.y();
+    const Real z1 = position_one.z();
 
-    const float x2 = position_two.x();
-    const float y2 = position_two.y();
-    const float z2 = position_two.z();
+    const Real x2 = position_two.x();
+    const Real y2 = position_two.y();
+    const Real z2 = position_two.z();
 
-    const float x3 = position_three.x();
-    const float y3 = position_three.y();
-    const float z3 = position_three.z();
+    const Real x3 = position_three.x();
+    const Real y3 = position_three.y();
+    const Real z3 = position_three.z();
 
-    const float x4 = position_four.x();
-    const float y4 = position_four.y();
-    const float z4 = position_four.z();
+    const Real x4 = position_four.x();
+    const Real y4 = position_four.y();
+    const Real z4 = position_four.z();
 
     Eigen::Matrix4f V;
     V.row(0) << 1, x1, y1, z1;
@@ -156,7 +157,7 @@ template <typename T> void GTestDebugPrint(T value) {
 }
 
 void FindMaxVertices(std::vector<unsigned int>& indices,
-                     const Eigen::VectorXf& positions);
+                     const VectorXr& positions);
 
 namespace stopwatch {
 

@@ -28,8 +28,8 @@ auto ShaderProgram::SetMatrixUniformIdentity() -> void { glLoadIdentity(); }
 
 auto ShaderProgram::Bind() const -> void { glUseProgram(id); }
 
-auto ShaderProgram::SetMatrixUniform(int location,
-                                     const Eigen::MatrixXf& uniform) -> void {
+auto ShaderProgram::SetMatrixUniform(int location, const MatrixXr& uniform)
+    -> void {
     glUniformMatrix4fv(location, 1, GL_FALSE, uniform.data());
 }
 

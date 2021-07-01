@@ -13,7 +13,7 @@
 #include "tetgen.h"
 
 auto MakeBasicMesh() -> std::shared_ptr<Mesh> {
-  Eigen::MatrixXf V(8, 3);
+  MatrixXr V(8, 3);
   V.row(0) << 0, 0, 0;
   V.row(1) << 0.025, 0, 0;
   V.row(2) << 0, 0.5, 0;
@@ -34,8 +34,8 @@ auto MakeBasicMesh() -> std::shared_ptr<Mesh> {
 }
 
 TEST(TestLinearTetrahedral, TestConstructor) {
-  const float youngs_modulus = 210e6;
-  const float poissons_ratio = 0.3;
+  const Real youngs_modulus = 210e6;
+  const Real poissons_ratio = 0.3;
   const auto mesh = MakeBasicMesh();
   const auto lt = std::make_unique<LinearTetrahedral>(
       youngs_modulus, poissons_ratio, mesh,
@@ -45,8 +45,8 @@ TEST(TestLinearTetrahedral, TestConstructor) {
 }
 
 TEST(TestLinearTetrahedral, TestElementStiffness) {
-  const float youngs_modulus = 210e6;
-  const float poissons_ratio = 0.3;
+  const Real youngs_modulus = 210e6;
+  const Real poissons_ratio = 0.3;
   const auto mesh = MakeBasicMesh();
 
   const auto bc_1 = BoundaryCondition{
@@ -74,10 +74,10 @@ TEST(TestLinearTetrahedral, TestElementStiffness) {
   const auto lt = std::make_unique<LinearTetrahedral>(
       youngs_modulus, poissons_ratio, mesh, bcs);
 
-  const Eigen::MatrixXf plane_stresses =
+  const MatrixXr plane_stresses =
       lt->Solve(youngs_modulus, poissons_ratio, mesh);
 
-  Eigen::VectorXf p1_compare(3);
+  VectorXr p1_compare(3);
   p1_compare << 0, 0.123f, 7.4534f;
   p1_compare *= 1e9;
   ASSERT_TRUE(plane_stresses.row(0).isApprox(p1_compare));

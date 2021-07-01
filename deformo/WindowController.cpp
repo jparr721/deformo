@@ -50,12 +50,12 @@ void WindowController::SetSliceAxis(const QString& value) {
     emit OnSliceAxisChange(value);
 }
 
-void WindowController::SetSliceValue(float value) {
+void WindowController::SetSliceValue(Real value) {
     mesh->SetSliceValue(value);
     emit OnSliceValueChange(value);
 }
 
-void WindowController::SetNodalMass(float value) {
+void WindowController::SetNodalMass(Real value) {
     nodal_mass_ = value;
     emit OnNodalMassChange(value);
 }
@@ -249,11 +249,9 @@ void WindowController::ConnectUiElementsToSimulation() {
     SetRayleighMu(simulation_->RayleighMu());
 }
 
-void WindowController::DisableStaticUiElements() {
-}
+void WindowController::DisableStaticUiElements() {}
 
-void WindowController::EnableStaticUiElements() {
-}
+void WindowController::EnableStaticUiElements() {}
 
 void WindowController::ResetPlaybackControls() {
     recorded_displacements_.clear();
@@ -272,8 +270,8 @@ void WindowController::RecomputeSliceValueRange() {
         i = 2;
     }
 
-    float minimum = 0.f;
-    float maximum = 0.f;
+    Real minimum = 0.f;
+    Real maximum = 0.f;
 
     for (int i = 0; i < mesh->positions.size(); ++i) {
         minimum = std::fmin(minimum, mesh->positions(i));

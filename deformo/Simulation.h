@@ -10,39 +10,39 @@
 
 class Simulation {
   public:
-    float dt = 0.01f;
-    float current_time = 0.f;
+    Real dt = 0.01f;
+    Real current_time = 0.f;
 
     Simulation() = default;
-    Simulation(float youngs_modulus, float poissons_ratio, float point_mass,
+    Simulation(Real youngs_modulus, Real poissons_ratio, Real point_mass,
                const std::shared_ptr<Mesh>& mesh,
                const std::vector<BoundaryCondition>& boundary_conditions);
 
     void Solve();
-    Eigen::VectorXf Integrate() const;
+    VectorXr Integrate() const;
 
     // Setters
     void SetBoundaryConditions(
         const std::vector<BoundaryCondition>& boundary_conditions) {
         engine_->boundary_conditions = boundary_conditions;
     }
-    void SetYoungsModulus(float E) { youngs_modulus_ = E; }
-    void SetPoissonsRatio(float v) { poissons_ratio_ = v; }
-    void SetMass(float mass) const { integrator_->SetMassMatrix(mass); }
-    void SetNodalMass(float mass) const { integrator_->SetMassMatrix(mass); }
-    void SetTimestepSize(float dt) { this->dt = dt; }
+    void SetYoungsModulus(Real E) { youngs_modulus_ = E; }
+    void SetPoissonsRatio(Real v) { poissons_ratio_ = v; }
+    void SetMass(Real mass) const { integrator_->SetMassMatrix(mass); }
+    void SetNodalMass(Real mass) const { integrator_->SetMassMatrix(mass); }
+    void SetTimestepSize(Real dt) { this->dt = dt; }
 
-    void SetRayleighMu(float mu) {
+    void SetRayleighMu(Real mu) {
         rayleigh_mu_ = mu;
         integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
     }
 
-    void SetRayleighLambda(float lambda) {
+    void SetRayleighLambda(Real lambda) {
         rayleigh_lambda_ = lambda;
         integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
     }
 
-    void SetDampingMatrix(float mu, float lambda) {
+    void SetDampingMatrix(Real mu, Real lambda) {
         rayleigh_mu_ = mu;
         rayleigh_lambda_ = lambda;
         integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
@@ -52,7 +52,7 @@ class Simulation {
         mesh_->SetTetgenFlags(value);
     }
 
-    void SetSliceValue(float value) const { mesh_->SetSliceValue(value); }
+    void SetSliceValue(Real value) const { mesh_->SetSliceValue(value); }
     void SetSliceAxis(const std::string& value) const {
         mesh_->SetSliceAxis(StringToSliceAxis(value));
     }
@@ -60,21 +60,21 @@ class Simulation {
     void SetMesh(const std::shared_ptr<Mesh>& mesh) { mesh_ = mesh; }
 
     // Getters
-    [[nodiscard]] float SliceValue() const { return mesh_->slice_value; }
-    [[nodiscard]] float NodalMass() const { return integrator_->NodalMass(); }
-    [[nodiscard]] float PoissonsRatio() const { return poissons_ratio_; }
-    [[nodiscard]] float YoungsModulus() const { return youngs_modulus_; }
-    [[nodiscard]] float TimestepSize() const { return dt; }
+    [[nodiscard]] Real SliceValue() const { return mesh_->slice_value; }
+    [[nodiscard]] Real NodalMass() const { return integrator_->NodalMass(); }
+    [[nodiscard]] Real PoissonsRatio() const { return poissons_ratio_; }
+    [[nodiscard]] Real YoungsModulus() const { return youngs_modulus_; }
+    [[nodiscard]] Real TimestepSize() const { return dt; }
 
-    [[nodiscard]] float RayleighLambda() const { return rayleigh_lambda_; }
-    [[nodiscard]] float RayleighMu() const { return rayleigh_mu_; }
+    [[nodiscard]] Real RayleighLambda() const { return rayleigh_lambda_; }
+    [[nodiscard]] Real RayleighMu() const { return rayleigh_mu_; }
 
   private:
-    float rayleigh_mu_ = 0.5f;
-    float rayleigh_lambda_ = 0.5f;
+    Real rayleigh_mu_ = 0.5f;
+    Real rayleigh_lambda_ = 0.5f;
 
-    float youngs_modulus_ = 10000.f;
-    float poissons_ratio_ = 0.3f;
+    Real youngs_modulus_ = 10000.f;
+    Real poissons_ratio_ = 0.3f;
 
     std::unique_ptr<LinearTetrahedral> engine_;
     std::unique_ptr<ExplicitCentralDifferenceMethod> integrator_;

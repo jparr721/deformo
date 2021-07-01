@@ -33,12 +33,12 @@ Mesh::Mesh(const std::string& ply_path, const std::string& tetgen_flags)
     InitializeFromTetgenFlagsAndFile(ply_path, tetgen_flags);
 }
 
-Mesh::Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T) {
+Mesh::Mesh(const MatrixXr& V, const Eigen::MatrixXi& T) {
     Vectorize(tetrahedral_elements, T);
     InitializeRenderableSurfaces(V, T);
 }
 
-void Mesh::Update(const Eigen::VectorXf& displacements) {
+void Mesh::Update(const VectorXr& displacements) {
     positions = displacements + rest_positions;
 }
 
@@ -54,7 +54,7 @@ int Mesh::GetPositionAtFaceIndex(const int face_index) const {
     return tetrahedral_elements(face_index) * 3;
 }
 
-void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
+void Mesh::InitializeRenderableSurfaces(const MatrixXr& V,
                                         const Eigen::MatrixXi& T) {
     Vectorize(positions, V);
     rest_positions = positions;
@@ -65,9 +65,8 @@ void Mesh::InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
     }
 }
 
-void Mesh::ConstructMesh(Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
-                         Eigen::MatrixXi& TT, const Eigen::MatrixXf& V,
-                         const Eigen::MatrixXi& F,
+void Mesh::ConstructMesh(MatrixXr& TV, Eigen::MatrixXi& TF, Eigen::MatrixXi& TT,
+                         const MatrixXr& V, const Eigen::MatrixXi& F,
                          const std::string& tetgen_flags) const {
     tetgenio out;
     Tetrahedralize(out, V, F, tetgen_flags);
@@ -93,11 +92,11 @@ void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
                                             const std::string& tetgen_flags) {
     assert(std::filesystem::path(ply_path).extension() == ".ply" &&
            "INVALID PLY FILE");
-    Eigen::MatrixXf V;
+    MatrixXr V;
     Eigen::MatrixXi F;
     igl::readPLY(ply_path, V, F);
 
-    Eigen::MatrixXf TV;
+    MatrixXr TV;
     Eigen::MatrixXi TF;
     Eigen::MatrixXi TT;
 
@@ -112,24 +111,24 @@ void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
 }
 
 // ================ SETTERS
-void Mesh::SetSliceValue(float value) {
+void Mesh::SetSliceValue(Real value) {
     unsigned short mod = 0;
 
     if (slice_axis == SliceAxis::x_axis) {
         mod = 0;
     } else if (slice_axis == SliceAxis::y_axis) {
-        mod = 1; 
+        mod = 1;
     } else if (slice_axis == SliceAxis::z_axis) {
-        mod = 2; 
+        mod = 2;
     }
 
-    for (int i = mod; i < positions.size(); i += 2) {
-        if (positions(i) >= value) {
-            colors.segment(i - mod, 4) << kMeshDefaultColorInvisible;
-        } else {
-            colors.segment(i - mod, 4) << kMeshDefaultColor;
-        }
-    }
+    /*  for (int i = mod; i < positions.size(); i += 2) {
+          if (positions(i) >= value) {
+              colors.segment(i - mod, 4) << kMeshDefaultColorInvisible;
+          } else {
+              colors.segment(i - mod, 4) << kMeshDefaultColor;
+          }
+      }*/
 }
 
 void Mesh::SetSliceAxis(const SliceAxis axis) { slice_axis = axis; }

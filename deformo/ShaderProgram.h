@@ -1,9 +1,10 @@
 #pragma once
 
-#include <QMatrix4x4>
+#include "Numerics.h"
+
 #include "OpenGL.h"
 #include "Shader.h"
-#include <Eigen/Dense>
+#include <QMatrix4x4>
 #include <string>
 #include <unordered_map>
 
@@ -23,7 +24,7 @@ class ShaderProgram {
     auto Release() const -> void;
 
     auto SetMatrixUniformIdentity() -> void;
-    auto SetMatrixUniform(int location, const Eigen::MatrixXf& uniform) -> void;
+    auto SetMatrixUniform(int location, const MatrixXr& uniform) -> void;
 
     auto UniformLocation(const std::string& name) -> int;
 };

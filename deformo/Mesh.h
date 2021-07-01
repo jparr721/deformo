@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Numerics.h"
 #include <Eigen/Dense>
 #include <string>
 
@@ -14,32 +15,31 @@ auto StringToSliceAxis(const std::string& input) -> SliceAxis;
 class Mesh {
   public:
     SliceAxis slice_axis = SliceAxis::x_axis;
-    float slice_value = 0;
+    Real slice_value = 0;
 
-    inline const static Eigen::Vector4f kMeshDefaultColor =
-        Eigen::Vector4f(0.f, 0.f, 1.f, 1.f);
-    inline const static Eigen::Vector4f kMeshDefaultColorInvisible =
-        Eigen::Vector4f(0.f, 0.f, 0.f, 0.f);
-    inline const static Eigen::Vector4f kMeshDefaultSelectedColor =
-        Eigen::Vector4f(0.f, 1.f, 0.f, 1.f);
+    inline const static Vector4 kMeshDefaultColor = Vector4(0.f, 0.f, 1.f, 1.f);
+    inline const static Vector4 kMeshDefaultColorInvisible =
+        Vector4(0.f, 0.f, 0.f, 0.f);
+    inline const static Vector4 kMeshDefaultSelectedColor =
+        Vector4(0.f, 1.f, 0.f, 1.f);
 
     // Geometry Colors
-    Eigen::VectorXf colors;
+    VectorXr colors;
 
     // Geometry Positions
-    Eigen::VectorXf positions;
-    Eigen::VectorXf rest_positions;
+    VectorXr positions;
+    VectorXr rest_positions;
 
     // Geometry Faces / Tetrahedra
     Eigen::VectorXi tetrahedral_elements;
     Eigen::VectorXi faces;
 
     Mesh(const std::string& ply_path, const std::string& tetgen_flags = "zpq");
-    Mesh(const Eigen::MatrixXf& V, const Eigen::MatrixXi& T);
+    Mesh(const MatrixXr& V, const Eigen::MatrixXi& T);
 
-    void Update(const Eigen::VectorXf& displacements);
+    void Update(const VectorXr& displacements);
 
-    void SetSliceValue(float value);
+    void SetSliceValue(Real value);
     void SetSliceAxis(SliceAxis axis);
     void SetTetgenFlags(const std::string& flags);
 
@@ -66,11 +66,10 @@ class Mesh {
         out = Eigen::Map<Out>(in_t.data(), in_t.rows() * in_t.cols());
     }
 
-    void InitializeRenderableSurfaces(const Eigen::MatrixXf& V,
+    void InitializeRenderableSurfaces(const MatrixXr& V,
                                       const Eigen::MatrixXi& T);
-    void ConstructMesh(Eigen::MatrixXf& TV, Eigen::MatrixXi& TF,
-                       Eigen::MatrixXi& TT, const Eigen::MatrixXf& V,
-                       const Eigen::MatrixXi& F,
+    void ConstructMesh(MatrixXr& TV, Eigen::MatrixXi& TF, Eigen::MatrixXi& TT,
+                       const MatrixXr& V, const Eigen::MatrixXi& F,
                        const std::string& tetgen_flags) const;
     void InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
                                           const std::string& tetgen_flags);

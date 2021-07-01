@@ -3,8 +3,8 @@
 
 namespace utils {
 void FindMaxVertices(std::vector<unsigned>& indices,
-                     const Eigen::VectorXf& positions) {
-    float max_y = -1e-10f;
+                     const VectorXr& positions) {
+    Real max_y = -1e-10f;
     // Iterate over each y value in the position vector
     for (int i = 1; i < positions.rows(); i += 3) {
         max_y = std::fmax(positions(i), max_y);

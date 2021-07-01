@@ -8,20 +8,20 @@
 #include <vector>
 
 namespace {
-    constexpr int kMaxFaceSize = 3;
-    constexpr int kMaxNumCorners = 4;
-}
+constexpr int kMaxFaceSize = 3;
+constexpr int kMaxNumCorners = 4;
+} // namespace
 
-bool TetgenioToMesh(Eigen::MatrixXf& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T,
+bool TetgenioToMesh(MatrixXr& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T,
                     const tetgenio& out) {
-    std::vector<std::vector<float>> v;
+    std::vector<std::vector<Real>> v;
     std::vector<std::vector<int>> f;
     std::vector<std::vector<int>> t;
 
     // Process Points
     // Crash if we don't have any points
     assert(out.pointlist != nullptr && "TETGENIO OUTPUT BUFFER EMPTY");
-    v.resize(out.numberofpoints, std::vector<float>(3));
+    v.resize(out.numberofpoints, std::vector<Real>(3));
     for (int i = 0; i < out.numberofpoints; ++i) {
         v[i][0] = out.pointlist[i * 3 + 0];
         v[i][1] = out.pointlist[i * 3 + 1];
@@ -73,10 +73,9 @@ bool TetgenioToMesh(Eigen::MatrixXf& V, Eigen::MatrixXi& F, Eigen::MatrixXi& T,
     return true;
 }
 
-bool MeshToTetgenio(tetgenio& in, const Eigen::MatrixXf& V,
-                    const Eigen::MatrixXi& F) {
+bool MeshToTetgenio(tetgenio& in, const MatrixXr& V, const Eigen::MatrixXi& F) {
 
-    std::vector<std::vector<float>> v;
+    std::vector<std::vector<Real>> v;
     std::vector<std::vector<int>> f;
 
     utils::MatrixToList(v, V);
@@ -127,8 +126,8 @@ bool MeshToTetgenio(tetgenio& in, const Eigen::MatrixXf& V,
     return true;
 }
 
-void Tetrahedralize(tetgenio& out, const Eigen::MatrixXf& V,
-                    const Eigen::MatrixXi& F, const std::string& flags) {
+void Tetrahedralize(tetgenio& out, const MatrixXr& V, const Eigen::MatrixXi& F,
+                    const std::string& flags) {
     tetgenio in;
     assert(MeshToTetgenio(in, V, F) && "FAILED TO CONVERT MESH TO TETGENIO");
 

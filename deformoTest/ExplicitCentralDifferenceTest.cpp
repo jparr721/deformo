@@ -18,9 +18,9 @@ auto MakeStiffnessMatrix() -> Eigen::Matrix2f {
   return stiffness;
 }
 
-auto MakeMassMatrix() -> Eigen::SparseMatrixXf {
-  using T = Eigen::Triplet<float>;
-  Eigen::SparseMatrixXf mass_matrix;
+auto MakeMassMatrix() -> SparseMatrixXr {
+  using T = Eigen::Triplet<Real>;
+  SparseMatrixXr mass_matrix;
   mass_matrix.resize(2, 2);
   const auto ul = T(0, 0, 2);
   const auto ur = T(0, 1, 0);
@@ -35,7 +35,7 @@ TEST(TestExplicitCentralDifference, TestConstructor) {
   const Eigen::Vector2f initial_displacement = Eigen::Vector2f(0, 0);
   const Eigen::Vector2f initial_forces = Eigen::Vector2f(0.f, 10.f);
   const Eigen::Matrix2f stiffness = MakeStiffnessMatrix();
-  const Eigen::SparseMatrixXf mass_matrix = MakeMassMatrix();
+  const SparseMatrixXr mass_matrix = MakeMassMatrix();
 
   const auto integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
       .28, 1, stiffness, initial_displacement, initial_forces);
@@ -47,10 +47,10 @@ TEST(TestExplicitCentralDifference, TestConstructor) {
 }
 
 TEST(TestExplicitCentralDifference, TestSolver) {
-  Eigen::VectorXf displacement = Eigen::Vector2f(0.f, 0.f);
+  VectorXr displacement = Eigen::Vector2f(0.f, 0.f);
   Eigen::Vector2f forces = Eigen::Vector2f(0.f, 10.f);
   const Eigen::Matrix2f stiffness = MakeStiffnessMatrix();
-  const Eigen::SparseMatrixXf mass_matrix = MakeMassMatrix();
+  const SparseMatrixXr mass_matrix = MakeMassMatrix();
 
   const auto integrator = std::make_unique<ExplicitCentralDifferenceMethod>(
       .28, mass_matrix, stiffness, displacement, forces);
@@ -62,13 +62,13 @@ TEST(TestExplicitCentralDifference, TestSolver) {
     std::cerr << displacement << std::endl;
     std::cerr << "===" << std::endl;
     if (i == 0) {
-      Eigen::VectorXf compare(2);
+      VectorXr compare(2);
       compare << 0, 0.392f;
       ASSERT_TRUE(compare.isApprox(displacement));
     }
   }
 
-  Eigen::VectorXf compare(2);
+  VectorXr compare(2);
   compare << 1.0223f, 2.60083f;
   ASSERT_TRUE(compare.isApprox(displacement));
 }

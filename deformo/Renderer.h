@@ -32,11 +32,11 @@ class Renderer {
 
     auto Render() -> void;
     auto Resize(int width, int height) -> void;
-    auto SetPositionDisplacement(const Eigen::VectorXf& positions) -> void;
-    auto SetColors(const Eigen::VectorXf& colors) -> void;
+    auto SetPositionDisplacement(const VectorXr& positions) -> void;
+    auto SetColors(const VectorXr& colors) -> void;
     auto SetRenderMode(GLenum mode) -> void;
     void SetTetgenFlags(const std::string& flags);
-    void SetCutPlane(float cut_plane);
+    void SetCutPlane(Real cut_plane);
     void SetCutPlaneAxis(SliceAxis cut_plane_axis);
 
   private:

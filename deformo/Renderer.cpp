@@ -66,13 +66,12 @@ auto Renderer::Resize(int width, int height) -> void {
     LogErrors("Renderer::Resize");
 }
 
-auto Renderer::SetPositionDisplacement(const Eigen::VectorXf& positions)
-    -> void {
+auto Renderer::SetPositionDisplacement(const VectorXr& positions) -> void {
     mesh_->Update(positions);
     dirty_.set(DirtyStatus::positions);
 }
 
-auto Renderer::SetColors(const Eigen::VectorXf& colors) -> void {
+auto Renderer::SetColors(const VectorXr& colors) -> void {
     mesh_->colors = colors;
     dirty_.set(DirtyStatus::colors);
 }
@@ -84,7 +83,7 @@ auto Renderer::SetRenderMode(const GLenum mode) -> void {
 
 void Renderer::SetTetgenFlags(const std::string& flags) {}
 
-void Renderer::SetCutPlane(float cut_plane) { mesh_->SetSliceValue(cut_plane); }
+void Renderer::SetCutPlane(Real cut_plane) { mesh_->SetSliceValue(cut_plane); }
 
 void Renderer::SetCutPlaneAxis(SliceAxis cut_plane_axis) {
     mesh_->SetSliceAxis(cut_plane_axis);
@@ -115,9 +114,9 @@ auto Renderer::ReloadRenderMode() -> void {
 auto Renderer::ReloadVertexBuffers() -> void {
     BindVertexAttributeArray(shader_program_->id, "position", vbo, 3,
                              mesh_->positions);
-    //if (dirty_[DirtyStatus::colors]) {
-        BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 4,
-                                 mesh_->colors);
+    // if (dirty_[DirtyStatus::colors]) {
+    BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 4,
+                             mesh_->colors);
     //    dirty_.flip(DirtyStatus::colors);
     //}
 }

@@ -3,15 +3,15 @@
 #include <cassert>
 #include <vector>
 
-auto utils::numerics::OneDimensionalLinearInterpolation(const float low,
-                                                        const float high,
-                                                        const float interval)
-    -> std::vector<float> {
+auto linear_algebra::OneDimensionalLinearInterpolation(const Real low,
+                                                       const Real high,
+                                                       const Real interval)
+    -> std::vector<Real> {
     assert(high - low >= 1 &&
            "Interpolation Not Supported For Values of Diff < 1");
-    std::vector<float> values;
+    std::vector<Real> values;
 
-    for (float i = low; i <= high;) {
+    for (Real i = low; i <= high;) {
         values.push_back(i);
         i += interval;
     }
@@ -23,4 +23,9 @@ auto utils::numerics::OneDimensionalLinearInterpolation(const float low,
     }
 
     return values;
+}
+
+constexpr auto linear_algebra::Lerp(const Real a, const Real b,
+                                    const Real t) noexcept -> Real {
+    return (1 - t) * a + t * b;
 }

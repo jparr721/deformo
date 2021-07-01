@@ -8,7 +8,7 @@
 #include "Utils.h"
 
 LinearTetrahedral::LinearTetrahedral(
-    const float youngs_modulus, const float poissons_ratio,
+    const Real youngs_modulus, const Real poissons_ratio,
     const std::shared_ptr<Mesh>& mesh,
     std::vector<BoundaryCondition> boundary_conditions)
     : integrator_size(boundary_conditions.size()),
@@ -22,41 +22,41 @@ LinearTetrahedral::LinearTetrahedral(
 }
 
 void LinearTetrahedral::AssembleElementStiffness(
-    float youngs_modulus, float poissons_ratio,
+    Real youngs_modulus, Real poissons_ratio,
     const std::shared_ptr<Mesh>& mesh) {
-    for (int i = 0; i < mesh->TetrahedralElementsSize(); i += Mesh::FacesStride()) {
+    for (int i = 0; i < mesh->TetrahedralElementsSize();
+         i += Mesh::FacesStride()) {
         std::vector<int> stiffness_coordinates;
         // Get the index face value
         int index = mesh->GetPositionAtFaceIndex(i);
         stiffness_coordinates.push_back(index / 3);
-        Eigen::VectorXf shape_one;
+        VectorXr shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 1);
         stiffness_coordinates.push_back(index / 3);
-        Eigen::VectorXf shape_two;
+        VectorXr shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 2);
         stiffness_coordinates.push_back(index / 3);
-        Eigen::VectorXf shape_three;
+        VectorXr shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 3);
         stiffness_coordinates.push_back(index / 3);
-        Eigen::VectorXf shape_four;
+        VectorXr shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
 
-        const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
+        const MatrixXr B = AssembleStrainRelationshipMatrix(
             shape_one, shape_two, shape_three, shape_four);
 
-        const Eigen::Matrix66f D =
+        const Matrix6 D =
             AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
 
-        const float V = utils::ComputeTetrahedraElementVolume(
+        const Real V = utils::ComputeTetrahedraElementVolume(
             shape_one, shape_two, shape_three, shape_four);
-        const Eigen::Matrix12f element_stiffness_matrix =
-            V * B.transpose() * D * B;
+        const Matrix12 element_stiffness_matrix = V * B.transpose() * D * B;
 
         const ElementStiffness element_stiffness = {element_stiffness_matrix,
                                                     stiffness_coordinates};
@@ -92,15 +92,15 @@ void LinearTetrahedral::AssembleBoundaryForces() {
                           boundary_force_indices, boundary_force_indices);
 }
 
-Eigen::MatrixXf
-LinearTetrahedral::AssembleElementPlaneStresses(const Eigen::MatrixXf& sigmas) {
-    Eigen::MatrixXf plane_stresses;
+MatrixXr
+LinearTetrahedral::AssembleElementPlaneStresses(const MatrixXr& sigmas) {
+    MatrixXr plane_stresses;
     plane_stresses.resize(sigmas.rows(), 3);
 
     for (int row = 0; row < sigmas.rows(); ++row) {
-        const Eigen::VectorXf sigma = sigmas.row(row);
-        const float s1 = sigma.sum();
-        const float s2 =
+        const VectorXr sigma = sigmas.row(row);
+        const Real s1 = sigma.sum();
+        const Real s2 =
             (sigma(0) * sigma(1) + sigma(0) * sigma(2) + sigma(1) * sigma(2)) -
             (sigma(3) * sigma(3) - sigma(4) * sigma(4) - sigma(5) * sigma(5));
 
@@ -109,7 +109,7 @@ LinearTetrahedral::AssembleElementPlaneStresses(const Eigen::MatrixXf& sigmas) {
         ms3.row(1) << sigma(3), sigma(1), sigma(4);
         ms3.row(2) << sigma(5), sigma(4), sigma(2);
 
-        const float s3 = ms3.determinant();
+        const Real s3 = ms3.determinant();
 
         const Eigen::Vector3f plane_stress(s1, s2, s3);
         plane_stresses.row(row) = plane_stress;
@@ -123,10 +123,10 @@ void LinearTetrahedral::AssembleGlobalStiffness(
     // Allocate space in global_stiffness for 3nx3n elements
     const unsigned int size = mesh->Size();
 
-    global_stiffness = Eigen::MatrixXf::Zero(size, size);
+    global_stiffness = MatrixXr::Zero(size, size);
 
     for (const auto& element_stiffness : element_stiffnesses) {
-        const Eigen::Matrix12f k = element_stiffness.stiffness_matrix;
+        const Matrix12 k = element_stiffness.stiffness_matrix;
         const auto i = element_stiffness.indices.at(0);
         const auto j = element_stiffness.indices.at(1);
         const auto m = element_stiffness.indices.at(2);
@@ -293,29 +293,27 @@ void LinearTetrahedral::AssembleGlobalStiffness(
     }
 }
 
-Eigen::Matrix66f
-LinearTetrahedral::AssembleStressStrainMatrix(float youngs_modulus,
-                                              float poissons_ratio) {
-    Eigen::Matrix66f D;
+Matrix6 LinearTetrahedral::AssembleStressStrainMatrix(Real youngs_modulus,
+                                                      Real poissons_ratio) {
+    Matrix6 D;
     D.row(0) << 1 - poissons_ratio, poissons_ratio, poissons_ratio, 0, 0, 0;
     D.row(1) << poissons_ratio, 1 - poissons_ratio, poissons_ratio, 0, 0, 0;
     D.row(2) << poissons_ratio, poissons_ratio, 1 - poissons_ratio, 0, 0, 0;
     D.row(3) << 0, 0, 0, (1 - 2 * poissons_ratio) / 2, 0, 0;
     D.row(4) << 0, 0, 0, 0, (1 - 2 * poissons_ratio) / 2, 0;
     D.row(5) << 0, 0, 0, 0, 0, (1 - 2 * poissons_ratio) / 2;
-    D *= youngs_modulus /
-         ((1 + poissons_ratio) * (1 - 2 * poissons_ratio));
+    D *= youngs_modulus / ((1 + poissons_ratio) * (1 - 2 * poissons_ratio));
     return D;
 }
 
-Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
+MatrixXr LinearTetrahedral::AssembleStrainRelationshipMatrix(
     const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
     const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four) {
-    Eigen::MatrixXf strain_relationship;
-    const float V = utils::ComputeTetrahedraElementVolume(
+    MatrixXr strain_relationship;
+    const Real V = utils::ComputeTetrahedraElementVolume(
         shape_one, shape_two, shape_three, shape_four);
-    const auto create_beta_submatrix = [](float beta, float gamma,
-                                          float delta) -> BetaSubMatrixXf {
+    const auto create_beta_submatrix = [](Real beta, Real gamma,
+                                          Real delta) -> BetaSubMatrixXf {
         BetaSubMatrixXf B;
         B.row(0) << beta, 0, 0;
         B.row(1) << 0, gamma, 0;
@@ -326,47 +324,45 @@ Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
         return B;
     };
 
-    const float x1 = shape_one.x();
-    const float y1 = shape_one.y();
-    const float z1 = shape_one.z();
+    const Real x1 = shape_one.x();
+    const Real y1 = shape_one.y();
+    const Real z1 = shape_one.z();
 
-    const float x2 = shape_two.x();
-    const float y2 = shape_two.y();
-    const float z2 = shape_two.z();
+    const Real x2 = shape_two.x();
+    const Real y2 = shape_two.y();
+    const Real z2 = shape_two.z();
 
-    const float x3 = shape_three.x();
-    const float y3 = shape_three.y();
-    const float z3 = shape_three.z();
+    const Real x3 = shape_three.x();
+    const Real y3 = shape_three.y();
+    const Real z3 = shape_three.z();
 
-    const float x4 = shape_four.x();
-    const float y4 = shape_four.y();
-    const float z4 = shape_four.z();
+    const Real x4 = shape_four.x();
+    const Real y4 = shape_four.y();
+    const Real z4 = shape_four.z();
 
-    const float beta_1 =
+    const Real beta_1 =
         -1 * ConstructShapeFunctionParameter(y2, z2, y3, z3, y4, z4);
-    const float beta_2 =
-        ConstructShapeFunctionParameter(y1, z1, y3, z3, y4, z4);
-    const float beta_3 =
+    const Real beta_2 = ConstructShapeFunctionParameter(y1, z1, y3, z3, y4, z4);
+    const Real beta_3 =
         -1 * ConstructShapeFunctionParameter(y1, z1, y2, z2, y4, z4);
-    const float beta_4 =
-        ConstructShapeFunctionParameter(y1, z1, y2, z2, y3, z3);
+    const Real beta_4 = ConstructShapeFunctionParameter(y1, z1, y2, z2, y3, z3);
 
-    const float gamma_1 =
+    const Real gamma_1 =
         ConstructShapeFunctionParameter(x2, z2, x3, z3, x4, z4);
-    const float gamma_2 =
+    const Real gamma_2 =
         -1 * ConstructShapeFunctionParameter(x1, z1, x3, z3, x4, z4);
-    const float gamma_3 =
+    const Real gamma_3 =
         ConstructShapeFunctionParameter(x1, z1, x2, z2, x4, z4);
-    const float gamma_4 =
+    const Real gamma_4 =
         -1 * ConstructShapeFunctionParameter(x1, z1, x2, z2, x3, z3);
 
-    const float delta_1 =
+    const Real delta_1 =
         -1 * ConstructShapeFunctionParameter(x2, y2, x3, y3, x4, y4);
-    const float delta_2 =
+    const Real delta_2 =
         ConstructShapeFunctionParameter(x1, y1, x3, y3, x4, y4);
-    const float delta_3 =
+    const Real delta_3 =
         -1 * ConstructShapeFunctionParameter(x1, y1, x2, y2, x4, y4);
-    const float delta_4 =
+    const Real delta_4 =
         ConstructShapeFunctionParameter(x1, y1, x2, y2, x3, y3);
 
     const BetaSubMatrixXf B1 = create_beta_submatrix(beta_1, gamma_1, delta_1);
@@ -385,9 +381,9 @@ Eigen::MatrixXf LinearTetrahedral::AssembleStrainRelationshipMatrix(
     return strain_relationship;
 }
 
-float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
-                                                         float p3, float p4,
-                                                         float p5, float p6) {
+Real LinearTetrahedral::ConstructShapeFunctionParameter(Real p1, Real p2,
+                                                        Real p3, Real p4,
+                                                        Real p5, Real p6) {
     Eigen::Matrix3f parameter;
     parameter.row(0) << 1, p1, p2;
     parameter.row(1) << 1, p3, p4;
@@ -395,10 +391,10 @@ float LinearTetrahedral::ConstructShapeFunctionParameter(float p1, float p2,
     return parameter.determinant();
 }
 
-Eigen::VectorXf
+VectorXr
 LinearTetrahedral::ComputeRenderedDisplacements(int displacements_size) {
     assert(!boundary_conditions.empty() && "NO BOUNDARY CONDITIONS");
-    Eigen::VectorXf output = Eigen::VectorXf::Zero(displacements_size);
+    VectorXr output = VectorXr::Zero(displacements_size);
 
     int i = 0;
     for (const auto& [node, _] : boundary_conditions) {
@@ -410,49 +406,52 @@ LinearTetrahedral::ComputeRenderedDisplacements(int displacements_size) {
     return output;
 }
 
-Eigen::MatrixXf LinearTetrahedral::Solve(float youngs_modulus,
-                                         float poissons_ratio, const std::shared_ptr<Mesh>& mesh) {
-    const Eigen::VectorXf solved_displacement = ComputeRenderedDisplacements(mesh->Size());
+MatrixXr LinearTetrahedral::Solve(Real youngs_modulus, Real poissons_ratio,
+                                  const std::shared_ptr<Mesh>& mesh) {
+    const VectorXr solved_displacement =
+        ComputeRenderedDisplacements(mesh->Size());
 
-    Eigen::MatrixXf element_stresses;
-    element_stresses.resize(mesh->TetrahedralElementsSize() / Mesh::FacesStride(), 6);
+    MatrixXr element_stresses;
+    element_stresses.resize(
+        mesh->TetrahedralElementsSize() / Mesh::FacesStride(), 6);
 
-    for (int i = 0; i < mesh->TetrahedralElementsSize(); i += Mesh::FacesStride()) {
+    for (int i = 0; i < mesh->TetrahedralElementsSize();
+         i += Mesh::FacesStride()) {
         int index = mesh->GetPositionAtFaceIndex(i);
-        Eigen::VectorXf shape_one;
+        VectorXr shape_one;
         utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
-        Eigen::VectorXf displacement_one;
+        VectorXr displacement_one;
         utils::SliceEigenVector(displacement_one, solved_displacement, index,
                                 index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 1);
-        Eigen::VectorXf shape_two;
+        VectorXr shape_two;
         utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
-        Eigen::VectorXf displacement_two;
+        VectorXr displacement_two;
         utils::SliceEigenVector(displacement_two, solved_displacement, index,
                                 index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 2);
-        Eigen::VectorXf shape_three;
+        VectorXr shape_three;
         utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
-        Eigen::VectorXf displacement_three;
+        VectorXr displacement_three;
         utils::SliceEigenVector(displacement_three, solved_displacement, index,
                                 index + 2);
 
         index = mesh->GetPositionAtFaceIndex(i + 3);
-        Eigen::VectorXf shape_four;
+        VectorXr shape_four;
         utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
-        Eigen::VectorXf displacement_four;
+        VectorXr displacement_four;
         utils::SliceEigenVector(displacement_four, solved_displacement, index,
                                 index + 2);
 
-        const Eigen::MatrixXf B = AssembleStrainRelationshipMatrix(
+        const MatrixXr B = AssembleStrainRelationshipMatrix(
             shape_one, shape_two, shape_three, shape_four);
 
-        Eigen::VectorXf u(12);
+        VectorXr u(12);
         u << displacement_one, displacement_two, displacement_three,
             displacement_four;
-        const Eigen::Matrix66f D =
+        const Matrix6 D =
             AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
         element_stresses.row(i / Mesh::FacesStride()) = D * B * u;
     }

@@ -33,8 +33,8 @@ class WindowController : public QObject {
     // Simulation Settings Window
     // Simulation Settings -- FEA Parameters
     void SetSliceAxis(const QString& value);
-    void SetSliceValue(float value);
-    void SetNodalMass(float value);
+    void SetSliceValue(Real value);
+    void SetNodalMass(Real value);
     void SetPoissonsRatio(double value);
     void SetYoungsModulus(double value);
     void SetTimestepSize(double value);
@@ -66,8 +66,8 @@ class WindowController : public QObject {
     // Simulation Settings Window
     // Simulation Settings -- FEA Parameters
     void OnSliceAxisChange(const QString& value);
-    void OnSliceValueChange(float value);
-    void OnNodalMassChange(float value);
+    void OnSliceValueChange(Real value);
+    void OnNodalMassChange(Real value);
     void OnPoissonsRatioChange(double value);
     void OnYoungsModulusChange(double value);
     void OnTimestepSizeChange(double value);
@@ -85,32 +85,32 @@ class WindowController : public QObject {
   private:
     bool simulating_ = false;
     // Simulation Runtime Parameters
-    float dt_ = 0.01f;
+    Real dt_ = 0.01f;
 
     // Physical Parameters
-    float nodal_mass_ = 5.f;
+    Real nodal_mass_ = 5.f;
 
     // Damping Parameters
-    float rayleigh_mu_ = 0.5f;
-    float rayleigh_lambda_ = 0.5f;
+    Real rayleigh_mu_ = 0.5f;
+    Real rayleigh_lambda_ = 0.5f;
 
     // FEA Parameters
-    float youngs_modulus_ = 10000.f;
-    float poissons_ratio_ = 0.3f;
+    Real youngs_modulus_ = 10000.f;
+    Real poissons_ratio_ = 0.3f;
 
     GLenum render_mode_ = GL_LINES;
 
     // Render Parameters
     std::string tetgen_flags_ = "zpq";
     // Render-Mutation Parameters
-    float slice_value_;
+    Real slice_value_;
     std::string slice_axis_;
 
     std::unique_ptr<Simulation> simulation_;
 
     std::shared_ptr<Renderer> renderer_;
 
-    std::vector<Eigen::VectorXf> recorded_displacements_;
+    std::vector<VectorXr> recorded_displacements_;
 
     BoundaryConditions
     GenerateDefaultBoundaryConditions(const std::shared_ptr<Mesh>& mesh);
