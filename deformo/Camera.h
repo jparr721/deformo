@@ -31,52 +31,52 @@ template <typename Real> class Camera {
 
     void SetRotation(Real theta, Real phi);
     void SetHorizontalRotation(Real theta);
-    void setVerticalRotation(Real phi);
-    void setSphericalPosition(Real r, Real theta, Real phi);
-    void addRadius(Real dRadius);
-    void setRadius(Real radius);
-    void setFieldOfView(Real fov);
-    void setNearPlane(Real nearPlane);
-    void setFarPlane(Real farPlane);
-    void setMinRadius(Real minRadius);
-    void setMaxRadius(Real maxRadius);
+    void SetVerticalRotation(Real phi);
+    void SetSphericalPosition(Real r, Real theta, Real phi);
+    void AddRadius(Real dRadius);
+    void SetRadius(Real radius);
+    void SetFieldOfView(Real fov);
+    void SetNearPlane(Real nearPlane);
+    void SetFarPlane(Real farPlane);
+    void SetMinRadius(Real minRadius);
+    void SetMaxRadius(Real maxRadius);
 
-    void setRotationSensitivity(Real sen);
-    void setPanSensitivity(Real sen);
-    void setZoomSensitivity(Real sen);
-    void setScopeSensitivity(Real sen);
+    void SetRotationSensitivity(Real sen);
+    void SetPanSensitivity(Real sen);
+    void SetZoomSensitivity(Real sen);
+    void SetScopeSensitivity(Real sen);
 
-    void reset();
-    void resetPlanes();
-    void resetView();
-    void resetMatrices();
-    void resetSensitivities();
+    void Reset();
+    void ResetPlanes();
+    void ResetView();
+    void ResetMatrices();
+    void ResetSensitivities();
 
-    auto getRotationSensitivity() const -> Real;
-    auto getPanSensitivity() const -> Real;
-    auto getZoomSensitivity() const -> Real;
-    auto getScopeSensitivity() const -> Real;
+    auto GetRotationSensitivity() const -> Real;
+    auto GetPanSensitivity() const -> Real;
+    auto GetZoomSensitivity() const -> Real;
+    auto GetScopeSensitivity() const -> Real;
 
-    auto getViewDirection() -> Vector3;
-    auto getRightDirection() -> Vector3;
-    auto getLeftDirection() -> Vector3;
-    auto getUpDirection() -> Vector3;
-    auto getDownDirection() -> Vector3;
+    auto GetViewDirection() -> Vector3;
+    auto GetRightDirection() -> Vector3;
+    auto GetLeftDirection() -> Vector3;
+    auto GetUpDirection() -> Vector3;
+    auto GetDownDirection() -> Vector3;
 
-    auto getEye() const -> const Vector3&;
-    auto getLookAt() const -> const Vector3&;
-    auto getUp() const -> const Vector3&;
+    auto GetEye() const -> const Vector3&;
+    auto GetLookAt() const -> const Vector3&;
+    auto GetUp() const -> const Vector3&;
 
-    auto getWidth() const -> std::size_t;
-    auto getHeight() const -> std::size_t;
-    auto getNear() const -> const Real&;
-    auto getFar() const -> const Real&;
+    auto GetWidth() const -> std::size_t;
+    auto GetHeight() const -> std::size_t;
+    auto GetNear() const -> const Real&;
+    auto GetFar() const -> const Real&;
 
-    auto getViewMatrix() -> const Matrix4&;
-    auto getProjectionMatrix() -> const Matrix4&;
+    auto GetViewMatrix() -> const Matrix4&;
+    auto GetProjectionMatrix() -> const Matrix4&;
 
-    auto toViewMatrix() -> Matrix4;
-    auto toProjectionMatrix() -> Matrix4;
+    auto ToViewMatrix() -> Matrix4;
+    auto ToProjectionMatrix() -> Matrix4;
 
     static auto LookAt(const Vector3& eye, const Vector3& lookAt,
                        const Vector3& up) -> Matrix4;
@@ -192,8 +192,8 @@ template <typename Real> auto Camera<Real>::Rotate(Real du, Real dv) -> bool {
 }
 
 template <typename Real> auto Camera<Real>::Pan(Real du, Real dv) -> bool {
-    Vector3 uDir = getLeftDirection();
-    Vector3 vDir = getDownDirection();
+    Vector3 uDir = GetLeftDirection();
+    Vector3 vDir = GetDownDirection();
 
     Vector3 uDisp = (du * pan_sensitivity_) * uDir;
     Vector3 vDisp = (dv * pan_sensitivity_) * vDir;
@@ -302,30 +302,30 @@ template <typename Real> void Camera<Real>::SetHorizontalRotation(Real theta) {
     compile();
 }
 
-template <typename Real> void Camera<Real>::setVerticalRotation(Real phi) {
+template <typename Real> void Camera<Real>::SetVerticalRotation(Real phi) {
     phi_ = phi;
     compile();
 }
 
 template <typename Real>
-void Camera<Real>::setSphericalPosition(Real r, Real theta, Real phi) {
+void Camera<Real>::SetSphericalPosition(Real r, Real theta, Real phi) {
     r_ = r;
     theta_ = theta;
     phi_ = phi;
     compile();
 }
 
-template <typename Real> void Camera<Real>::addRadius(Real dRadius) {
+template <typename Real> void Camera<Real>::AddRadius(Real dRadius) {
     r_ += dRadius;
     compile();
 }
 
-template <typename Real> void Camera<Real>::setRadius(Real radius) {
+template <typename Real> void Camera<Real>::SetRadius(Real radius) {
     r_ = radius;
     compile();
 }
 
-template <typename Real> void Camera<Real>::setFieldOfView(Real fov) {
+template <typename Real> void Camera<Real>::SetFieldOfView(Real fov) {
     if (fov > Real(kMaxFov))
         fov_ = Real(kMaxFov);
     else if (fov < Real(kMinFov))
@@ -335,65 +335,65 @@ template <typename Real> void Camera<Real>::setFieldOfView(Real fov) {
     SetPerspective(fov_, aspect_ratio_, near_plane_, far_plane_);
 }
 
-template <typename Real> void Camera<Real>::setNearPlane(Real nearPlane) {
+template <typename Real> void Camera<Real>::SetNearPlane(Real nearPlane) {
     near_plane_ = nearPlane;
     SetPerspective(fov_, aspect_ratio_, nearPlane, far_plane_);
 }
 
-template <typename Real> void Camera<Real>::setFarPlane(Real farPlane) {
+template <typename Real> void Camera<Real>::SetFarPlane(Real farPlane) {
     far_plane_ = farPlane;
     SetPerspective(fov_, aspect_ratio_, near_plane_, farPlane);
 }
 
-template <typename Real> void Camera<Real>::setMinRadius(Real minRadius) {
+template <typename Real> void Camera<Real>::SetMinRadius(Real minRadius) {
     min_radius_ = minRadius;
 }
 
-template <typename Real> void Camera<Real>::setMaxRadius(Real maxRadius) {
+template <typename Real> void Camera<Real>::SetMaxRadius(Real maxRadius) {
     max_radius_ = maxRadius;
 }
 
-template <typename Real> void Camera<Real>::setRotationSensitivity(Real sen) {
+template <typename Real> void Camera<Real>::SetRotationSensitivity(Real sen) {
     rotation_sensitivity_ = sen;
 }
 
-template <typename Real> void Camera<Real>::setPanSensitivity(Real sen) {
+template <typename Real> void Camera<Real>::SetPanSensitivity(Real sen) {
     pan_sensitivity_ = sen;
 }
 
-template <typename Real> void Camera<Real>::setZoomSensitivity(Real sen) {
+template <typename Real> void Camera<Real>::SetZoomSensitivity(Real sen) {
     zoom_sensitivity_ = sen;
 }
 
-template <typename Real> void Camera<Real>::setScopeSensitivity(Real sen) {
+template <typename Real> void Camera<Real>::SetScopeSensitivity(Real sen) {
     scope_sensitivity_ = sen;
 }
 
-template <typename Real> void Camera<Real>::reset() {
-    resetMatrices();
-    resetPlanes();
-    resetView();
-    resetSensitivities();
+template <typename Real> void Camera<Real>::Reset() {
+    ResetMatrices();
+    ResetPlanes();
+    ResetView();
+    ResetSensitivities();
     compile();
 }
 
-template <typename Real> void Camera<Real>::resetPlanes() {
+template <typename Real> void Camera<Real>::ResetPlanes() {
     near_plane_ = Real(kDefaultNearPlane);
     far_plane_ = Real(kDefaultFarPlane);
 }
 
-template <typename Real> void Camera<Real>::resetView() {
+template <typename Real> void Camera<Real>::ResetView() {
     eye_ = Vector3::UnitZ();
     look_at_ = Vector3::Zero();
     up_ = Vector3::UnitY();
 }
 
-template <typename Real> void Camera<Real>::resetMatrices() {
+template <typename Real> void Camera<Real>::ResetMatrices() {
     view_matrix_ = Matrix4::Identity();
     projection_matrix_ = Matrix4::Identity();
 }
 
-template <typename Real> void Camera<Real>::resetSensitivities() {
+template <typename Real> void Camera<Real>::ResetSensitivities() {
     rotation_sensitivity_ = Real(kDefaultRotationSensitivity);
     pan_sensitivity_ = Real(kDefaultPanSensitivity);
     zoom_sensitivity_ = Real(kDefaultZoomSensitivity);
@@ -401,100 +401,100 @@ template <typename Real> void Camera<Real>::resetSensitivities() {
 }
 
 template <typename Real>
-auto Camera<Real>::getRotationSensitivity() const -> Real {
+auto Camera<Real>::GetRotationSensitivity() const -> Real {
     return rotation_sensitivity_;
 }
 
-template <typename Real> auto Camera<Real>::getPanSensitivity() const -> Real {
+template <typename Real> auto Camera<Real>::GetPanSensitivity() const -> Real {
     return pan_sensitivity_;
 }
 
-template <typename Real> auto Camera<Real>::getZoomSensitivity() const -> Real {
+template <typename Real> auto Camera<Real>::GetZoomSensitivity() const -> Real {
     return zoom_sensitivity_;
 }
 
 template <typename Real>
-auto Camera<Real>::getScopeSensitivity() const -> Real {
+auto Camera<Real>::GetScopeSensitivity() const -> Real {
     return scope_sensitivity_;
 }
 
 template <typename Real>
-inline auto Camera<Real>::getViewDirection() -> Vector3 {
+inline auto Camera<Real>::GetViewDirection() -> Vector3 {
     compile();
     return (look_at_ - eye_).normalized();
 }
 
 template <typename Real>
-inline auto Camera<Real>::getRightDirection() -> Vector3 {
+inline auto Camera<Real>::GetRightDirection() -> Vector3 {
     compile();
     Vector3 dir = (look_at_ - eye_).normalized();
     return (up_.cross(dir)).normalized();
 }
 
 template <typename Real>
-inline auto Camera<Real>::getLeftDirection() -> Vector3 {
+inline auto Camera<Real>::GetLeftDirection() -> Vector3 {
     compile();
     Vector3 dir = (look_at_ - eye_).normalized();
     return (dir.cross(up_)).normalized();
 }
 
-template <typename Real> inline auto Camera<Real>::getUpDirection() -> Vector3 {
+template <typename Real> inline auto Camera<Real>::GetUpDirection() -> Vector3 {
     compile();
     return up_;
 }
 
 template <typename Real>
-inline auto Camera<Real>::getDownDirection() -> Vector3 {
+inline auto Camera<Real>::GetDownDirection() -> Vector3 {
     compile();
     return -up_;
 }
 
-template <typename Real> auto Camera<Real>::getEye() const -> const Vector3& {
+template <typename Real> auto Camera<Real>::GetEye() const -> const Vector3& {
     return eye_;
 }
 
 template <typename Real>
-auto Camera<Real>::getLookAt() const -> const Vector3& {
+auto Camera<Real>::GetLookAt() const -> const Vector3& {
     return look_at_;
 }
 
-template <typename Real> auto Camera<Real>::getUp() const -> const Vector3& {
+template <typename Real> auto Camera<Real>::GetUp() const -> const Vector3& {
     return up_;
 }
 
-template <typename Real> auto Camera<Real>::getWidth() const -> std::size_t {
+template <typename Real> auto Camera<Real>::GetWidth() const -> std::size_t {
     return width_;
 }
 
-template <typename Real> auto Camera<Real>::getHeight() const -> std::size_t {
+template <typename Real> auto Camera<Real>::GetHeight() const -> std::size_t {
     return height_;
 }
 
-template <typename Real> auto Camera<Real>::getNear() const -> const Real& {
+template <typename Real> auto Camera<Real>::GetNear() const -> const Real& {
     return near_plane_;
 }
 
-template <typename Real> auto Camera<Real>::getFar() const -> const Real& {
+template <typename Real> auto Camera<Real>::GetFar() const -> const Real& {
     return far_plane_;
 }
 
-template <typename Real> auto Camera<Real>::getViewMatrix() -> const Matrix4& {
+template <typename Real> auto Camera<Real>::GetViewMatrix() -> const Matrix4& {
     compile();
     return view_matrix_;
 }
 
 template <typename Real>
-auto Camera<Real>::getProjectionMatrix() -> const Matrix4& {
+auto Camera<Real>::GetProjectionMatrix() -> const Matrix4& {
     compile();
     return projection_matrix_;
 }
 
-template <typename Real> auto Camera<Real>::toViewMatrix() -> Matrix4 {
+template <typename Real> auto Camera<Real>::ToViewMatrix() -> Matrix4 {
     compile();
     return view_matrix_;
 }
 
-template <typename Real> auto Camera<Real>::toProjectionMatrix() -> Matrix4 {
+template <typename Real> auto Camera<Real>::ToProjectionMatrix() -> Matrix4 {
     compile();
     return projection_matrix_;
 }
