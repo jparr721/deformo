@@ -24,8 +24,3 @@ auto linear_algebra::OneDimensionalLinearInterpolation(const Real low,
 
     return values;
 }
-
-constexpr auto linear_algebra::Lerp(const Real a, const Real b,
-                                    const Real t) noexcept -> Real {
-    return (1 - t) * a + t * b;
-}

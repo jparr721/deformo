@@ -2,6 +2,7 @@
 
 #include <Eigen/Core>
 #include <Eigen/Sparse>
+#include <unsupported/Eigen/CXX11/Tensor>
 #include <vector>
 
 #ifdef DEFORMO_USE_DOUBLE
@@ -30,8 +31,15 @@ using MatrixXr = Eigen::Matrix<Real, Eigen::Dynamic, Eigen::Dynamic>;
 // Sparse MatrixTypes
 using SparseMatrixXr = Eigen::SparseMatrix<Real>;
 
+// Dense Tensor Types
+using Tensor3r = Eigen::Tensor<Real, 3>;
+using Tensor4r = Eigen::Tensor<Real, 4>;
+
 namespace linear_algebra {
 auto OneDimensionalLinearInterpolation(Real low, Real high, Real interval)
     -> std::vector<Real>;
-constexpr auto Lerp(Real a, Real b, Real t) noexcept -> Real;
+
+template <typename T> constexpr auto Lerp(T a, T b, Real t) noexcept -> T {
+    return a + (b - a) * t;
+};
 } // namespace linear_algebra

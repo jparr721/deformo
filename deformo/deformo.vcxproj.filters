@@ -48,6 +48,9 @@
     <Filter Include="Linear Algebra">
       <UniqueIdentifier>{b9a09f89-a6f1-4aed-aeff-c7dec041b7b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Engine\Meshing">
+      <UniqueIdentifier>{e7df5841-4eb4-4ae0-913b-a9eb143f84fb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -121,6 +124,12 @@
     <ClCompile Include="Numerics.cpp">
       <Filter>Linear Algebra</Filter>
     </ClCompile>
+    <ClCompile Include="Cube.cpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>Machine Learning</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -188,6 +197,12 @@
     </ClInclude>
     <ClInclude Include="Numerics.h">
       <Filter>Linear Algebra</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube.h">
+      <Filter>Engine\Meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>Machine Learning</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

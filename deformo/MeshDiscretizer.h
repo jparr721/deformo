@@ -1,33 +1,34 @@
 #pragma once
 
+#include "Mesh.h"
 #include "Numerics.h"
-#include <Eigen/Dense>
-#include <vector>
+#include <utility>
 
-template <typename DerivedMesh, typename DerivedVolumes> class MeshDiscretizer {
+class MeshDiscretizer {
   public:
-    MeshDiscretizer(
-        const Eigen::PlainObjectBase<DerivedMesh> tethrahedral_mesh,
-        const Eigen::PlainObjectBase<DerivedVolumes> tetrahedral_volumes)
-        : mesh_(tethrahedral_mesh), volumes_(tetrahedral_volumes) {}
+    MeshDiscretizer(VectorXr tethrahedral_mesh,
+                    Eigen::VectorXi tetrahedral_volumes)
+        : mesh_(std::move(tethrahedral_mesh)),
+          volumes_(std::move(tetrahedral_volumes)) {}
 
-    constexpr auto Reoslution() const noexcept -> Real { return resolution_; }
+    auto Discretize(Real resolution = static_cast<Real>(0.1)) -> void;
+    auto ToMesh() -> std::shared_ptr<Mesh>;
+    auto ToExpandedForm(const VectorXr& data_dim) -> Tensor4r;
 
-    auto Discretize(const Real resolution)
-        -> Eigen::PlainObjectBase<DerivedMesh> {
-        assert(resolution > 0 && resolution <= 1 && "RESOLUTION TOO LARGE");
-
-        resolution_ = resolution;
-
-        return {};
+    [[nodiscard]] constexpr auto Resolution() const noexcept -> Real {
+        return resolution_;
     }
 
   private:
     Real resolution_;
 
-    Eigen::PlainObjectBase<DerivedMesh> mesh_;
-    Eigen::PlainObjectBase<DerivedVolumes> volumes_;
-    Eigen::PlainObjectBase<DerivedMesh> discretized_mesh_;
+    VectorXr mesh_;
+    Eigen::VectorXi volumes_;
 
-    auto RangeLerp(const Real resolution) -> std::vector<Real> {}
+    VectorXr discretized_mesh_;
+    Eigen::VectorXi discretized_volumes_;
+
+    auto RangeLerp(const Vector3& a, const Vector3& b) const -> VectorXr;
+
+    auto RowSlice(const VectorXr& data, int index) -> VectorXr;
 };

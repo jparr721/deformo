@@ -121,6 +121,21 @@ void SliceByIndices(Eigen::PlainObjectBase<Out>& out,
     }
 }
 
+template <typename Out, typename In>
+void SliceVectorByRange(Eigen::PlainObjectBase<Out>& out,
+                        const Eigen::DenseBase<In>& in, int start,
+                        int end) {
+    assert(in.rows() > start && in.rows() >= end &&
+           "SLICE RANGE OUT OF BOUNDS");
+    assert(end > start && "START HAPPENS AFTER END");
+    out.resize(end - start);
+
+    int idx = 0;
+    for (int i = start; i < end; ++i, ++idx) {
+        out(idx) = in(i);
+    }
+}
+
 template <typename Derived>
 [[nodiscard]] Real ComputeTetrahedraElementVolume(
     const Eigen::PlainObjectBase<Derived>& position_one,

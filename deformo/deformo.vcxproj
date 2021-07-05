@@ -113,6 +113,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BoundaryCondition.cpp" />
+    <ClCompile Include="Cube.cpp" />
     <ClCompile Include="Dotenv.cpp" />
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -121,6 +122,7 @@
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshDiscretizer.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Numerics.cpp" />
     <ClCompile Include="WindowController.cpp" />
     <QtRcc Include="deformo.qrc" />
@@ -140,6 +142,7 @@
   <ItemGroup>
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Cube.h" />
     <ClInclude Include="Dotenv.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="ExplicitCentralDifference.h" />
@@ -147,6 +150,7 @@
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshDiscretizer.h" />
+    <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="Numerics.h" />
     <ClInclude Include="OpenGL.h" />
     <ClInclude Include="QTUtils.h" />
