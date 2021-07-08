@@ -1,8 +1,9 @@
 #pragma once
 
-#include <iostream>
+#include "Tensorflow.h"
+#include <string>
 
 class ModelLoader {
   public:
-    ModelLoader() = default;
+    explicit ModelLoader(const std::string& path);
 };

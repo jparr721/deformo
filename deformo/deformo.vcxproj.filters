@@ -130,6 +130,9 @@
     <ClCompile Include="ModelLoader.cpp">
       <Filter>Machine Learning</Filter>
     </ClCompile>
+    <ClCompile Include="TFModel.cpp">
+      <Filter>Machine Learning</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -202,6 +205,12 @@
       <Filter>Engine\Meshing</Filter>
     </ClInclude>
     <ClInclude Include="ModelLoader.h">
+      <Filter>Machine Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="Tensorflow.h">
+      <Filter>Machine Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="TFModel.h">
       <Filter>Machine Learning</Filter>
     </ClInclude>
   </ItemGroup>

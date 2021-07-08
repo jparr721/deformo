@@ -46,7 +46,7 @@ auto Renderer::Render() -> void {
     shader_program_->Bind();
 
     shader_program_->SetMatrixUniformIdentity();
-    shader_program_->SetMatrixUniform(mvp, camera_->ToViewMatrix());
+    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix() * camera_->ToViewMatrix());
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, mesh_->FacesSize(), GL_UNSIGNED_INT, nullptr);

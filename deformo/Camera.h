@@ -99,7 +99,7 @@ template <typename Real> class Camera {
                                                       Real phi) -> Vector3;
 
   protected:
-    void compile() noexcept;
+    void Compile() noexcept;
 
   protected:
     Matrix4 view_matrix_;
@@ -172,7 +172,7 @@ template <typename Real> Camera<Real>::~Camera() {}
 template <typename Real>
 auto Camera<Real>::Resize(std::size_t width, std::size_t height) -> bool {
     SetPerspective(fov_, width, height, near_plane_, far_plane_);
-    compile();
+    Compile();
     return true;
 }
 
@@ -180,14 +180,14 @@ template <typename Real>
 auto Camera<Real>::Resize(std::size_t width, std::size_t height,
                           Real near_plane, Real far_plane) -> bool {
     SetPerspective(fov_, width, height, near_plane, far_plane);
-    compile();
+    Compile();
     return true;
 }
 
 template <typename Real> auto Camera<Real>::Rotate(Real du, Real dv) -> bool {
     theta_ -= (du * rotation_sensitivity_);
     phi_ += (dv * rotation_sensitivity_);
-    compile();
+    Compile();
     return true;
 }
 
@@ -200,23 +200,23 @@ template <typename Real> auto Camera<Real>::Pan(Real du, Real dv) -> bool {
     Vector3 panDisp = uDisp + vDisp;
 
     displacement_ += panDisp;
-    compile();
+    Compile();
     return true;
 }
 
 template <typename Real> auto Camera<Real>::Zoom(Real dr) -> bool {
     if (r_ + dr > max_radius_) {
         r_ = max_radius_;
-        compile();
+        Compile();
         return false;
     }
     if (r_ + dr < min_radius_) {
         r_ = min_radius_;
-        compile();
+        Compile();
         return false;
     }
     r_ += dr;
-    compile();
+    Compile();
     return true;
 }
 
@@ -266,7 +266,7 @@ template <typename Real> void Camera<Real>::SetPosition(const Vector3& pos) {
     position.x() = pos.x();
     position.y() = pos.y();
     position.z() = pos.z();
-    compile();
+    Compile();
 }
 
 template <typename Real>
@@ -274,13 +274,13 @@ void Camera<Real>::SetPosition(Real x, Real y, Real z) {
     position.x() = x;
     position.y() = y;
     position.z() = z;
-    compile();
+    Compile();
 }
 
 template <typename Real>
 void Camera<Real>::AddPosition(const Vector3& displacement) {
     position += displacement;
-    compile();
+    Compile();
 }
 
 template <typename Real>
@@ -288,23 +288,23 @@ void Camera<Real>::AddPosition(Real dx, Real dy, Real dz) {
     displacement_.x() += dx;
     displacement_.y() += dy;
     displacement_.z() += dz;
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::SetRotation(Real theta, Real phi) {
     theta_ = theta;
     phi_ = phi;
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::SetHorizontalRotation(Real theta) {
     theta_ = theta;
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::SetVerticalRotation(Real phi) {
     phi_ = phi;
-    compile();
+    Compile();
 }
 
 template <typename Real>
@@ -312,17 +312,17 @@ void Camera<Real>::SetSphericalPosition(Real r, Real theta, Real phi) {
     r_ = r;
     theta_ = theta;
     phi_ = phi;
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::AddRadius(Real dRadius) {
     r_ += dRadius;
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::SetRadius(Real radius) {
     r_ = radius;
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::SetFieldOfView(Real fov) {
@@ -374,7 +374,7 @@ template <typename Real> void Camera<Real>::Reset() {
     ResetPlanes();
     ResetView();
     ResetSensitivities();
-    compile();
+    Compile();
 }
 
 template <typename Real> void Camera<Real>::ResetPlanes() {
@@ -420,32 +420,32 @@ auto Camera<Real>::GetScopeSensitivity() const -> Real {
 
 template <typename Real>
 inline auto Camera<Real>::GetViewDirection() -> Vector3 {
-    compile();
+    Compile();
     return (look_at_ - eye_).normalized();
 }
 
 template <typename Real>
 inline auto Camera<Real>::GetRightDirection() -> Vector3 {
-    compile();
+    Compile();
     Vector3 dir = (look_at_ - eye_).normalized();
     return (up_.cross(dir)).normalized();
 }
 
 template <typename Real>
 inline auto Camera<Real>::GetLeftDirection() -> Vector3 {
-    compile();
+    Compile();
     Vector3 dir = (look_at_ - eye_).normalized();
     return (dir.cross(up_)).normalized();
 }
 
 template <typename Real> inline auto Camera<Real>::GetUpDirection() -> Vector3 {
-    compile();
+    Compile();
     return up_;
 }
 
 template <typename Real>
 inline auto Camera<Real>::GetDownDirection() -> Vector3 {
-    compile();
+    Compile();
     return -up_;
 }
 
@@ -479,23 +479,23 @@ template <typename Real> auto Camera<Real>::GetFar() const -> const Real& {
 }
 
 template <typename Real> auto Camera<Real>::GetViewMatrix() -> const Matrix4& {
-    compile();
+    Compile();
     return view_matrix_;
 }
 
 template <typename Real>
 auto Camera<Real>::GetProjectionMatrix() -> const Matrix4& {
-    compile();
+    Compile();
     return projection_matrix_;
 }
 
 template <typename Real> auto Camera<Real>::ToViewMatrix() -> Matrix4 {
-    compile();
+    Compile();
     return view_matrix_;
 }
 
 template <typename Real> auto Camera<Real>::ToProjectionMatrix() -> Matrix4 {
-    compile();
+    Compile();
     return projection_matrix_;
 }
 
@@ -687,7 +687,7 @@ inline auto Camera<Real>::SphereicalToCartesian_dPhiCrossdTheta(Real r,
     return result;
 }
 
-template <typename Real> inline void Camera<Real>::compile() noexcept {
+template <typename Real> inline void Camera<Real>::Compile() noexcept {
     look_at_ = Vector3::Zero();
     eye_ = Camera<Real>::SphereicalToCartesian(r_, theta_, phi_);
     up_ =

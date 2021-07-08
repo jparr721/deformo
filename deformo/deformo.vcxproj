@@ -124,6 +124,7 @@
     <ClCompile Include="MeshDiscretizer.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Numerics.cpp" />
+    <ClCompile Include="TFModel.cpp" />
     <ClCompile Include="WindowController.cpp" />
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
@@ -161,6 +162,8 @@
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="MeshGenerator.h" />
     <ClInclude Include="Simulation.h" />
+    <ClInclude Include="Tensorflow.h" />
+    <ClInclude Include="TFModel.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Vao.h" />
     <ClInclude Include="Vbo.h" />
