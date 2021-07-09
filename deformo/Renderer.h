@@ -31,7 +31,7 @@ class Renderer {
     ~Renderer();
 
     auto Render() -> void;
-    auto Resize(int width, int height) -> void;
+    auto Resize(int width, int height) const -> void;
     auto SetPositionDisplacement(const VectorXr& positions) -> void;
     auto SetColors(const VectorXr& colors) -> void;
     auto SetRenderMode(GLenum mode) -> void;

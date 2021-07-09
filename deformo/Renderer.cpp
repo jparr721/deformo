@@ -46,7 +46,8 @@ auto Renderer::Render() -> void {
     shader_program_->Bind();
 
     shader_program_->SetMatrixUniformIdentity();
-    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix() * camera_->ToViewMatrix());
+    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix() *
+                                               camera_->ToViewMatrix());
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, mesh_->FacesSize(), GL_UNSIGNED_INT, nullptr);
@@ -57,11 +58,10 @@ auto Renderer::Render() -> void {
     LogErrors("Renderer::Render");
 }
 
-auto Renderer::Resize(int width, int height) -> void {
-    glViewport(0, 0, width, height);
+auto Renderer::Resize(const int width, const int height) const -> void {
     shader_program_->Bind();
     camera_->Resize(width, height);
-    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix());
+    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix() * camera_->ToViewMatrix());
     shader_program_->Release();
     LogErrors("Renderer::Resize");
 }
