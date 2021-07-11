@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1942</width>
+    <width>1920</width>
     <height>1080</height>
    </rect>
   </property>
@@ -305,7 +305,7 @@ QMenu::separator {
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="designer_tab">
        <property name="font">
@@ -319,7 +319,11 @@ QMenu::separator {
        </attribute>
        <layout class="QGridLayout" name="gridLayout_5">
         <item row="0" column="0">
-         <layout class="QGridLayout" name="gridLayout"/>
+         <layout class="QGridLayout" name="gridLayout">
+          <item row="0" column="0">
+           <widget class="GLWidget" name="openGLWidget_2"/>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>
@@ -461,8 +465,8 @@ QMenu::separator {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>466</width>
-               <height>816</height>
+               <width>267</width>
+               <height>378</height>
               </rect>
              </property>
              <attribute name="label">
@@ -934,7 +938,7 @@ QMenu::separator {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>466</width>
+               <width>461</width>
                <height>816</height>
               </rect>
              </property>

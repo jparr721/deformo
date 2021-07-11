@@ -5,7 +5,6 @@
 #include "Vbo.h"
 
 #include <Eigen/Dense>
-#include <QKeyEvent>
 #include <QOpenGLFunctions>
 #include <QOpenGLWidget>
 #include <QTimer>
