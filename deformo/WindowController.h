@@ -117,7 +117,6 @@ class WindowController : public QObject {
 
     Ui::deformoClass ui_;
 
-  private:
     void ConnectUiElementsToSimulation();
     void DisableStaticUiElements();
     void EnableStaticUiElements();

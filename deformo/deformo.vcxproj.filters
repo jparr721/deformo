@@ -133,6 +133,9 @@
     <ClCompile Include="TFModel.cpp">
       <Filter>Machine Learning</Filter>
     </ClCompile>
+    <ClCompile Include="MarchingCubes.cpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -212,6 +215,9 @@
     </ClInclude>
     <ClInclude Include="TFModel.h">
       <Filter>Machine Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="MarchingCubes.h">
+      <Filter>Engine\Meshing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
