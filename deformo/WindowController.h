@@ -19,9 +19,9 @@ class WindowController : public QObject {
 
     BoundaryConditions boundary_conditions;
 
-    WindowController(Ui::deformoClass& ui, const std::string& mesh_path);
+    WindowController(Ui::deformoClass& ui);
 
-    void SetRenderer(const std::shared_ptr<Renderer> renderer);
+    void SetRenderer(const std::shared_ptr<Renderer>& renderer);
 
     void StepForward();
 

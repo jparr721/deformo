@@ -95,7 +95,12 @@ void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
     MatrixXr V;
     Eigen::MatrixXi F;
     igl::readPLY(ply_path, V, F);
+    InitializeFromVerticesFacesAndTetgenFlags(V, F, tetgen_flags);
+}
 
+void Mesh::InitializeFromVerticesFacesAndTetgenFlags(
+    const MatrixXr& V, const Eigen::MatrixXi& F,
+    const std::string& tetgen_flags) {
     MatrixXr TV;
     Eigen::MatrixXi TF;
     Eigen::MatrixXi TT;

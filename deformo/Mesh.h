@@ -36,6 +36,8 @@ class Mesh {
 
     Mesh(const std::string& ply_path, const std::string& tetgen_flags = "zpq");
     Mesh(const MatrixXr& V, const Eigen::MatrixXi& T);
+    Mesh(const MatrixXr& V, const Eigen::MatrixXi& F,
+         const std::string& tetgen_flags);
 
     void Update(const VectorXr& displacements);
 
@@ -73,6 +75,10 @@ class Mesh {
                        const std::string& tetgen_flags) const;
     void InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
                                           const std::string& tetgen_flags);
+    void
+    InitializeFromVerticesFacesAndTetgenFlags(const MatrixXr& V,
+                                              const Eigen::MatrixXi& F,
+                                              const std::string& tetgen_flags);
     auto ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
                                                        const Eigen::VectorXi& T)
         -> Eigen::MatrixXi;

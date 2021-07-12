@@ -3,16 +3,10 @@
 #include "QTUtils.h"
 #include "Utils.h"
 
-WindowController::WindowController(Ui::deformoClass& ui,
-                                   const std::string& mesh_path)
-    : ui_(ui) {
-    const std::string suffix = ".ply";
-    // TODO (@jparr721) - Make this a ui_ error
-    assert(0 == mesh_path.compare(mesh_path.size() - suffix.size(),
-                                  suffix.size(), suffix) &&
-           "YOU CAN ONLY LOAD .PLY FILES");
+WindowController::WindowController(Ui::deformoClass& ui) : ui_(ui) {
 
-    mesh = std::make_shared<Mesh>(mesh_path, tetgen_flags_);
+    const std::string default_mesh_path = "cube.ply";
+    mesh = std::make_shared<Mesh>(default_mesh_path, tetgen_flags_);
     boundary_conditions = GenerateDefaultBoundaryConditions(mesh);
     simulation_ =
         std::make_unique<Simulation>(youngs_modulus_, poissons_ratio_,
@@ -21,7 +15,7 @@ WindowController::WindowController(Ui::deformoClass& ui,
     ConnectUiElementsToSimulation();
 }
 
-void WindowController::SetRenderer(const std::shared_ptr<Renderer> renderer) {
+void WindowController::SetRenderer(const std::shared_ptr<Renderer>& renderer) {
     renderer_ = renderer;
 }
 

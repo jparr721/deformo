@@ -136,6 +136,9 @@
     <ClCompile Include="MarchingCubes.cpp">
       <Filter>Engine\Meshing</Filter>
     </ClCompile>
+    <ClCompile Include="ImplicitSurfaceGenerator.cpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -217,6 +220,9 @@
       <Filter>Machine Learning</Filter>
     </ClInclude>
     <ClInclude Include="MarchingCubes.h">
+      <Filter>Engine\Meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="ImplicitSurfaceGenerator.h">
       <Filter>Engine\Meshing</Filter>
     </ClInclude>
   </ItemGroup>
