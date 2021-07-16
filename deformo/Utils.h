@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Numerics.h"
-#include <Eigen/Dense>
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -11,6 +10,7 @@
 #include <iostream>
 #include <numeric>
 #include <ratio>
+#include <sstream>
 #include <type_traits>
 #include <vector>
 
@@ -123,8 +123,7 @@ void SliceByIndices(Eigen::PlainObjectBase<Out>& out,
 
 template <typename Out, typename In>
 void SliceVectorByRange(Eigen::PlainObjectBase<Out>& out,
-                        const Eigen::DenseBase<In>& in, int start,
-                        int end) {
+                        const Eigen::DenseBase<In>& in, int start, int end) {
     assert(in.rows() > start && in.rows() >= end &&
            "SLICE RANGE OUT OF BOUNDS");
     assert(end > start && "START HAPPENS AFTER END");
@@ -173,6 +172,30 @@ template <typename T> void GTestDebugPrint(T value) {
 
 void FindMaxVertices(std::vector<unsigned int>& indices,
                      const VectorXr& positions);
+
+namespace runtime {
+namespace {
+template <typename T> void LogAll(std::ostream& o, T val) {
+    o << val << std::endl;
+}
+
+template <typename T, typename... Context>
+void LogAll(std::ostream& o, T val, Context... context) {
+    LogAll(o, val);
+    LogAll(o, context...);
+}
+} // namespace
+
+template <typename... Context>
+void DeformoAssert(bool condition, Context... context) {
+    if (!condition) {
+        std::ostringstream oss;
+        LogAll(oss, context...);
+        std::cout << "DEFORMO STACK DUMP: " << std::endl << oss.str();
+        assert(condition);
+    }
+}
+} // namespace runtime
 
 namespace stopwatch {
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/Dense>
 #include <Eigen/Sparse>
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <vector>
@@ -10,7 +11,6 @@ using Real = double;
 #else
 using Real = float;
 #endif
-
 
 // Dense Vector Types
 using Vector2r = Eigen::Matrix<Real, 2, 1>;
@@ -50,12 +50,15 @@ template <unsigned Dim> class Tensor {
         Resize(dimensions...);
     }
 
-    auto Dimension(const unsigned int dim) const -> unsigned int { return instance_.dimension(dim); }
+    auto Dimension(const unsigned int dim) const -> unsigned int {
+        return instance_.dimension(dim);
+    }
     auto Dimensions() const -> unsigned int { return instance_.NumDimensions; }
-    auto Instance() const -> Eigen::Tensor<Real, Dim>& { return instance_; }
+    auto Instance() -> Eigen::Tensor<Real, Dim>& { return instance_; }
 
-    template <typename... T>
-    auto Resize(T&&... dimensions) -> void { instance_.resize(dimensions...); }
+    template <typename... T> auto Resize(T&&... dimensions) -> void {
+        instance_.resize(dimensions...);
+    }
 
     friend std::ostream& operator<<(std::ostream& out, const Tensor& t) {
         return out << t.instance_;
@@ -66,8 +69,7 @@ template <unsigned Dim> class Tensor {
         instance_(indices...) = value;
     }
 
-    template <typename... Indices>
-    auto At(Indices&&... indices) const {
+    template <typename... Indices> auto At(Indices&&... indices) const {
         constexpr std::size_t n_indices = sizeof...(indices);
 
         if constexpr (n_indices == 1) {
@@ -101,7 +103,8 @@ template <unsigned Dim> class Tensor {
         return m;
     }
 
-    auto Row(const unsigned int layer, const unsigned int row) const -> VectorXr {
+    auto Row(const unsigned int layer, const unsigned int row) const
+        -> VectorXr {
         VectorXr v;
         const unsigned int cols = instance_.dimension(2);
         v.resize(cols);
@@ -117,7 +120,6 @@ template <unsigned Dim> class Tensor {
 // Dense Tensor Types
 using Tensor3r = Tensor<3>;
 
-
 namespace linear_algebra {
 auto OneDimensionalLinearInterpolation(Real low, Real high, Real interval)
     -> std::vector<Real>;
@@ -125,4 +127,6 @@ auto OneDimensionalLinearInterpolation(Real low, Real high, Real interval)
 template <typename T> constexpr auto Lerp(T a, T b, Real t) noexcept -> T {
     return a + (b - a) * t;
 };
+
+auto LinSpace(Real start, Real stop, unsigned int num) -> VectorXr;
 } // namespace linear_algebra

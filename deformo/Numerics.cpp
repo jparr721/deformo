@@ -24,3 +24,38 @@ auto linear_algebra::OneDimensionalLinearInterpolation(const Real low,
 
     return values;
 }
+
+auto linear_algebra::LinSpace(Real start, Real stop, unsigned int num)
+    -> VectorXr {
+    VectorXr interval;
+    if (num == 1) {
+        interval.resize(1);
+        interval << (stop - start / 2) + start;
+        return interval;
+    }
+
+    assert(stop > start && "STOP CANNOT BE GREATER THAN START");
+
+    const Real div = num - 1;
+
+    assert(div > 0 && "NUM MUST BE GREATER THAN 1");
+
+    const Real delta = stop - start;
+    interval.resize(delta);
+
+    // Initialize
+    for (int i = 0; i < num; ++i) {
+        interval(i) = i;
+    }
+
+    const Real step = delta / div;
+
+    assert(step > 0 && "STEP FUNCTION INVALID CHECK DELTA AND DIV");
+
+    interval *= step;
+    interval += (VectorXr::Ones(interval.rows()) * start);
+
+    interval(interval.rows() - 1) = stop;
+
+    return interval;
+}
