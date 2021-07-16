@@ -51,6 +51,9 @@
     <Filter Include="Engine\Meshing">
       <UniqueIdentifier>{e7df5841-4eb4-4ae0-913b-a9eb143f84fb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Physics\Parameterization">
+      <UniqueIdentifier>{a516dc70-3ed1-4f55-b835-e49773dbaeb8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -139,6 +142,12 @@
     <ClCompile Include="ImplicitSurfaceGenerator.cpp">
       <Filter>Engine\Meshing</Filter>
     </ClCompile>
+    <ClCompile Include="Homogenization.cpp">
+      <Filter>Physics\Parameterization</Filter>
+    </ClCompile>
+    <ClCompile Include="Rve.cpp">
+      <Filter>Physics</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -224,6 +233,12 @@
     </ClInclude>
     <ClInclude Include="ImplicitSurfaceGenerator.h">
       <Filter>Engine\Meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="Homogenization.h">
+      <Filter>Physics\Parameterization</Filter>
+    </ClInclude>
+    <ClInclude Include="Rve.h">
+      <Filter>Physics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

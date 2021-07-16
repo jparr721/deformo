@@ -5,7 +5,7 @@
 class Cube {
   public:
     Cube();
-    Cube(const Vector3& position);
+    Cube(const Vector3r& position);
 
     auto Positions() -> VectorXr;
 

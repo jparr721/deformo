@@ -116,6 +116,7 @@
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="Dotenv.cpp" />
     <ClCompile Include="GLWidget.cpp" />
+    <ClCompile Include="Homogenization.cpp" />
     <ClCompile Include="ImplicitSurfaceGenerator.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="ExplicitCentralDifference.cpp" />
@@ -126,6 +127,7 @@
     <ClCompile Include="MeshDiscretizer.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Numerics.cpp" />
+    <ClCompile Include="Rve.cpp" />
     <ClCompile Include="TFModel.cpp" />
     <ClCompile Include="WindowController.cpp" />
     <QtRcc Include="deformo.qrc" />
@@ -147,6 +149,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="Dotenv.h" />
+    <ClInclude Include="Homogenization.h" />
     <ClInclude Include="ImplicitSurfaceGenerator.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="ExplicitCentralDifference.h" />
@@ -162,6 +165,7 @@
     <ClInclude Include="Rayleigh.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="Rve.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="MeshGenerator.h" />

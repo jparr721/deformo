@@ -13,7 +13,7 @@ class MeshDiscretizer {
 
     auto Discretize(Real resolution = static_cast<Real>(0.1)) -> void;
     auto ToMesh() -> std::shared_ptr<Mesh>;
-    auto ToExpandedForm(const VectorXr& data_dim) -> Tensor4r;
+    auto ToExpandedForm(const VectorXr& data_dim) -> Eigen::Tensor<Real, 4>;
 
     [[nodiscard]] constexpr auto Resolution() const noexcept -> Real {
         return resolution_;
@@ -28,7 +28,7 @@ class MeshDiscretizer {
     VectorXr discretized_mesh_;
     Eigen::VectorXi discretized_volumes_;
 
-    auto RangeLerp(const Vector3& a, const Vector3& b) const -> VectorXr;
+    auto RangeLerp(const Vector3r& a, const Vector3r& b) const -> VectorXr;
 
     auto RowSlice(const VectorXr& data, int index) -> VectorXr;
 };

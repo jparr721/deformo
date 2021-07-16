@@ -12,9 +12,9 @@ auto MeshDiscretizer::Discretize(const Real resolution) -> void {
     for (int row = 0; row < volumes_.rows(); row += 3) {
         const auto r = Eigen::Vector3i(volumes_(row), volumes_(row + 1),
                                        volumes_(row + 2));
-        const Vector3 pt_1 = RowSlice(mesh_, r.x());
-        const Vector3 pt_2 = RowSlice(mesh_, r.y());
-        const Vector3 pt_3 = RowSlice(mesh_, r.z());
+        const Vector3r pt_1 = RowSlice(mesh_, r.x());
+        const Vector3r pt_2 = RowSlice(mesh_, r.y());
+        const Vector3r pt_3 = RowSlice(mesh_, r.z());
 
         const VectorXr x_y = RangeLerp(pt_1, pt_2);
         const VectorXr y_z = RangeLerp(pt_2, pt_3);
@@ -44,9 +44,9 @@ auto MeshDiscretizer::ToMesh() -> std::shared_ptr<Mesh> {
     return std::make_shared<Mesh>(discretized_mesh_, discretized_volumes_);
 }
 
-auto MeshDiscretizer::RangeLerp(const Vector3& a, const Vector3& b) const
+auto MeshDiscretizer::RangeLerp(const Vector3r& a, const Vector3r& b) const
     -> VectorXr {
-    const auto lerp_at_resolution = [](const Vector3& aa, const Vector3& bb,
+    const auto lerp_at_resolution = [](const Vector3r& aa, const Vector3r& bb,
                                        const Real resolution) -> VectorXr {
         const int output_size = std::log10(resolution) * 3.f;
 

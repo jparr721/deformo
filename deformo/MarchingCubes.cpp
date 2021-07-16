@@ -4,26 +4,26 @@
 namespace {
 struct Position {
     unsigned int index;
-    Vector3 position;
+    Vector3r position;
 };
 
 auto Interpolate(const Real x1, const Real y1, const Real z1, const Real x2,
                  const Real y2, const Real z2, const Real val1, const Real val2,
-                 const Real iso_level) -> Vector3 {
+                 const Real iso_level) -> Vector3r {
     const auto mu_interpolate = [](const Real v1, const Real v2,
                                    const Real mu) -> Real {
         return v1 + mu * (v2 - v1);
     };
 
     const Real mu = (iso_level - val1) / (val1 - val2);
-    return Vector3(mu_interpolate(x1, x2, mu), mu_interpolate(y1, y2, mu),
+    return Vector3r(mu_interpolate(x1, x2, mu), mu_interpolate(y1, y2, mu),
                    mu_interpolate(z1, z2, mu));
 }
 
 auto Intersection(const unsigned int x, const unsigned int y,
                   const unsigned int z, const unsigned int edge_number,
                   const unsigned int cell_length, const Real iso_level,
-                  const Tensor3r& scalar_field) -> Vector3 {
+                  const Tensor3r& scalar_field) -> Vector3r {
     unsigned int v1x = x;
     unsigned int v1y = y;
     unsigned int v1z = z;
@@ -103,8 +103,8 @@ auto Intersection(const unsigned int x, const unsigned int y,
     const Real y2 = v2y * cell_length;
     const Real z2 = v2z * cell_length;
 
-    const Real val1 = scalar_field(v1z, v1y, v1x);
-    const Real val2 = scalar_field(v2z, v2y, v2x);
+    const Real val1 = scalar_field.At(v1z, v1y, v1x);
+    const Real val2 = scalar_field.At(v2z, v2y, v2x);
     return Interpolate(x1, y1, z1, x2, y2, z2, val1, val2, iso_level);
 }
 
@@ -186,14 +186,14 @@ void GenerateImplicitSurface(MatrixXr& V, Eigen::MatrixXi& F, const Real iso_lev
     std::vector<Eigen::Vector3i> triangles;
     std::map<unsigned int, Position> vertices;
 
-    const unsigned int n_cells_z = scalar_field.dimension(0);
-    const unsigned int n_cells_y = scalar_field.dimension(1);
-    const unsigned int n_cells_x = scalar_field.dimension(2);
+    const unsigned int n_cells_z = scalar_field.Dimension(0);
+    const unsigned int n_cells_y = scalar_field.Dimension(1);
+    const unsigned int n_cells_x = scalar_field.Dimension(2);
 
     const auto insert_at_edge = [&](const unsigned int x, const unsigned int y,
                                     const unsigned int z,
                                     const unsigned int edge_number) -> void {
-        const Vector3 point = Intersection(x, y, z, edge_number, cell_length,
+        const Vector3r point = Intersection(x, y, z, edge_number, cell_length,
                                            iso_level, scalar_field);
         const unsigned int id =
             EdgeId(x, y, z, n_cells_x, n_cells_y, edge_number);
@@ -205,35 +205,35 @@ void GenerateImplicitSurface(MatrixXr& V, Eigen::MatrixXi& F, const Real iso_lev
             for (unsigned int x = 0; x < n_cells_x; ++x) {
                 // Calculate lookup index in table
                 unsigned int table_index = 0;
-                if (scalar_field(z, y, x) < iso_level) {
+                if (scalar_field.At(z, y, x) < iso_level) {
                     table_index |= 1;
                 }
 
-                if (scalar_field(z, y + 1, x) < iso_level) {
+                if (scalar_field.At(z, y + 1, x) < iso_level) {
                     table_index |= 2;
                 }
 
-                if (scalar_field(z, y + 1, x + 1) < iso_level) {
+                if (scalar_field.At(z, y + 1, x + 1) < iso_level) {
                     table_index |= 4;
                 }
 
-                if (scalar_field(z, y, x + 1) < iso_level) {
+                if (scalar_field.At(z, y, x + 1) < iso_level) {
                     table_index |= 8;
                 }
 
-                if (scalar_field(z + 1, y, x) < iso_level) {
+                if (scalar_field.At(z + 1, y, x) < iso_level) {
                     table_index |= 16;
                 }
 
-                if (scalar_field(z + 1, y + 1, x) < iso_level) {
+                if (scalar_field.At(z + 1, y + 1, x) < iso_level) {
                     table_index |= 32;
                 }
 
-                if (scalar_field(z + 1, y + 1, x + 1) < iso_level) {
+                if (scalar_field.At(z + 1, y + 1, x + 1) < iso_level) {
                     table_index |= 64;
                 }
 
-                if (scalar_field(z + 1, y, x + 1) < iso_level) {
+                if (scalar_field.At(z + 1, y, x + 1) < iso_level) {
                     table_index |= 128;
                 }
 

@@ -17,11 +17,11 @@ class Mesh {
     SliceAxis slice_axis = SliceAxis::x_axis;
     Real slice_value = 0;
 
-    inline const static Vector4 kMeshDefaultColor = Vector4(0.f, 0.f, 1.f, 1.f);
-    inline const static Vector4 kMeshDefaultColorInvisible =
-        Vector4(0.f, 0.f, 0.f, 0.f);
-    inline const static Vector4 kMeshDefaultSelectedColor =
-        Vector4(0.f, 1.f, 0.f, 1.f);
+    inline const static Vector4r kMeshDefaultColor = Vector4r(0.f, 0.f, 1.f, 1.f);
+    inline const static Vector4r kMeshDefaultColorInvisible =
+        Vector4r(0.f, 0.f, 0.f, 0.f);
+    inline const static Vector4r kMeshDefaultSelectedColor =
+        Vector4r(0.f, 1.f, 0.f, 1.f);
 
     // Geometry Colors
     VectorXr colors;

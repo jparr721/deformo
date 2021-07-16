@@ -13,7 +13,7 @@ This class holds the numerical simulator for the corotational linear FEA model.
 class LinearTetrahedral {
     using BetaSubMatrixXf = Eigen::Matrix<Real, 6, 3>;
     struct ElementStiffness {
-        Matrix12 stiffness_matrix;
+        Matrix12r stiffness_matrix;
         std::vector<int> indices;
     };
 
@@ -80,7 +80,7 @@ class LinearTetrahedral {
 
     [[nodiscard]] VectorXr ComputeRenderedDisplacements(int displacements_size);
 
-    [[nodiscard]] Matrix6 AssembleStressStrainMatrix(Real youngs_modulus,
+    [[nodiscard]] Matrix6r AssembleStressStrainMatrix(Real youngs_modulus,
                                                      Real poissons_ratio);
     [[nodiscard]] MatrixXr AssembleStrainRelationshipMatrix(
         const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,

@@ -51,12 +51,12 @@ void LinearTetrahedral::AssembleElementStiffness(
         const MatrixXr B = AssembleStrainRelationshipMatrix(
             shape_one, shape_two, shape_three, shape_four);
 
-        const Matrix6 D =
+        const Matrix6r D =
             AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
 
         const Real V = utils::ComputeTetrahedraElementVolume(
             shape_one, shape_two, shape_three, shape_four);
-        const Matrix12 element_stiffness_matrix = V * B.transpose() * D * B;
+        const Matrix12r element_stiffness_matrix = V * B.transpose() * D * B;
 
         const ElementStiffness element_stiffness = {element_stiffness_matrix,
                                                     stiffness_coordinates};
@@ -126,7 +126,7 @@ void LinearTetrahedral::AssembleGlobalStiffness(
     global_stiffness = MatrixXr::Zero(size, size);
 
     for (const auto& element_stiffness : element_stiffnesses) {
-        const Matrix12 k = element_stiffness.stiffness_matrix;
+        const Matrix12r k = element_stiffness.stiffness_matrix;
         const auto i = element_stiffness.indices.at(0);
         const auto j = element_stiffness.indices.at(1);
         const auto m = element_stiffness.indices.at(2);
@@ -293,9 +293,9 @@ void LinearTetrahedral::AssembleGlobalStiffness(
     }
 }
 
-Matrix6 LinearTetrahedral::AssembleStressStrainMatrix(Real youngs_modulus,
+Matrix6r LinearTetrahedral::AssembleStressStrainMatrix(Real youngs_modulus,
                                                       Real poissons_ratio) {
-    Matrix6 D;
+    Matrix6r D;
     D.row(0) << 1 - poissons_ratio, poissons_ratio, poissons_ratio, 0, 0, 0;
     D.row(1) << poissons_ratio, 1 - poissons_ratio, poissons_ratio, 0, 0, 0;
     D.row(2) << poissons_ratio, poissons_ratio, 1 - poissons_ratio, 0, 0, 0;
@@ -451,7 +451,7 @@ MatrixXr LinearTetrahedral::Solve(Real youngs_modulus, Real poissons_ratio,
         VectorXr u(12);
         u << displacement_one, displacement_two, displacement_three,
             displacement_four;
-        const Matrix6 D =
+        const Matrix6r D =
             AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
         element_stresses.row(i / Mesh::FacesStride()) = D * B * u;
     }

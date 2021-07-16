@@ -24,9 +24,9 @@ template <typename Real> class Camera {
     void SetFrustum(Real left, Real right, Real top, Real bottom,
                     Real nearPlane, Real farPlane);
 
-    void SetPosition(const Vector3& position);
+    void SetPosition(const Vector3r& position);
     void SetPosition(Real x, Real y, Real z);
-    void AddPosition(const Vector3& displacement);
+    void AddPosition(const Vector3r& displacement);
     void AddPosition(Real dx, Real dy, Real dz);
 
     void SetRotation(Real theta, Real phi);
@@ -57,65 +57,65 @@ template <typename Real> class Camera {
     auto GetZoomSensitivity() const -> Real;
     auto GetScopeSensitivity() const -> Real;
 
-    auto GetViewDirection() -> Vector3;
-    auto GetRightDirection() -> Vector3;
-    auto GetLeftDirection() -> Vector3;
-    auto GetUpDirection() -> Vector3;
-    auto GetDownDirection() -> Vector3;
+    auto GetViewDirection() -> Vector3r;
+    auto GetRightDirection() -> Vector3r;
+    auto GetLeftDirection() -> Vector3r;
+    auto GetUpDirection() -> Vector3r;
+    auto GetDownDirection() -> Vector3r;
 
-    auto GetEye() const -> const Vector3&;
-    auto GetLookAt() const -> const Vector3&;
-    auto GetUp() const -> const Vector3&;
+    auto GetEye() const -> const Vector3r&;
+    auto GetLookAt() const -> const Vector3r&;
+    auto GetUp() const -> const Vector3r&;
 
     auto GetWidth() const -> std::size_t;
     auto GetHeight() const -> std::size_t;
     auto GetNear() const -> const Real&;
     auto GetFar() const -> const Real&;
 
-    auto GetViewMatrix() -> const Matrix4&;
-    auto GetProjectionMatrix() -> const Matrix4&;
+    auto GetViewMatrix() -> const Matrix4r&;
+    auto GetProjectionMatrix() -> const Matrix4r&;
 
-    auto ToViewMatrix() -> Matrix4;
-    auto ToProjectionMatrix() -> Matrix4;
+    auto ToViewMatrix() -> Matrix4r;
+    auto ToProjectionMatrix() -> Matrix4r;
 
-    static auto LookAt(const Vector3& eye, const Vector3& lookAt,
-                       const Vector3& up) -> Matrix4;
+    static auto LookAt(const Vector3r& eye, const Vector3r& lookAt,
+                       const Vector3r& up) -> Matrix4r;
     static auto LookAt(Real eyex, Real eyey, Real eyez, Real atx, Real aty,
-                       Real atz, Real upx, Real upy, Real upz) -> Matrix4;
+                       Real atz, Real upx, Real upy, Real upz) -> Matrix4r;
 
     static auto PerspectiveMatrix(Real fov, std::size_t width,
                                   std::size_t height, Real nearPlane,
-                                  Real farPlane) noexcept -> Matrix4;
+                                  Real farPlane) noexcept -> Matrix4r;
     static auto OrthographicMatrix(Real left, Real right, Real bottom, Real top,
                                    Real nearPlane, Real farPlane) noexcept
-        -> Matrix4;
+        -> Matrix4r;
 
-    static auto SphereicalToCartesian(Real r, Real theta, Real phi) -> Vector3;
+    static auto SphereicalToCartesian(Real r, Real theta, Real phi) -> Vector3r;
     static auto SphereicalToCartesian_dTheta(Real r, Real theta, Real phi)
-        -> Vector3;
+        -> Vector3r;
     static auto SphereicalToCartesian_dPhi(Real r, Real theta, Real phi)
-        -> Vector3;
+        -> Vector3r;
     static auto SphereicalToCartesian_dPhiCrossdTheta(Real r, Real theta,
-                                                      Real phi) -> Vector3;
+                                                      Real phi) -> Vector3r;
 
   protected:
     void Compile() noexcept;
 
   protected:
-    Matrix4 view_matrix_;
-    Matrix4 projection_matrix_;
+    Matrix4r view_matrix_;
+    Matrix4r projection_matrix_;
     Real near_plane_, far_plane_;
 
     std::size_t width_, height_;
-    Vector3 eye_;
-    Vector3 look_at_;
-    Vector3 up_;
+    Vector3r eye_;
+    Vector3r look_at_;
+    Vector3r up_;
 
     Real fov_, aspect_ratio_;
     Real min_radius_, max_radius_;
 
     Real r_, theta_, phi_;
-    Vector3 displacement_;
+    Vector3r displacement_;
 
     Real pan_sensitivity_;
     Real zoom_sensitivity_;
@@ -142,12 +142,12 @@ constexpr Real kMaxFov = static_cast<Real>(120.0);
 constexpr Real kMinFov = static_cast<Real>(10.0);
 
 template <typename Real> Camera<Real>::Camera() {
-    view_matrix_ = Matrix4::Identity();
-    projection_matrix_ = Matrix4::Identity();
+    view_matrix_ = Matrix4r::Identity();
+    projection_matrix_ = Matrix4r::Identity();
 
-    eye_ = Vector3::UnitZ();
-    look_at_ = Vector3::Zero();
-    up_ = Vector3::UnitY();
+    eye_ = Vector3r::UnitZ();
+    look_at_ = Vector3r::Zero();
+    up_ = Vector3r::UnitY();
 
     near_plane_ = Real(kDefaultNearPlane);
     far_plane_ = Real(kDefaultFarPlane);
@@ -164,7 +164,7 @@ template <typename Real> Camera<Real>::Camera() {
     aspect_ratio_ = Real(kDefaultAspectRatio);
     min_radius_ = Real(kDefaultMinRadius);
     max_radius_ = Real(kDefaultMaxRadius);
-    displacement_ = Vector3::Zero();
+    displacement_ = Vector3r::Zero();
 }
 
 template <typename Real> Camera<Real>::~Camera() {}
@@ -192,12 +192,12 @@ template <typename Real> auto Camera<Real>::Rotate(Real du, Real dv) -> bool {
 }
 
 template <typename Real> auto Camera<Real>::Pan(Real du, Real dv) -> bool {
-    Vector3 uDir = GetLeftDirection();
-    Vector3 vDir = GetDownDirection();
+    Vector3r uDir = GetLeftDirection();
+    Vector3r vDir = GetDownDirection();
 
-    Vector3 uDisp = (du * pan_sensitivity_) * uDir;
-    Vector3 vDisp = (dv * pan_sensitivity_) * vDir;
-    Vector3 panDisp = uDisp + vDisp;
+    Vector3r uDisp = (du * pan_sensitivity_) * uDir;
+    Vector3r vDisp = (dv * pan_sensitivity_) * vDir;
+    Vector3r panDisp = uDisp + vDisp;
 
     displacement_ += panDisp;
     Compile();
@@ -262,7 +262,7 @@ void Camera<Real>::SetFrustum(Real left, Real right, Real top, Real bottom,
     projection_matrix_(14) = (-temp * farPlane) / temp4;
 }
 
-template <typename Real> void Camera<Real>::SetPosition(const Vector3& pos) {
+template <typename Real> void Camera<Real>::SetPosition(const Vector3r& pos) {
     position.x() = pos.x();
     position.y() = pos.y();
     position.z() = pos.z();
@@ -278,7 +278,7 @@ void Camera<Real>::SetPosition(Real x, Real y, Real z) {
 }
 
 template <typename Real>
-void Camera<Real>::AddPosition(const Vector3& displacement) {
+void Camera<Real>::AddPosition(const Vector3r& displacement) {
     position += displacement;
     Compile();
 }
@@ -383,14 +383,14 @@ template <typename Real> void Camera<Real>::ResetPlanes() {
 }
 
 template <typename Real> void Camera<Real>::ResetView() {
-    eye_ = Vector3::UnitZ();
-    look_at_ = Vector3::Zero();
-    up_ = Vector3::UnitY();
+    eye_ = Vector3r::UnitZ();
+    look_at_ = Vector3r::Zero();
+    up_ = Vector3r::UnitY();
 }
 
 template <typename Real> void Camera<Real>::ResetMatrices() {
-    view_matrix_ = Matrix4::Identity();
-    projection_matrix_ = Matrix4::Identity();
+    view_matrix_ = Matrix4r::Identity();
+    projection_matrix_ = Matrix4r::Identity();
 }
 
 template <typename Real> void Camera<Real>::ResetSensitivities() {
@@ -419,46 +419,46 @@ auto Camera<Real>::GetScopeSensitivity() const -> Real {
 }
 
 template <typename Real>
-inline auto Camera<Real>::GetViewDirection() -> Vector3 {
+inline auto Camera<Real>::GetViewDirection() -> Vector3r {
     Compile();
     return (look_at_ - eye_).normalized();
 }
 
 template <typename Real>
-inline auto Camera<Real>::GetRightDirection() -> Vector3 {
+inline auto Camera<Real>::GetRightDirection() -> Vector3r {
     Compile();
-    Vector3 dir = (look_at_ - eye_).normalized();
+    Vector3r dir = (look_at_ - eye_).normalized();
     return (up_.cross(dir)).normalized();
 }
 
 template <typename Real>
-inline auto Camera<Real>::GetLeftDirection() -> Vector3 {
+inline auto Camera<Real>::GetLeftDirection() -> Vector3r {
     Compile();
-    Vector3 dir = (look_at_ - eye_).normalized();
+    Vector3r dir = (look_at_ - eye_).normalized();
     return (dir.cross(up_)).normalized();
 }
 
-template <typename Real> inline auto Camera<Real>::GetUpDirection() -> Vector3 {
+template <typename Real> inline auto Camera<Real>::GetUpDirection() -> Vector3r {
     Compile();
     return up_;
 }
 
 template <typename Real>
-inline auto Camera<Real>::GetDownDirection() -> Vector3 {
+inline auto Camera<Real>::GetDownDirection() -> Vector3r {
     Compile();
     return -up_;
 }
 
-template <typename Real> auto Camera<Real>::GetEye() const -> const Vector3& {
+template <typename Real> auto Camera<Real>::GetEye() const -> const Vector3r& {
     return eye_;
 }
 
 template <typename Real>
-auto Camera<Real>::GetLookAt() const -> const Vector3& {
+auto Camera<Real>::GetLookAt() const -> const Vector3r& {
     return look_at_;
 }
 
-template <typename Real> auto Camera<Real>::GetUp() const -> const Vector3& {
+template <typename Real> auto Camera<Real>::GetUp() const -> const Vector3r& {
     return up_;
 }
 
@@ -478,43 +478,43 @@ template <typename Real> auto Camera<Real>::GetFar() const -> const Real& {
     return far_plane_;
 }
 
-template <typename Real> auto Camera<Real>::GetViewMatrix() -> const Matrix4& {
+template <typename Real> auto Camera<Real>::GetViewMatrix() -> const Matrix4r& {
     Compile();
     return view_matrix_;
 }
 
 template <typename Real>
-auto Camera<Real>::GetProjectionMatrix() -> const Matrix4& {
+auto Camera<Real>::GetProjectionMatrix() -> const Matrix4r& {
     Compile();
     return projection_matrix_;
 }
 
-template <typename Real> auto Camera<Real>::ToViewMatrix() -> Matrix4 {
+template <typename Real> auto Camera<Real>::ToViewMatrix() -> Matrix4r {
     Compile();
     return view_matrix_;
 }
 
-template <typename Real> auto Camera<Real>::ToProjectionMatrix() -> Matrix4 {
+template <typename Real> auto Camera<Real>::ToProjectionMatrix() -> Matrix4r {
     Compile();
     return projection_matrix_;
 }
 
 template <typename Real>
-auto Camera<Real>::LookAt(const Vector3& eye, const Vector3& lookAt,
-                          const Vector3& up) -> Matrix4 {
+auto Camera<Real>::LookAt(const Vector3r& eye, const Vector3r& lookAt,
+                          const Vector3r& up) -> Matrix4r {
     return Camera<Real>::LookAt(eye.x(), eye.y(), eye.z(), lookAt.x(),
                                 lookAt.y(), lookAt.z(), up.x(), up.y(), up.z());
 }
 
 template <typename Real>
 auto Camera<Real>::LookAt(Real eyex, Real eyey, Real eyez, Real atx, Real aty,
-                          Real atz, Real upx, Real upy, Real upz) -> Matrix4 {
-    Matrix4 matrix;
-    Vector3 x, y, z;
-    Vector3 eye(eyex, eyey, eyez);
+                          Real atz, Real upx, Real upy, Real upz) -> Matrix4r {
+    Matrix4r matrix;
+    Vector3r x, y, z;
+    Vector3r eye(eyex, eyey, eyez);
 
-    y = Vector3(upx, upy, upz);
-    z = Vector3(atx - eyex, aty - eyey, atz - eyez);
+    y = Vector3r(upx, upy, upz);
+    z = Vector3r(atx - eyex, aty - eyey, atz - eyez);
     x = y.cross(z).normalized();
     y = z.cross(x).normalized();
     z.normalize();
@@ -545,8 +545,8 @@ auto Camera<Real>::LookAt(Real eyex, Real eyey, Real eyez, Real atx, Real aty,
 template <typename Real>
 auto Camera<Real>::PerspectiveMatrix(Real fov, std::size_t width,
                                      std::size_t height, Real nearPlane,
-                                     Real farPlane) noexcept -> Matrix4 {
-    Matrix4 proj;
+                                     Real farPlane) noexcept -> Matrix4r {
+    Matrix4r proj;
     proj.setZero();
 
     Real aspectRatio = static_cast<Real>(width) / static_cast<Real>(height);
@@ -577,8 +577,8 @@ auto Camera<Real>::PerspectiveMatrix(Real fov, std::size_t width,
 template <typename Real>
 auto Camera<Real>::OrthographicMatrix(Real left, Real right, Real bottom,
                                       Real top, Real nearPlane,
-                                      Real farPlane) noexcept -> Matrix4 {
-    Matrix4 proj;
+                                      Real farPlane) noexcept -> Matrix4r {
+    Matrix4r proj;
 
     Real x = Real(2) / (right - left);
     Real y = Real(2) / (top - bottom);
@@ -617,8 +617,8 @@ auto Camera<Real>::OrthographicMatrix(Real left, Real right, Real bottom,
  */
 template <typename Real>
 inline auto Camera<Real>::SphereicalToCartesian(Real r, Real theta, Real phi)
-    -> Vector3 {
-    Vector3 result;
+    -> Vector3r {
+    Vector3r result;
 
     Real sinPhi = std::sin(phi);
     Real cosPhi = std::cos(phi);
@@ -634,8 +634,8 @@ inline auto Camera<Real>::SphereicalToCartesian(Real r, Real theta, Real phi)
 /* Unswapped: Rt(r, t, p) = -rsin(phi)sin(theta)i + rsin(phi)cos(theta)j + 0k */
 template <typename Real>
 inline auto Camera<Real>::SphereicalToCartesian_dTheta(Real r, Real theta,
-                                                       Real phi) -> Vector3 {
-    Vector3 result;
+                                                       Real phi) -> Vector3r {
+    Vector3r result;
 
     Real sinPhi = std::sin(phi);
     Real cosPhi = std::cos(phi);
@@ -652,8 +652,8 @@ inline auto Camera<Real>::SphereicalToCartesian_dTheta(Real r, Real theta,
  * rsin(phi)k */
 template <typename Real>
 inline auto Camera<Real>::SphereicalToCartesian_dPhi(Real r, Real theta,
-                                                     Real phi) -> Vector3 {
-    Vector3 result;
+                                                     Real phi) -> Vector3r {
+    Vector3r result;
 
     Real sinPhi = std::sin(phi);
     Real cosPhi = std::cos(phi);
@@ -672,8 +672,8 @@ template <typename Real>
 inline auto Camera<Real>::SphereicalToCartesian_dPhiCrossdTheta(Real r,
                                                                 Real theta,
                                                                 Real phi)
-    -> Vector3 {
-    Vector3 result;
+    -> Vector3r {
+    Vector3r result;
 
     Real rs = (r * r);
     Real sinPhi = std::sin(phi);
@@ -688,7 +688,7 @@ inline auto Camera<Real>::SphereicalToCartesian_dPhiCrossdTheta(Real r,
 }
 
 template <typename Real> inline void Camera<Real>::Compile() noexcept {
-    look_at_ = Vector3::Zero();
+    look_at_ = Vector3r::Zero();
     eye_ = Camera<Real>::SphereicalToCartesian(r_, theta_, phi_);
     up_ =
         Camera<Real>::SphereicalToCartesian_dPhi(r_, theta_, phi_).normalized();
