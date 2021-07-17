@@ -38,7 +38,7 @@ auto ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion)
                                   (inclusion.area + minimum_surface_padding)),
                                  inclusion.rows);
     y_axis_origins -= VectorXr::Ones(y_axis_origins.rows());
-    CheckLayerPadding(y_axis_origins);
+    CheckLayerPadding(y_axis_origins, implicit_surface.Dimension(2));
 
     VectorXr x_axis_origins =
         linear_algebra::LinSpace(inclusion.area + minimum_surface_padding,
@@ -46,7 +46,7 @@ auto ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion)
                                   (inclusion.area + minimum_surface_padding)),
                                  inclusion.cols);
     x_axis_origins -= VectorXr::Ones(x_axis_origins.rows());
-    CheckLayerPadding(x_axis_origins);
+    CheckLayerPadding(x_axis_origins, implicit_surface.Dimension(1));
 
     std::vector<Vector2<unsigned int>> centroids;
     for (int i = 0; i < y_axis_origins.rows(); ++i) {
@@ -100,12 +100,12 @@ auto ImplicitSurfaceGenerator::LayerContainsSecondaryMaterial(
 @brief Ensures padding is even on all sides, returning false if not. Only
 applies to isotropic material meshes.
 */
-auto ImplicitSurfaceGenerator::CheckLayerPadding(const VectorXr& layer)
-    -> void {
-    const auto left_padding = layer(0);
-    const auto right_padding = layer(layer.rows() - 1);
+auto ImplicitSurfaceGenerator::CheckLayerPadding(const VectorXr& layer,
+                                                 const int max) -> void {
+    const auto left_padding = layer(0) + 1;
+    const auto right_padding = max - layer(layer.rows() - 1);
 
-    deformo_assert.Assert(left_padding - right_padding == 0, __FUNCTION__, __FILE__,
+    deformo_assert.Assert(left_padding == right_padding, __FUNCTION__, __FILE__,
                           __LINE__, "Padding does not match: ", left_padding,
                           right_padding, layer);
 }

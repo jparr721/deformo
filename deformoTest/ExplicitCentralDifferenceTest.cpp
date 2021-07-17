@@ -58,9 +58,6 @@ TEST(TestExplicitCentralDifference, TestSolver) {
 
   for (int i = 0; i < 12; ++i) {
     integrator->Solve(displacement, forces);
-    std::cerr << "displacement: " << std::endl;
-    std::cerr << displacement << std::endl;
-    std::cerr << "===" << std::endl;
     if (i == 0) {
       VectorXr compare(2);
       compare << 0, 0.392f;

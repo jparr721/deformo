@@ -33,7 +33,7 @@ class ImplicitSurfaceGenerator {
 
     // Helpers
     auto LayerContainsSecondaryMaterial(const MatrixXr& layer) -> bool;
-    auto CheckLayerPadding(const VectorXr& layer) -> void;
+    auto CheckLayerPadding(const VectorXr& layer, int max) -> void;
 
     // Shape Generators
     auto MakeShapedIndices(const Vector2<unsigned>& centroid,

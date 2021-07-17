@@ -4,6 +4,7 @@
 
 #include "BoundaryCondition.h"
 #include "Numerics.h"
+#include "Rve.h"
 
 #include "Mesh.h"
 
@@ -59,10 +60,18 @@ class LinearTetrahedral {
     MatrixXr AssembleElementPlaneStresses(const MatrixXr& sigmas);
 
     /*
-    @brief Applies the vector of boundary conditions to the nodes and solves
+    @brief Applies the vector of boundary conditions to the nodes and solves the
+    dynamic form problem
     */
     MatrixXr Solve(Real youngs_modulus, Real poissons_ratio,
                    const std::shared_ptr<Mesh>& mesh);
+
+    /*
+    @brief Applies the vector of boundary conditions to the nodes and solves the
+    static form problem via homogenization
+    */
+    MatrixXr SolveStatic(Real youngs_modulus, Real poissions_ratio,
+                         const std::shared_ptr<Mesh>& mesh);
 
     /*
     @brief Construct the shape function parameter matrix determinant.
@@ -80,9 +89,13 @@ class LinearTetrahedral {
 
     [[nodiscard]] VectorXr ComputeRenderedDisplacements(int displacements_size);
 
-    [[nodiscard]] Matrix6r AssembleStressStrainMatrix(Real youngs_modulus,
-                                                     Real poissons_ratio);
+    [[nodiscard]] Matrix6r AssembleConstitutiveMatrix(Real youngs_modulus,
+                                                      Real poissons_ratio);
     [[nodiscard]] MatrixXr AssembleStrainRelationshipMatrix(
         const Eigen::Vector3f& shape_one, const Eigen::Vector3f& shape_two,
         const Eigen::Vector3f& shape_three, const Eigen::Vector3f& shape_four);
+    [[nodiscard]] MatrixXr
+    ComputeElementStress(Real youngs_modulus, Real poissons_ratio,
+                         const VectorXr& displacement,
+                         const std::shared_ptr<Mesh>& mesh);
 };

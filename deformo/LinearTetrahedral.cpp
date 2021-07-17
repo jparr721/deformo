@@ -52,7 +52,7 @@ void LinearTetrahedral::AssembleElementStiffness(
             shape_one, shape_two, shape_three, shape_four);
 
         const Matrix6r D =
-            AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
+            AssembleConstitutiveMatrix(youngs_modulus, poissons_ratio);
 
         const Real V = utils::ComputeTetrahedraElementVolume(
             shape_one, shape_two, shape_three, shape_four);
@@ -293,8 +293,8 @@ void LinearTetrahedral::AssembleGlobalStiffness(
     }
 }
 
-Matrix6r LinearTetrahedral::AssembleStressStrainMatrix(Real youngs_modulus,
-                                                      Real poissons_ratio) {
+Matrix6r LinearTetrahedral::AssembleConstitutiveMatrix(Real youngs_modulus,
+                                                       Real poissons_ratio) {
     Matrix6r D;
     D.row(0) << 1 - poissons_ratio, poissons_ratio, poissons_ratio, 0, 0, 0;
     D.row(1) << poissons_ratio, 1 - poissons_ratio, poissons_ratio, 0, 0, 0;
@@ -381,6 +381,57 @@ MatrixXr LinearTetrahedral::AssembleStrainRelationshipMatrix(
     return strain_relationship;
 }
 
+MatrixXr LinearTetrahedral::ComputeElementStress(
+    Real youngs_modulus, Real poissons_ratio, const VectorXr& displacement,
+    const std::shared_ptr<Mesh>& mesh) {
+    MatrixXr element_stresses;
+    element_stresses.resize(
+        mesh->TetrahedralElementsSize() / Mesh::FacesStride(), 6);
+
+    for (int i = 0; i < mesh->TetrahedralElementsSize();
+         i += Mesh::FacesStride()) {
+        int index = mesh->GetPositionAtFaceIndex(i);
+        VectorXr shape_one;
+        utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
+        VectorXr displacement_one;
+        utils::SliceEigenVector(displacement_one, displacement, index,
+                                index + 2);
+
+        index = mesh->GetPositionAtFaceIndex(i + 1);
+        VectorXr shape_two;
+        utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
+        VectorXr displacement_two;
+        utils::SliceEigenVector(displacement_two, displacement, index,
+                                index + 2);
+
+        index = mesh->GetPositionAtFaceIndex(i + 2);
+        VectorXr shape_three;
+        utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
+        VectorXr displacement_three;
+        utils::SliceEigenVector(displacement_three, displacement, index,
+                                index + 2);
+
+        index = mesh->GetPositionAtFaceIndex(i + 3);
+        VectorXr shape_four;
+        utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
+        VectorXr displacement_four;
+        utils::SliceEigenVector(displacement_four, displacement, index,
+                                index + 2);
+
+        const MatrixXr B = AssembleStrainRelationshipMatrix(
+            shape_one, shape_two, shape_three, shape_four);
+
+        VectorXr u(12);
+        u << displacement_one, displacement_two, displacement_three,
+            displacement_four;
+        const Matrix6r D =
+            AssembleConstitutiveMatrix(youngs_modulus, poissons_ratio);
+        element_stresses.row(i / Mesh::FacesStride()) = D * B * u;
+    }
+
+    return element_stresses;
+}
+
 Real LinearTetrahedral::ConstructShapeFunctionParameter(Real p1, Real p2,
                                                         Real p3, Real p4,
                                                         Real p5, Real p6) {
@@ -410,51 +461,22 @@ MatrixXr LinearTetrahedral::Solve(Real youngs_modulus, Real poissons_ratio,
                                   const std::shared_ptr<Mesh>& mesh) {
     const VectorXr solved_displacement =
         ComputeRenderedDisplacements(mesh->Size());
+    return ComputeElementStress(youngs_modulus, poissons_ratio,
+                                solved_displacement, mesh);
+}
 
-    MatrixXr element_stresses;
-    element_stresses.resize(
-        mesh->TetrahedralElementsSize() / Mesh::FacesStride(), 6);
+MatrixXr LinearTetrahedral::SolveStatic(Real youngs_modulus,
+                                        Real poissions_ratio,
+                                        const std::shared_ptr<Mesh>& mesh) {
+    VectorXr U = VectorXr::Zero(mesh->Size());
 
-    for (int i = 0; i < mesh->TetrahedralElementsSize();
-         i += Mesh::FacesStride()) {
-        int index = mesh->GetPositionAtFaceIndex(i);
-        VectorXr shape_one;
-        utils::SliceEigenVector(shape_one, mesh->positions, index, index + 2);
-        VectorXr displacement_one;
-        utils::SliceEigenVector(displacement_one, solved_displacement, index,
-                                index + 2);
-
-        index = mesh->GetPositionAtFaceIndex(i + 1);
-        VectorXr shape_two;
-        utils::SliceEigenVector(shape_two, mesh->positions, index, index + 2);
-        VectorXr displacement_two;
-        utils::SliceEigenVector(displacement_two, solved_displacement, index,
-                                index + 2);
-
-        index = mesh->GetPositionAtFaceIndex(i + 2);
-        VectorXr shape_three;
-        utils::SliceEigenVector(shape_three, mesh->positions, index, index + 2);
-        VectorXr displacement_three;
-        utils::SliceEigenVector(displacement_three, solved_displacement, index,
-                                index + 2);
-
-        index = mesh->GetPositionAtFaceIndex(i + 3);
-        VectorXr shape_four;
-        utils::SliceEigenVector(shape_four, mesh->positions, index, index + 2);
-        VectorXr displacement_four;
-        utils::SliceEigenVector(displacement_four, solved_displacement, index,
-                                index + 2);
-
-        const MatrixXr B = AssembleStrainRelationshipMatrix(
-            shape_one, shape_two, shape_three, shape_four);
-
-        VectorXr u(12);
-        u << displacement_one, displacement_two, displacement_three,
-            displacement_four;
-        const Matrix6r D =
-            AssembleStressStrainMatrix(youngs_modulus, poissons_ratio);
-        element_stresses.row(i / Mesh::FacesStride()) = D * B * u;
+    int i = 0;
+    const VectorXr u = per_element_stiffness.fullPivLu().solve(boundary_forces);
+    for (const auto& [node, _] : boundary_conditions) {
+        U.segment(node, 3) << u(i), u(i + 1), u(i + 2);
+        i += 3;
     }
 
-    return AssembleElementPlaneStresses(element_stresses);
+    const VectorXr global_force = global_stiffness * U;
+    return ComputeElementStress(youngs_modulus, poissions_ratio, U, mesh);
 }
