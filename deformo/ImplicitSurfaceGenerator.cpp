@@ -29,27 +29,30 @@ ImplicitSurfaceGenerator::ImplicitSurfaceGenerator(const unsigned int height,
     implicit_surface.Instance().setConstant(BinaryMaterial::kPrimaryMaterial);
 }
 
-Tensor3r ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion) {
+auto ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion)
+    -> Tensor3r {
     // Y axis origin with padding
-    const Vector3r y_axis_origins =
+    VectorXr y_axis_origins =
         linear_algebra::LinSpace(inclusion.area + minimum_surface_padding,
-                                 implicit_surface.Dimension(2) -
-                                     (inclusion.area + minimum_surface_padding),
+                                 (implicit_surface.Dimension(2) -
+                                  (inclusion.area + minimum_surface_padding)),
                                  inclusion.rows);
+    y_axis_origins -= VectorXr::Ones(y_axis_origins.rows());
+    VectorXr x_axis_origins =
+        linear_algebra::LinSpace(inclusion.area + minimum_surface_padding,
+                                 (implicit_surface.Dimension(1) -
+                                  (inclusion.area + minimum_surface_padding)),
+                                 inclusion.cols);
+    x_axis_origins -= VectorXr::Ones(x_axis_origins.rows());
+
+    std::cout << x_axis_origins << std::endl;
 
     std::vector<Vector2<unsigned int>> centroids;
-    for (int row = 0; row < inclusion.rows; ++row) {
-        const VectorXr x_axis_layout = linear_algebra::LinSpace(
-            inclusion.area + minimum_surface_padding,
-            implicit_surface.Dimension(2) -
-                (inclusion.area + minimum_surface_padding),
-            inclusion.cols);
-
-        // Yes, this _is_ prone to rounding error...
-        const int y_axis_value = static_cast<int>(y_axis_origins(row));
-
-        for (int i = 0; i < x_axis_layout.rows(); ++i) {
-            centroids.emplace_back(x_axis_layout(i), y_axis_value);
+    for (int i = 0; i < y_axis_origins.rows(); ++i) {
+        for (int j = 0; j < x_axis_origins.rows(); ++j) {
+            const int y = static_cast<int>(y_axis_origins(i));
+            const int x = static_cast<int>(x_axis_origins(j));
+            centroids.emplace_back(x, y);
         }
     }
 
@@ -63,13 +66,15 @@ Tensor3r ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion) {
         for (const auto& centroid : centroids) {
             const auto cube_indices = MakeShapedIndices(
                 centroid,
-                Vector3<unsigned int>(inclusion.rows, inclusion.cols,
+                Vector3<unsigned int>(inclusion.area, inclusion.area,
                                       inclusion.depth),
                 layer);
             indices.insert(indices.end(), cube_indices.begin(),
                            cube_indices.end());
         }
     }
+
+    SetFromIndices(indices);
 
     return implicit_surface;
 }
@@ -165,13 +170,13 @@ auto ImplicitSurfaceGenerator::MakeShapedIndices(
     const Vector2<unsigned int>& centroid, const Vector3<unsigned int>& shape,
     const unsigned int layer_number) -> std::vector<Vector3<unsigned int>> {
     std::vector<Vector3<unsigned int>> indices;
-    const unsigned int width = shape.x();
-    const unsigned int height = shape.y();
+    const unsigned int width = static_cast<unsigned int>(shape.x() / 2);
+    const unsigned int height = static_cast<unsigned int>(shape.y() / 2);
     const unsigned int depth = shape.z();
 
+    const unsigned int current_x = centroid.x();
+    const unsigned int current_y = centroid.y();
     for (auto layer = layer_number; layer < layer_number + depth; ++layer) {
-        const unsigned int current_x = centroid.x();
-        const unsigned int current_y = centroid.y();
         for (auto x = 0u; x < width; ++x) {
             for (auto y = 0u; y < height; ++y) {
                 indices.emplace_back(layer, current_x + x, current_y + y);
@@ -193,7 +198,8 @@ auto ImplicitSurfaceGenerator::MakeShapedIndices(
 
 auto ImplicitSurfaceGenerator::SetFromIndices(
     const std::vector<Vector3<unsigned int>>& indices) -> void {
-    for (const auto& index : indices) {
-        implicit_surface(0, index.x(), index.y(), index.z());
+    for (const Vector3<unsigned int>& index : indices) {
+        implicit_surface(BinaryMaterial::kSecondaryMaterial, index.x(),
+                         index.y(), index.z());
     }
 }

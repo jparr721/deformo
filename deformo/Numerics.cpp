@@ -41,7 +41,7 @@ auto linear_algebra::LinSpace(Real start, Real stop, unsigned int num)
     assert(div > 0 && "NUM MUST BE GREATER THAN 1");
 
     const Real delta = stop - start;
-    interval.resize(delta);
+    interval.resize(num);
 
     // Initialize
     for (int i = 0; i < num; ++i) {

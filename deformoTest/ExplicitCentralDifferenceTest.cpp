@@ -4,7 +4,7 @@
 #include <iostream>
 #include <memory>
 
-#include "../deformo/EigenTypes.h"
+#include "../deformo/Numerics.h"
 #include "../deformo/ExplicitCentralDifference.cpp"
 #include "../deformo/ExplicitCentralDifference.h"
 #include "../deformo/LinearTetrahedral.h"
