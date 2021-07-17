@@ -34,13 +34,13 @@ auto ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion)
     // Y axis origin with padding
     VectorXr y_axis_origins =
         linear_algebra::LinSpace(inclusion.area + minimum_surface_padding,
-                                 (implicit_surface.Dimension(2) -
+                                 (implicit_surface.Dimension(2) + 1 -
                                   (inclusion.area + minimum_surface_padding)),
                                  inclusion.rows);
     y_axis_origins -= VectorXr::Ones(y_axis_origins.rows());
     VectorXr x_axis_origins =
         linear_algebra::LinSpace(inclusion.area + minimum_surface_padding,
-                                 (implicit_surface.Dimension(1) -
+                                 (implicit_surface.Dimension(1) + 1-
                                   (inclusion.area + minimum_surface_padding)),
                                  inclusion.cols);
     x_axis_origins -= VectorXr::Ones(x_axis_origins.rows());

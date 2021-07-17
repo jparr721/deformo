@@ -13,7 +13,7 @@ TEST(TestImplicitSurfaceGenerator, TestConstructor) {
 }
 
 TEST(TestImplicitSurfaceGenerator, TestGenerator) {
-  const auto generator = std::make_unique<ImplicitSurfaceGenerator>(50, 50, 50);
+  const auto generator = std::make_unique<ImplicitSurfaceGenerator>(49, 49, 49);
   const BinaryInclusion inclusion{15, 4, 5, 5, 5};
 
   const Tensor3r generated = generator->Generate(inclusion);
