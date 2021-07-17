@@ -173,30 +173,6 @@ template <typename T> void GTestDebugPrint(T value) {
 void FindMaxVertices(std::vector<unsigned int>& indices,
                      const VectorXr& positions);
 
-namespace runtime {
-namespace {
-template <typename T> void LogAll(std::ostream& o, T val) {
-    o << val << std::endl;
-}
-
-template <typename T, typename... Context>
-void LogAll(std::ostream& o, T val, Context... context) {
-    LogAll(o, val);
-    LogAll(o, context...);
-}
-} // namespace
-
-template <typename... Context>
-void DeformoAssert(bool condition, Context... context) {
-    if (!condition) {
-        std::ostringstream oss;
-        LogAll(oss, context...);
-        std::cout << "DEFORMO STACK DUMP: " << std::endl << oss.str();
-        assert(condition);
-    }
-}
-} // namespace runtime
-
 namespace stopwatch {
 
 /*Some performance analysis tools*/

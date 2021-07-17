@@ -38,14 +38,15 @@ auto ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion)
                                   (inclusion.area + minimum_surface_padding)),
                                  inclusion.rows);
     y_axis_origins -= VectorXr::Ones(y_axis_origins.rows());
+    CheckLayerPadding(y_axis_origins);
+
     VectorXr x_axis_origins =
         linear_algebra::LinSpace(inclusion.area + minimum_surface_padding,
-                                 (implicit_surface.Dimension(1) + 1-
+                                 (implicit_surface.Dimension(1) + 1 -
                                   (inclusion.area + minimum_surface_padding)),
                                  inclusion.cols);
     x_axis_origins -= VectorXr::Ones(x_axis_origins.rows());
-
-    std::cout << x_axis_origins << std::endl;
+    CheckLayerPadding(x_axis_origins);
 
     std::vector<Vector2<unsigned int>> centroids;
     for (int i = 0; i < y_axis_origins.rows(); ++i) {
@@ -79,19 +80,6 @@ auto ImplicitSurfaceGenerator::Generate(const BinaryInclusion inclusion)
     return implicit_surface;
 }
 
-auto ImplicitSurfaceGenerator::CheckShapeUniformity() -> bool {
-    const auto layers = implicit_surface.Dimension(0);
-
-    for (int i = 0; i < layers; ++i) {
-        const MatrixXr layer = implicit_surface.At(i);
-        if (!CheckLayerPadding(layer)) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 auto ImplicitSurfaceGenerator::LayerContainsSecondaryMaterial(
     const MatrixXr& layer) -> bool {
     const auto rows = layer.rows();
@@ -110,60 +98,16 @@ auto ImplicitSurfaceGenerator::LayerContainsSecondaryMaterial(
 
 /*
 @brief Ensures padding is even on all sides, returning false if not. Only
-applies to isotropic material meshes with cube-like secondary material
-inclusions.
-
-This function sucks, don't have time to fix it :shrug:
+applies to isotropic material meshes.
 */
-auto ImplicitSurfaceGenerator::CheckLayerPadding(const MatrixXr& layer)
-    -> bool {
-    if (!LayerContainsSecondaryMaterial(layer)) {
-        return true;
-    }
+auto ImplicitSurfaceGenerator::CheckLayerPadding(const VectorXr& layer)
+    -> void {
+    const auto left_padding = layer(0);
+    const auto right_padding = layer(layer.rows() - 1);
 
-    const auto rows = layer.rows();
-    const auto cols = layer.cols();
-
-    int padding_amount = -1;
-    int secondary_material_width = 0;
-
-    for (int row = 0; row < rows; ++row) {
-        if (padding_amount > -1) {
-            break;
-        }
-        for (int col = 0; col < cols; ++col) {
-            // First instance of the secondary material, check material width
-            if (padding_amount == -1 &&
-                layer(row, col) == BinaryMaterial::kSecondaryMaterial) {
-                // Padding amount is left-distance on iteration.
-                padding_amount = col;
-                while (layer(row, col) == BinaryMaterial::kSecondaryMaterial) {
-                    utils::runtime::DeformoAssert(
-                        col != cols, "OVERRUN IN COLUMN RANGE: ", row, col);
-                    ++secondary_material_width;
-                    ++col;
-                }
-            }
-        }
-    }
-
-    assert(padding_amount > 0 && "FAILED TO INFER PADDING");
-
-    for (int row = 0; row < rows; ++row) {
-        for (int col = 0; col < padding_amount; ++col) {
-            if (layer(row, col) == BinaryMaterial::kSecondaryMaterial) {
-                return false;
-            }
-        }
-
-        for (int col = cols - 1; col > cols - padding_amount; --col) {
-            if (layer(row, col) == BinaryMaterial::kSecondaryMaterial) {
-                return false;
-            }
-        }
-    }
-
-    return true;
+    deformo_assert.Assert(left_padding - right_padding == 0, __FUNCTION__, __FILE__,
+                          __LINE__, "Padding does not match: ", left_padding,
+                          right_padding, layer);
 }
 
 auto ImplicitSurfaceGenerator::MakeShapedIndices(

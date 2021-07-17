@@ -148,6 +148,7 @@
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Cube.h" />
+    <ClInclude Include="DeformoAssert.h" />
     <ClInclude Include="Dotenv.h" />
     <ClInclude Include="Homogenization.h" />
     <ClInclude Include="ImplicitSurfaceGenerator.h" />

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DeformoAssert.h"
 #include "Numerics.h"
 #include <vector>
 
@@ -28,17 +29,17 @@ class ImplicitSurfaceGenerator {
     auto Generate(const BinaryInclusion inclusion) -> Tensor3r;
 
   private:
-    // Different Isotropic Material Checks
-    auto CheckShapeUniformity() -> bool;
+    DeformoAssertion deformo_assert;
 
     // Helpers
     auto LayerContainsSecondaryMaterial(const MatrixXr& layer) -> bool;
-    auto CheckLayerPadding(const MatrixXr& layer) -> bool;
+    auto CheckLayerPadding(const VectorXr& layer) -> void;
 
     // Shape Generators
     auto MakeShapedIndices(const Vector2<unsigned>& centroid,
                            const Vector3<unsigned>& shape,
                            unsigned int layer_number)
         -> std::vector<Vector3<unsigned int>>;
-    auto SetFromIndices(const std::vector<Vector3<unsigned int>>& indices) -> void;
+    auto SetFromIndices(const std::vector<Vector3<unsigned int>>& indices)
+        -> void;
 };
