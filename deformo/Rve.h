@@ -6,14 +6,26 @@
 #include <utility>
 
 struct Material {
+    // The number this material represents in the scalar field
+    unsigned int number;
+
     // Name of the material, for bookkeeping
-    std::string name = "";
+    std::string name;
 
     // Young's Modulus
     Real E = -1;
 
     // Poisson's Ratio
     Real v = -1;
+
+    auto Lambda() -> Real {
+        // TODO(@jparr721) - Implement
+        return E;
+    }
+    auto Mu() -> Real {
+        // TODO(@jparr721) - Implement
+        return v;
+    }
 };
 
 class Rve {

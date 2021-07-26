@@ -46,6 +46,7 @@ template <typename T> using Matrix4 = Eigen::Matrix<T, 4, 4>;
 template <unsigned Dim> class Tensor {
   public:
     Tensor() = default;
+    Tensor(const Eigen::Tensor<Real, Dim> instance) : instance_(instance) {}
     template <typename... T> explicit Tensor(T&&... dimensions) {
         Resize(dimensions...);
     }
@@ -55,6 +56,27 @@ template <unsigned Dim> class Tensor {
     }
     auto Dimensions() const -> unsigned int { return instance_.NumDimensions; }
     auto Instance() -> Eigen::Tensor<Real, Dim>& { return instance_; }
+
+    template <typename... Indices>
+    static auto Constant(Real value, Indices&&... indices) -> Tensor<Dim> {
+        Tensor<Dim> t;
+        t.Resize(indices...);
+        constexpr std::size_t n_indices = sizeof...(indices);
+
+        if (n_indices == 3) {
+            const auto layers = indices...[0];
+            const auto rows = indices...[1];
+            const auto cols = indices...[2];
+
+            for (int i = 0; i < layers; ++i) {
+                for (int j = 0; j < rows; ++j) {
+                    for (int k = 0; k < cols; ++k) {
+                        t(value, indices...);
+                    }
+                }
+            }
+        }
+    }
 
     template <typename... T> auto Resize(T&&... dimensions) -> void {
         instance_.resize(dimensions...);

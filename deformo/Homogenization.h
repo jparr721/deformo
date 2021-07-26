@@ -7,24 +7,26 @@ class Homogenization {
     using MatrixXi = MatrixX<unsigned int>;
 
   public:
-    Homogenization(unsigned int cell_len_x, unsigned int cell_len_y,
-                   unsigned int cell_len_z, Vector2r lambda, Vector2r mu,
-                   std::shared_ptr<Rve> rve);
+    explicit Homogenization(std::shared_ptr<Rve> rve);
 
   private:
     unsigned int cell_len_x_;
     unsigned int cell_len_y_;
     unsigned int cell_len_z_;
 
-    Real lambda_;
-    Real mu_;
-
     Real homogenized_E_;
     Real homogenized_v_;
 
-    Matrix6r constitutive_tensor;
+    Matrix6r constitutive_tensor_;
+
+    Tensor3r lambda_;
+    Tensor3r mu_;
+
+    Tensor3r voxel_;
 
     std::shared_ptr<Rve> rve_;
+
+    auto ComputeHexahedron(Real a, Real b, Real c) -> Vector4r;
 
     auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixXr;
     auto ComputeUniqueNodes(unsigned int n_elements) -> MatrixXr;
@@ -41,15 +43,35 @@ class Homogenization {
     auto
     ComputeUniqueDegreesOfFreedom(const MatrixXi& element_degrees_of_freedom,
                                   const MatrixXi& unique_nodes) -> MatrixXi;
-    auto ComputeDisplacement(const MatrixXr& stiffness,
-                             const MatrixXr& load,
+    auto ComputeDisplacement(const MatrixXr& stiffness, const MatrixXr& load,
                              const MatrixXi& element_degrees_of_freedom,
                              unsigned int n_degrees_of_freedom) -> MatrixXr;
     auto ComputeUnitStrainParameters() -> MatrixXr;
 
     // Utilities
     template <typename Derived>
-    auto Flat2d(Eigen::PlainObjectBase<Derived>& value) -> void;
-    template <typename Derived>
-    auto Flat1d(Eigen::PlainObjectBase<Derived>& value) -> void;
+    auto Flatten(Eigen::PlainObjectBase<Derived>& value) -> void {
+        // TODO(@jparr721) - Can probably use map
+        const auto shape = value.rows() * value.cols();
+        value.resize(shape, 1);
+    }
+
+    auto Where(const Tensor3r& input, unsigned int value) const -> Tensor3r {
+        const auto layers = input.Dimension(0);
+        const auto rows = input.Dimension(1);
+        const auto cols = input.Dimension(2);
+        Tensor3r output = Tensor3r::Constant(1, layers, rows, cols);
+
+        for (auto i = 0u; i < layers; ++i) {
+            for (auto j = 0u; j < rows; ++j) {
+                for (auto k = 0u; k < cols; ++k) {
+                    if (input.At(i, j, k) != value) {
+                        output(0, i, j, k);
+                    }
+                }
+            }
+        }
+
+        return output;
+    }
 };
