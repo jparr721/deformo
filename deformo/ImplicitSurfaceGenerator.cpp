@@ -22,9 +22,9 @@ const auto UnsignedVectorEqual = [](const Vector3<unsigned>& lhs,
 };
 } // namespace
 
-ImplicitSurfaceGenerator::ImplicitSurfaceGenerator(const unsigned int height,
-                                                   const unsigned int width,
-                                                   const unsigned int depth) {
+ImplicitSurfaceGenerator::ImplicitSurfaceGenerator(unsigned int height,
+                                                   unsigned int width,
+                                                   unsigned int depth) {
     implicit_surface.Resize(height, width, depth);
     implicit_surface.Instance().setConstant(BinaryMaterial::kPrimaryMaterial);
 }

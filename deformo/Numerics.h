@@ -43,46 +43,29 @@ template <typename T> using Matrix2 = Eigen::Matrix<T, 2, 2>;
 template <typename T> using Matrix3 = Eigen::Matrix<T, 3, 3>;
 template <typename T> using Matrix4 = Eigen::Matrix<T, 4, 4>;
 
-template <unsigned Dim> class Tensor {
+class Tensor3r {
   public:
-    Tensor() = default;
-    Tensor(const Eigen::Tensor<Real, Dim> instance) : instance_(instance) {}
-    template <typename... T> explicit Tensor(T&&... dimensions) {
-        Resize(dimensions...);
+    Tensor3r() = default;
+    Tensor3r(const Eigen::Tensor<Real, 3> instance) : instance_(instance) {}
+    explicit Tensor3r(unsigned int layers, unsigned int width, unsigned int height) {
+        Resize(layers, width, height);
     }
 
     auto Dimension(const unsigned int dim) const -> unsigned int {
         return instance_.dimension(dim);
     }
     auto Dimensions() const -> unsigned int { return instance_.NumDimensions; }
-    auto Instance() -> Eigen::Tensor<Real, Dim>& { return instance_; }
+    auto Instance() -> Eigen::Tensor<Real, 3>& { return instance_; }
 
-    template <typename... Indices>
-    static auto Constant(Real value, Indices&&... indices) -> Tensor<Dim> {
-        Tensor<Dim> t;
-        t.Resize(indices...);
-        constexpr std::size_t n_indices = sizeof...(indices);
-
-        if (n_indices == 3) {
-            const auto layers = indices...[0];
-            const auto rows = indices...[1];
-            const auto cols = indices...[2];
-
-            for (int i = 0; i < layers; ++i) {
-                for (int j = 0; j < rows; ++j) {
-                    for (int k = 0; k < cols; ++k) {
-                        t(value, indices...);
-                    }
-                }
-            }
-        }
+    auto SetConstant(Real value) -> void {
+        instance_.setConstant(value);
     }
 
-    template <typename... T> auto Resize(T&&... dimensions) -> void {
-        instance_.resize(dimensions...);
+    template <typename... T> auto Resize(unsigned int layers, unsigned int width, unsigned int height) -> void {
+        instance_.resize(layers, width, height);
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const Tensor& t) {
+    friend std::ostream& operator<<(std::ostream& out, const Tensor3r& t) {
         return out << t.instance_;
     }
 
@@ -108,7 +91,7 @@ template <unsigned Dim> class Tensor {
     }
 
   private:
-    Eigen::Tensor<Real, Dim> instance_;
+    Eigen::Tensor<Real, 3> instance_;
 
     auto Layer(const unsigned int layer) const -> MatrixXr {
         MatrixXr m;
@@ -138,9 +121,6 @@ template <unsigned Dim> class Tensor {
         return v;
     }
 };
-
-// Dense Tensor Types
-using Tensor3r = Tensor<3>;
 
 namespace linear_algebra {
 auto OneDimensionalLinearInterpolation(Real low, Real high, Real interval)

@@ -2,6 +2,7 @@
 
 #include "Numerics.h"
 #include "Rve.h"
+#include <array>
 
 class Homogenization {
     using MatrixXi = MatrixX<unsigned int>;
@@ -26,7 +27,7 @@ class Homogenization {
 
     std::shared_ptr<Rve> rve_;
 
-    auto ComputeHexahedron(Real a, Real b, Real c) -> Vector4r;
+    auto ComputeHexahedron(Real a, Real b, Real c) -> std::array<MatrixXr, 4>;
 
     auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixXr;
     auto ComputeUniqueNodes(unsigned int n_elements) -> MatrixXr;
@@ -60,7 +61,8 @@ class Homogenization {
         const auto layers = input.Dimension(0);
         const auto rows = input.Dimension(1);
         const auto cols = input.Dimension(2);
-        Tensor3r output = Tensor3r::Constant(1, layers, rows, cols);
+        Tensor3r output(layers, rows, cols);
+        output.SetConstant(1);
 
         for (auto i = 0u; i < layers; ++i) {
             for (auto j = 0u; j < rows; ++j) {
