@@ -10,23 +10,6 @@ class Homogenization {
   public:
     explicit Homogenization(std::shared_ptr<Rve> rve);
 
-  private:
-    unsigned int cell_len_x_;
-    unsigned int cell_len_y_;
-    unsigned int cell_len_z_;
-
-    Real homogenized_E_;
-    Real homogenized_v_;
-
-    Matrix6r constitutive_tensor_;
-
-    Tensor3r lambda_;
-    Tensor3r mu_;
-
-    Tensor3r voxel_;
-
-    std::shared_ptr<Rve> rve_;
-
     auto ComputeHexahedron(Real a, Real b, Real c) -> std::array<MatrixXr, 4>;
 
     auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixXr;
@@ -48,6 +31,23 @@ class Homogenization {
                              const MatrixXi& element_degrees_of_freedom,
                              unsigned int n_degrees_of_freedom) -> MatrixXr;
     auto ComputeUnitStrainParameters() -> MatrixXr;
+
+  private:
+    unsigned int cell_len_x_;
+    unsigned int cell_len_y_;
+    unsigned int cell_len_z_;
+
+    Real homogenized_E_;
+    Real homogenized_v_;
+
+    Matrix6r constitutive_tensor_;
+
+    Tensor3r lambda_;
+    Tensor3r mu_;
+
+    Tensor3r voxel_;
+
+    std::shared_ptr<Rve> rve_;
 
     // Utilities
     template <typename Derived>

@@ -1,4 +1,5 @@
 #include "Homogenization.h"
+#include "Utils.h"
 
 Homogenization::Homogenization(std::shared_ptr<Rve> rve) {
     rve_ = rve;
@@ -102,9 +103,9 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
                 MatrixXr qq;
                 qq.resize(3, 8);
-                qq.row(0) << qx;
-                qq.row(1) << qy;
-                qq.row(2) << qz;
+                qq.row(0) = qx;
+                qq.row(1) = qy;
+                qq.row(2) = qz;
 
                 MatrixXr dims;
                 dims.resize(3, 8);
@@ -141,16 +142,18 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
                 MatrixXr B = MatrixXr::Zero(6, 24);
                 B << B_e.At(0), B_e.At(1), B_e.At(2), B_e.At(3), B_e.At(4),
                     B_e.At(5), B_e.At(6), B_e.At(7);
+                B.transposeInPlace();
+                const MatrixXr BT = B.transpose();
 
                 const Real weight = J.determinant() * ww(ii) * ww(jj) * ww(kk);
 
                 // Element stiffness coefficient matrices
-                ke_lambda += weight * (B.transpose() * C_lambda) * B;
-                ke_mu += weight * (B.transpose() * C_mu) * B;
+                ke_lambda += weight * (BT * C_lambda) * B;
+                ke_mu += weight * (BT * C_mu) * B;
 
                 // Element load coefficient matrices
-                fe_lambda += weight * (B.transpose() * C_lambda);
-                fe_mu += weight * (B.transpose(), C_mu);
+                fe_lambda += weight * (BT * C_lambda);
+                fe_mu += weight * (BT * C_mu);
             }
         }
     }
