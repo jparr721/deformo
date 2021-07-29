@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DeformoAssert.h"
 #include "Numerics.h"
 #include "Rve.h"
 #include <array>
@@ -49,12 +50,17 @@ class Homogenization {
 
     std::shared_ptr<Rve> rve_;
 
+    DeformoAssertion assertion;
+
     // Utilities
-    template <typename Derived>
-    auto Flatten(Eigen::PlainObjectBase<Derived>& value) -> void {
+    /*
+    \brief Flatten in fortran order.
+    */
+    template <typename T>
+    auto Flatten(const MatrixX<T>& value) -> VectorX<T> {
         // TODO(@jparr721) - Can probably use map
         const auto shape = value.rows() * value.cols();
-        value.resize(shape, 1);
+        return VectorX<T>(Eigen::Map<VectorX<T>> value.data(), shape);
     }
 
     auto Where(const Tensor3r& input, unsigned int value) const -> Tensor3r {

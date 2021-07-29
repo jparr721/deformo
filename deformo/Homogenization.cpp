@@ -160,3 +160,27 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
     return std::array{ke_lambda, ke_mu, fe_lambda, fe_mu};
 }
+
+auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
+    -> MatrixXr {
+    assertion.Assert(voxel_.Dimensions() == 3, __FUNCTION__, __FILE__, __LINE__,
+                     "Voxel is improperly shaped");
+    const unsigned int n_el_x = voxel_.Dimension(0);
+    const unsigned int n_el_y = voxel_.Dimension(1);
+    const unsigned int n_el_z = voxel_.Dimension(2);
+
+    const unsigned int number_of_nodes =
+        (1 + n_el_x) * (1 + n_el_y) * (1 + n_el_z);
+
+    // Set up to apply the periodic boundary conditions for periodic volumes.
+    // Here, we set up the node numbers and indexing degrees of freedom for
+    // 3-D Homogenization.
+    VectorX<unsigned> node_numbers =
+        VectorX<unsigned>::LinSpaced(number_of_nodes, 1, number_of_nodes);
+
+    assertion.Assert(node_numbers.size() == number_of_nodes, __FUNCTION__,
+                     __FILE__, __LINE__, "Node numbers improperly formatted!",
+                     number_of_nodes);
+
+    return MatrixXr();
+}
