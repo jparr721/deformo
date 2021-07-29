@@ -166,6 +166,11 @@ template <typename Derived>
     return V.determinant() / 6;
 }
 
+template <typename Derived>
+Vector2<unsigned> Shape(const Eigen::PlainObjectBase<Derived>& in) {
+    return {in.rows(), in.cols()};
+}
+
 template <typename T> void GTestDebugPrint(T value) {
     std::cerr << value << std::endl;
 }

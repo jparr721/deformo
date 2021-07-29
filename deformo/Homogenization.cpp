@@ -42,6 +42,7 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
     // Constitutive matrix constribution for Lambda
     Matrix6r C_lambda;
+    C_lambda.setZero();
     C_lambda(0, 0) = 1;
     C_lambda(1, 0) = 1;
     C_lambda(2, 0) = 1;
@@ -142,14 +143,13 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
                 MatrixXr B = MatrixXr::Zero(6, 24);
                 B << B_e.At(0), B_e.At(1), B_e.At(2), B_e.At(3), B_e.At(4),
                     B_e.At(5), B_e.At(6), B_e.At(7);
-                B.transposeInPlace();
                 const MatrixXr BT = B.transpose();
 
                 const Real weight = J.determinant() * ww(ii) * ww(jj) * ww(kk);
 
                 // Element stiffness coefficient matrices
-                ke_lambda += weight * (BT * C_lambda) * B;
-                ke_mu += weight * (BT * C_mu) * B;
+                ke_lambda += weight * ((BT * C_lambda) * B);
+                ke_mu += weight * ((BT * C_mu) * B);
 
                 // Element load coefficient matrices
                 fe_lambda += weight * (BT * C_lambda);
