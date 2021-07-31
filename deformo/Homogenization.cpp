@@ -163,7 +163,7 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
 auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     -> MatrixXr {
-    assertion.Assert(voxel_.Dimensions() == 3, __FUNCTION__, __FILE__, __LINE__,
+    assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__, __LINE__,
                      "Voxel is improperly shaped");
     const unsigned int n_el_x = voxel_.Dimension(0);
     const unsigned int n_el_y = voxel_.Dimension(1);
@@ -175,12 +175,40 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     // Set up to apply the periodic boundary conditions for periodic volumes.
     // Here, we set up the node numbers and indexing degrees of freedom for
     // 3-D Homogenization.
-    VectorX<unsigned> node_numbers =
+    VectorX<unsigned> _nn =
         VectorX<unsigned>::LinSpaced(number_of_nodes, 1, number_of_nodes);
 
-    assertion.Assert(node_numbers.size() == number_of_nodes, __FUNCTION__,
-                     __FILE__, __LINE__, "Node numbers improperly formatted!",
+    assertion.Assert(_nn.size() == number_of_nodes, __FUNCTION__, __FILE__,
+                     __LINE__, "Node numbers improperly formatted!",
                      number_of_nodes);
+    const Tensor3r node_numbers =
+        Expand(_nn, 1 + n_el_x, 1 + n_el_y, 1 + n_el_z);
+    utils::GTestDebugPrint(node_numbers);
+
+    const unsigned int node_numbers_x = node_numbers.Dimension(0);
+    const unsigned int node_numbers_y = node_numbers.Dimension(1);
+    const unsigned int node_numbers_z = node_numbers.Dimension(2);
+
+    Tensor3r _dof(node_numbers_x, node_numbers_y, node_numbers_z);
+    for (auto x = 0u; x < node_numbers_x; ++x) {
+        for (auto y = 0u; y < node_numbers_y; ++y) {
+            for (auto z = 0u; z < node_numbers_z; ++z) {
+                _dof(node_numbers.At(x, y, z), x, y, z);
+            }
+        } 
+    }
+
+    Tensor3r three(_dof.Dimensions());
+    three.SetConstant(3);
+    _dof.Instance() *= three.Instance();
+    Tensor3r one(_dof.Dimensions());
+    one.SetConstant(1);
+    _dof.Instance() += one.Instance();
+
+    const VectorXr degrees_of_freedom =
+        _dof.Matrix(_dof.Dimensions().prod(), 1);
+    
+    utils::GTestDebugPrint(degrees_of_freedom);
 
     return MatrixXr();
 }

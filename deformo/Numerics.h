@@ -47,21 +47,29 @@ class Tensor3r {
   public:
     Tensor3r() = default;
     Tensor3r(const Eigen::Tensor<Real, 3> instance) : instance_(instance) {}
-    explicit Tensor3r(unsigned int layers, unsigned int width, unsigned int height) {
+    explicit Tensor3r(const Vector3<unsigned>& dims) {
+        Resize(dims.x(), dims.y(), dims.z());
+    }
+    Tensor3r(unsigned int layers, unsigned int width, unsigned int height) {
         Resize(layers, width, height);
     }
 
+    auto Matrix(unsigned int rows, unsigned int cols) -> MatrixXr {
+        return Eigen::Map<const MatrixXr>(instance_.data(), rows, cols);
+    }
     auto Dimension(const unsigned int dim) const -> unsigned int {
         return instance_.dimension(dim);
     }
-    auto Dimensions() const -> unsigned int { return instance_.NumDimensions; }
+    auto Dimensions() const -> Vector3<unsigned> {
+        return Vector3<unsigned>(Dimension(0), Dimension(1), Dimension(2));
+    }
     auto Instance() -> Eigen::Tensor<Real, 3>& { return instance_; }
 
-    auto SetConstant(Real value) -> void {
-        instance_.setConstant(value);
-    }
+    auto SetConstant(Real value) -> void { instance_.setConstant(value); }
 
-    template <typename... T> auto Resize(unsigned int layers, unsigned int width, unsigned int height) -> void {
+    template <typename... T>
+    auto Resize(unsigned int layers, unsigned int width, unsigned int height)
+        -> void {
         instance_.resize(layers, width, height);
     }
 

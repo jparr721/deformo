@@ -56,11 +56,25 @@ class Homogenization {
     /*
     \brief Flatten in fortran order.
     */
-    template <typename T>
-    auto Flatten(const MatrixX<T>& value) -> VectorX<T> {
+    template <typename T> auto Flatten(const MatrixX<T>& value) -> VectorX<T> {
         // TODO(@jparr721) - Can probably use map
         const auto shape = value.rows() * value.cols();
         return VectorX<T>(Eigen::Map<VectorX<T>> value.data(), shape);
+    }
+
+    template <typename Derived>
+    auto Expand(const Eigen::MatrixBase<Derived>& in, unsigned int x_dim,
+                unsigned int y_dim, unsigned int z_dim) -> Tensor3r {
+        Tensor3r out(z_dim, y_dim, x_dim);
+        for (auto x = 0u; x < x_dim; ++x_dim) {
+            for (auto y = 0u; y < y_dim; ++y) {
+                for (auto z = 0u; z < z_dim; ++z) {
+                    out(in(x * y * z), x, y, z);
+                }
+            }
+        }
+
+        return out;
     }
 
     auto Where(const Tensor3r& input, unsigned int value) const -> Tensor3r {
