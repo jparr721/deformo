@@ -43,3 +43,12 @@ TEST(TestHomogenization, TestComputeDegreesOfFreedom) {
       3956, 3957;
   ASSERT_TRUE(edof.row(999).isApprox(row_last_comp));
 }
+
+TEST(TestHomogenizations, TestComputeUniqueNodes) {
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  const auto homogenization = std::make_shared<Homogenization>(rve);
+  ASSERT_TRUE(homogenization.get() != nullptr);
+
+  const MatrixX<int> unique_nodes = homogenization->ComputeUniqueNodes(1000);
+}

@@ -14,7 +14,7 @@ class Homogenization {
     auto ComputeHexahedron(Real a, Real b, Real c) -> std::array<MatrixXr, 4>;
 
     auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixX<int>;
-    auto ComputeUniqueNodes(unsigned int n_elements) -> MatrixXr;
+    auto ComputeUniqueNodes(unsigned int n_elements) -> MatrixX<int>;
 
     // Stiffness Calculations
     auto AssembleStiffnessMatrix(const MatrixXi& element_degrees_of_freedom,
@@ -62,9 +62,10 @@ class Homogenization {
         return VectorX<T>(Eigen::Map<VectorX<T>> value.data(), shape);
     }
 
-    auto Expand(const VectorXr& in, unsigned int x_dim,
-                unsigned int y_dim, unsigned int z_dim) -> Tensor3r {
-        return Tensor3r(Eigen::TensorMap<Eigen::Tensor<const Real, 3>>(
+    template <typename T>
+    auto Expand(const VectorX<T>& in, unsigned int x_dim,
+                unsigned int y_dim, unsigned int z_dim) -> Tensor3<T> {
+        return Tensor3<T>(Eigen::TensorMap<Eigen::Tensor<const T, 3>>(
             in.data(), x_dim, y_dim, z_dim));
     }
 

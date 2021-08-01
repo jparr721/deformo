@@ -45,19 +45,20 @@ template <typename T> using Matrix2 = Eigen::Matrix<T, 2, 2>;
 template <typename T> using Matrix3 = Eigen::Matrix<T, 3, 3>;
 template <typename T> using Matrix4 = Eigen::Matrix<T, 4, 4>;
 
-class Tensor3r {
+template <typename T>
+class Tensor3 {
   public:
-    Tensor3r() = default;
-    Tensor3r(const Eigen::Tensor<Real, 3> instance) : instance_(instance) {}
-    explicit Tensor3r(const Vector3<unsigned>& dims) {
+    Tensor3() = default;
+    Tensor3(const Eigen::Tensor<T, 3> instance) : instance_(instance) {}
+    explicit Tensor3(const Vector3<unsigned>& dims) {
         Resize(dims.x(), dims.y(), dims.z());
     }
-    Tensor3r(unsigned int layers, unsigned int width, unsigned int height) {
+    Tensor3(unsigned int layers, unsigned int width, unsigned int height) {
         Resize(layers, width, height);
     }
 
-    auto Matrix(unsigned int rows, unsigned int cols) -> MatrixXr {
-        return Eigen::Map<const MatrixXr>(instance_.data(), rows, cols);
+    auto Matrix(unsigned int rows, unsigned int cols) -> MatrixX<T> {
+        return Eigen::Map<const MatrixX<T>>(instance_.data(), rows, cols);
     }
     auto Dimension(const unsigned int dim) const -> unsigned int {
         return instance_.dimension(dim);
@@ -65,22 +66,21 @@ class Tensor3r {
     auto Dimensions() const -> Vector3<unsigned> {
         return Vector3<unsigned>(Dimension(0), Dimension(1), Dimension(2));
     }
-    auto Instance() -> Eigen::Tensor<Real, 3>& { return instance_; }
+    auto Instance() -> Eigen::Tensor<T, 3>& { return instance_; }
 
-    auto SetConstant(Real value) -> void { instance_.setConstant(value); }
+    auto SetConstant(T value) -> void { instance_.setConstant(value); }
 
-    template <typename... T>
     auto Resize(unsigned int layers, unsigned int width, unsigned int height)
         -> void {
         instance_.resize(layers, width, height);
     }
 
-    friend std::ostream& operator<<(std::ostream& out, const Tensor3r& t) {
+    friend std::ostream& operator<<(std::ostream& out, const Tensor3& t) {
         return out << t.instance_;
     }
 
     template <typename... Indices>
-    void operator()(Real value, Indices&&... indices) {
+    void operator()(T value, Indices&&... indices) {
         instance_(indices...) = value;
     }
 
@@ -101,10 +101,10 @@ class Tensor3r {
     }
 
   private:
-    Eigen::Tensor<Real, 3> instance_;
+    Eigen::Tensor<T, 3> instance_;
 
-    auto Layer(const unsigned int layer) const -> MatrixXr {
-        MatrixXr m;
+    auto Layer(const unsigned int layer) const -> MatrixX<T> {
+        MatrixX<T> m;
         const unsigned int width = instance_.dimension(1);
         const unsigned int height = instance_.dimension(2);
 
@@ -119,8 +119,8 @@ class Tensor3r {
     }
 
     auto Row(const unsigned int layer, const unsigned int row) const
-        -> VectorXr {
-        VectorXr v;
+        -> VectorX<T> {
+        VectorX<T> v;
         const unsigned int cols = instance_.dimension(2);
         v.resize(cols);
 
@@ -131,6 +131,9 @@ class Tensor3r {
         return v;
     }
 };
+
+using Tensor3r = Tensor3<Real>;
+using Tensor3i = Tensor3<int>;
 
 namespace linear_algebra {
 auto OneDimensionalLinearInterpolation(Real low, Real high, Real interval)

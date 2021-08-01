@@ -170,19 +170,19 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     // Set up to apply the periodic boundary conditions for periodic volumes.
     // Here, we set up the node numbers and indexing degrees of freedom for
     // 3-D Homogenization.
-    VectorXr _nn = VectorXr::LinSpaced(number_of_nodes, 1, number_of_nodes);
+    VectorX<int> _nn = VectorX<int>::LinSpaced(number_of_nodes, 1, number_of_nodes);
 
     assertion.Assert(_nn.size() == number_of_nodes, __FUNCTION__, __FILE__,
                      __LINE__, "Node numbers improperly formatted!",
                      number_of_nodes);
-    const Tensor3r node_numbers =
+    const Tensor3i node_numbers =
         Expand(_nn, 1 + n_el_x, 1 + n_el_y, 1 + n_el_z);
 
     const unsigned int node_numbers_x = node_numbers.Dimension(0) - 1;
     const unsigned int node_numbers_y = node_numbers.Dimension(1) - 1;
     const unsigned int node_numbers_z = node_numbers.Dimension(2) - 1;
 
-    Tensor3r _dof(node_numbers_x, node_numbers_y, node_numbers_z);
+    Tensor3i _dof(node_numbers_x, node_numbers_y, node_numbers_z);
     for (auto x = 0u; x < node_numbers_x; ++x) {
         for (auto y = 0u; y < node_numbers_y; ++y) {
             for (auto z = 0u; z < node_numbers_z; ++z) {
@@ -191,15 +191,15 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
         }
     }
 
-    Tensor3r three(_dof.Dimensions());
+    Tensor3i three(_dof.Dimensions());
     three.SetConstant(3);
     _dof.Instance() *= three.Instance();
-    Tensor3r one(_dof.Dimensions());
+    Tensor3i one(_dof.Dimensions());
     one.SetConstant(1);
     _dof.Instance() += one.Instance();
 
     const VectorX<int> degrees_of_freedom =
-        _dof.Matrix(_dof.Dimensions().prod(), 1).cast<int>();
+        _dof.Matrix(_dof.Dimensions().prod(), 1);
 
     Vector6<int> _mid;
     _mid << 3, 4, 5, 0, 1, 2;
@@ -218,4 +218,17 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     const MatrixX<int> _edof_rhs = _add_combined.replicate(n_elements, 1);
        
     return _edof_lhs + _edof_rhs;
+}
+
+auto Homogenization::ComputeUniqueNodes(unsigned int n_elements) -> MatrixX<int> {
+    assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__,
+                     __LINE__, "Voxel is improperly shaped");
+    const unsigned int n_el_x = voxel_.Dimension(0);
+    const unsigned int n_el_y = voxel_.Dimension(1);
+    const unsigned int n_el_z = voxel_.Dimension(2);
+
+    const VectorX<int> _uniq =
+        VectorX<int>::LinSpaced(n_elements, 1, n_elements);
+
+    return MatrixX<int>();
 }
