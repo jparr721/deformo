@@ -157,9 +157,9 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 }
 
 auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
-    -> MatrixXr {
-    assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__, __LINE__,
-                     "Voxel is improperly shaped");
+    -> MatrixX<int> {
+    assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__,
+                     __LINE__, "Voxel is improperly shaped");
     const unsigned int n_el_x = voxel_.Dimension(0);
     const unsigned int n_el_y = voxel_.Dimension(1);
     const unsigned int n_el_z = voxel_.Dimension(2);
@@ -170,8 +170,7 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     // Set up to apply the periodic boundary conditions for periodic volumes.
     // Here, we set up the node numbers and indexing degrees of freedom for
     // 3-D Homogenization.
-    VectorXr _nn =
-        VectorXr::LinSpaced(number_of_nodes, 1, number_of_nodes);
+    VectorXr _nn = VectorXr::LinSpaced(number_of_nodes, 1, number_of_nodes);
 
     assertion.Assert(_nn.size() == number_of_nodes, __FUNCTION__, __FILE__,
                      __LINE__, "Node numbers improperly formatted!",
@@ -189,7 +188,7 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
             for (auto z = 0u; z < node_numbers_z; ++z) {
                 _dof(node_numbers.At(x, y, z), x, y, z);
             }
-        } 
+        }
     }
 
     Tensor3r three(_dof.Dimensions());
@@ -199,10 +198,24 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     one.SetConstant(1);
     _dof.Instance() += one.Instance();
 
-    const VectorXr degrees_of_freedom =
-        _dof.Matrix(_dof.Dimensions().prod(), 1);
-    
-    utils::GTestDebugPrint(degrees_of_freedom);
+    const VectorX<int> degrees_of_freedom =
+        _dof.Matrix(_dof.Dimensions().prod(), 1).cast<int>();
 
-    return MatrixXr();
+    Vector6<int> _mid;
+    _mid << 3, 4, 5, 0, 1, 2;
+    _mid += Vector6<int>::Ones() * 3 * n_el_x;
+
+    Vector12<int> _add_x;
+    _add_x << 0, 1, 2, _mid, -3, -2, -1;
+
+    const Vector12<int> _add_xy =
+        (_add_x.array() + (3 * (1 + n_el_y) * (1 + n_el_x))).matrix();
+
+    MatrixX<int> _add_combined(1, 24);
+    _add_combined << _add_x.transpose(), _add_xy.transpose();
+
+    const MatrixX<int> _edof_lhs = degrees_of_freedom.replicate(1, 24);
+    const MatrixX<int> _edof_rhs = _add_combined.replicate(n_elements, 1);
+       
+    return _edof_lhs + _edof_rhs;
 }

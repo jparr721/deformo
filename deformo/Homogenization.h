@@ -13,7 +13,7 @@ class Homogenization {
 
     auto ComputeHexahedron(Real a, Real b, Real c) -> std::array<MatrixXr, 4>;
 
-    auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixXr;
+    auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixX<int>;
     auto ComputeUniqueNodes(unsigned int n_elements) -> MatrixXr;
 
     // Stiffness Calculations

@@ -36,6 +36,8 @@ template <typename T> using VectorX = Eigen::Matrix<T, Eigen::Dynamic, 1>;
 template <typename T> using Vector2 = Eigen::Matrix<T, 2, 1>;
 template <typename T> using Vector3 = Eigen::Matrix<T, 3, 1>;
 template <typename T> using Vector4 = Eigen::Matrix<T, 4, 1>;
+template <typename T> using Vector6 = Eigen::Matrix<T, 6, 1>;
+template <typename T> using Vector12 = Eigen::Matrix<T, 12, 1>;
 
 template <typename T>
 using MatrixX = Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic>;
