@@ -125,17 +125,12 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
                 for (int layer = 0; layer < layers; ++layer) {
                     B_e(qxyz(0, layer), layer, 0, 0);
-
                     B_e(qxyz(1, layer), layer, 1, 1);
-
                     B_e(qxyz(2, layer), layer, 2, 2);
-
                     B_e(qxyz(1, layer), layer, 3, 0);
                     B_e(qxyz(0, layer), layer, 3, 1);
-
                     B_e(qxyz(2, layer), layer, 4, 1);
                     B_e(qxyz(1, layer), layer, 4, 2);
-
                     B_e(qxyz(2, layer), layer, 5, 0);
                     B_e(qxyz(0, layer), layer, 5, 2);
                 }
@@ -175,19 +170,18 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     // Set up to apply the periodic boundary conditions for periodic volumes.
     // Here, we set up the node numbers and indexing degrees of freedom for
     // 3-D Homogenization.
-    VectorX<unsigned> _nn =
-        VectorX<unsigned>::LinSpaced(number_of_nodes, 1, number_of_nodes);
+    VectorXr _nn =
+        VectorXr::LinSpaced(number_of_nodes, 1, number_of_nodes);
 
     assertion.Assert(_nn.size() == number_of_nodes, __FUNCTION__, __FILE__,
                      __LINE__, "Node numbers improperly formatted!",
                      number_of_nodes);
     const Tensor3r node_numbers =
         Expand(_nn, 1 + n_el_x, 1 + n_el_y, 1 + n_el_z);
-    utils::GTestDebugPrint(node_numbers);
 
-    const unsigned int node_numbers_x = node_numbers.Dimension(0);
-    const unsigned int node_numbers_y = node_numbers.Dimension(1);
-    const unsigned int node_numbers_z = node_numbers.Dimension(2);
+    const unsigned int node_numbers_x = node_numbers.Dimension(0) - 1;
+    const unsigned int node_numbers_y = node_numbers.Dimension(1) - 1;
+    const unsigned int node_numbers_z = node_numbers.Dimension(2) - 1;
 
     Tensor3r _dof(node_numbers_x, node_numbers_y, node_numbers_z);
     for (auto x = 0u; x < node_numbers_x; ++x) {

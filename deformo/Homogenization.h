@@ -62,19 +62,10 @@ class Homogenization {
         return VectorX<T>(Eigen::Map<VectorX<T>> value.data(), shape);
     }
 
-    template <typename Derived>
-    auto Expand(const Eigen::MatrixBase<Derived>& in, unsigned int x_dim,
+    auto Expand(const VectorXr& in, unsigned int x_dim,
                 unsigned int y_dim, unsigned int z_dim) -> Tensor3r {
-        Tensor3r out(z_dim, y_dim, x_dim);
-        for (auto x = 0u; x < x_dim; ++x_dim) {
-            for (auto y = 0u; y < y_dim; ++y) {
-                for (auto z = 0u; z < z_dim; ++z) {
-                    out(in(x * y * z), x, y, z);
-                }
-            }
-        }
-
-        return out;
+        return Tensor3r(Eigen::TensorMap<Eigen::Tensor<const Real, 3>>(
+            in.data(), x_dim, y_dim, z_dim));
     }
 
     auto Where(const Tensor3r& input, unsigned int value) const -> Tensor3r {

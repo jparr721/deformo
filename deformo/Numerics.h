@@ -109,7 +109,7 @@ class Tensor3r {
         m.resize(width, height);
         for (int i = 0; i < width; ++i) {
             for (int j = 0; j < height; ++j) {
-                m(i, j) = instance_(layer, i, j);
+                m(i, j) = instance_(i, j, layer);
             }
         }
 
@@ -123,7 +123,7 @@ class Tensor3r {
         v.resize(cols);
 
         for (int col = 0; col < cols; ++col) {
-            v(col) = instance_(layer, row, col);
+            v(col) = instance_(row, col, layer);
         }
 
         return v;
