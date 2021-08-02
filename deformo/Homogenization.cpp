@@ -119,20 +119,20 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
                 const MatrixXr J = qq * dims;
                 const MatrixXr qxyz = J.fullPivLu().solve(qq);
 
-                Tensor3r B_e = Tensor3r(8, 6, 3);
+                Tensor3r B_e = Tensor3r(6, 3, 8);
                 B_e.SetConstant(0);
-                const auto layers = B_e.Dimension(0);
+                const auto layers = B_e.Dimension(2);
 
                 for (int layer = 0; layer < layers; ++layer) {
-                    B_e(qxyz(0, layer), layer, 0, 0);
-                    B_e(qxyz(1, layer), layer, 1, 1);
-                    B_e(qxyz(2, layer), layer, 2, 2);
-                    B_e(qxyz(1, layer), layer, 3, 0);
-                    B_e(qxyz(0, layer), layer, 3, 1);
-                    B_e(qxyz(2, layer), layer, 4, 1);
-                    B_e(qxyz(1, layer), layer, 4, 2);
-                    B_e(qxyz(2, layer), layer, 5, 0);
-                    B_e(qxyz(0, layer), layer, 5, 2);
+                    B_e(0, 0, layer) = qxyz(0, layer);
+                    B_e(1, 1, layer) = qxyz(1, layer);
+                    B_e(2, 2, layer) = qxyz(2, layer);
+                    B_e(3, 0, layer) = qxyz(1, layer);
+                    B_e(3, 1, layer) = qxyz(0, layer);
+                    B_e(4, 1, layer) = qxyz(2, layer);
+                    B_e(4, 2, layer) = qxyz(1, layer);
+                    B_e(5, 0, layer) = qxyz(2, layer);
+                    B_e(5, 2, layer) = qxyz(0, layer);
                 }
 
                 MatrixXr B = MatrixXr::Zero(6, 24);
@@ -170,13 +170,14 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     // Set up to apply the periodic boundary conditions for periodic volumes.
     // Here, we set up the node numbers and indexing degrees of freedom for
     // 3-D Homogenization.
-    VectorX<int> _nn = VectorX<int>::LinSpaced(number_of_nodes, 1, number_of_nodes);
+    VectorX<int> _nn =
+        VectorX<int>::LinSpaced(number_of_nodes, 1, number_of_nodes);
 
     assertion.Assert(_nn.size() == number_of_nodes, __FUNCTION__, __FILE__,
                      __LINE__, "Node numbers improperly formatted!",
                      number_of_nodes);
     const Tensor3i node_numbers =
-        Expand(_nn, 1 + n_el_x, 1 + n_el_y, 1 + n_el_z);
+        Tensor3i::Expand(_nn, 1 + n_el_x, 1 + n_el_y, 1 + n_el_z);
 
     const unsigned int node_numbers_x = node_numbers.Dimension(0) - 1;
     const unsigned int node_numbers_y = node_numbers.Dimension(1) - 1;
@@ -186,7 +187,7 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     for (auto x = 0u; x < node_numbers_x; ++x) {
         for (auto y = 0u; y < node_numbers_y; ++y) {
             for (auto z = 0u; z < node_numbers_z; ++z) {
-                _dof(node_numbers.At(x, y, z), x, y, z);
+                _dof(x, y, z) = node_numbers.At(x, y, z);
             }
         }
     }
@@ -216,11 +217,12 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
 
     const MatrixX<int> _edof_lhs = degrees_of_freedom.replicate(1, 24);
     const MatrixX<int> _edof_rhs = _add_combined.replicate(n_elements, 1);
-       
+
     return _edof_lhs + _edof_rhs;
 }
 
-auto Homogenization::ComputeUniqueNodes(unsigned int n_elements) -> MatrixX<int> {
+auto Homogenization::ComputeUniqueNodes(unsigned int n_elements)
+    -> MatrixX<int> {
     assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__,
                      __LINE__, "Voxel is improperly shaped");
     const unsigned int n_el_x = voxel_.Dimension(0);
@@ -229,6 +231,19 @@ auto Homogenization::ComputeUniqueNodes(unsigned int n_elements) -> MatrixX<int>
 
     const VectorX<int> _uniq =
         VectorX<int>::LinSpaced(n_elements, 1, n_elements);
+
+    const Tensor3i unique_nodes_tensor = Tensor3i::Expand(_uniq, n_el_x, n_el_y, n_el_z);
+
+    Tensor3i _index_tensor(
+        (unique_nodes_tensor.Dimensions().array() + 1).matrix());
+
+    // Extend with a mirror of the back border
+    std::vector<VectorX<int>> back_borders;
+    constexpr int row = 0;
+    for (auto layer_idx = 0u; layer_idx < n_el_x; ++layer_idx) {
+        back_borders.push_back(unique_nodes_tensor.At(layer_idx, row));
+        utils::GTestDebugPrint(back_borders.at(layer_idx));
+    }
 
     return MatrixX<int>();
 }

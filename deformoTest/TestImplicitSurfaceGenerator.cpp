@@ -2,8 +2,6 @@
 
 #include <memory>
 
-#include "../deformo/Numerics.h"
-#include "../deformo/Numerics.cpp"
 #include "../deformo/ImplicitSurfaceGenerator.h"
 #include "../deformo/ImplicitSurfaceGenerator.cpp"
 

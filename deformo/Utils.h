@@ -171,8 +171,11 @@ Vector2<unsigned> Shape(const Eigen::PlainObjectBase<Derived>& in) {
     return {in.rows(), in.cols()};
 }
 
-template <typename T> void GTestDebugPrint(T value) {
+template <typename T> void GTestDebugPrint(T value, bool sep = true) {
     std::cerr << value << std::endl;
+    if (sep) {
+        std::cerr << "============" << std::endl;
+    }
 }
 
 void FindMaxVertices(std::vector<unsigned int>& indices,

@@ -143,7 +143,7 @@ auto ImplicitSurfaceGenerator::MakeShapedIndices(
 auto ImplicitSurfaceGenerator::SetFromIndices(
     const std::vector<Vector3<unsigned int>>& indices) -> void {
     for (const Vector3<unsigned int>& index : indices) {
-        implicit_surface(BinaryMaterial::kSecondaryMaterial, index.x(),
-                         index.y(), index.z());
+        implicit_surface(index.x(), index.y(), index.z()) =
+            BinaryMaterial::kSecondaryMaterial;
     }
 }

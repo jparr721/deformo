@@ -57,16 +57,8 @@ class Homogenization {
     \brief Flatten in fortran order.
     */
     template <typename T> auto Flatten(const MatrixX<T>& value) -> VectorX<T> {
-        // TODO(@jparr721) - Can probably use map
         const auto shape = value.rows() * value.cols();
         return VectorX<T>(Eigen::Map<VectorX<T>> value.data(), shape);
-    }
-
-    template <typename T>
-    auto Expand(const VectorX<T>& in, unsigned int x_dim,
-                unsigned int y_dim, unsigned int z_dim) -> Tensor3<T> {
-        return Tensor3<T>(Eigen::TensorMap<Eigen::Tensor<const T, 3>>(
-            in.data(), x_dim, y_dim, z_dim));
     }
 
     auto Where(const Tensor3r& input, unsigned int value) const -> Tensor3r {
@@ -80,7 +72,7 @@ class Homogenization {
             for (auto j = 0u; j < rows; ++j) {
                 for (auto k = 0u; k < cols; ++k) {
                     if (input.At(i, j, k) != value) {
-                        output(0, i, j, k);
+                        output(i, j, k) = 0;
                     }
                 }
             }
