@@ -53,31 +53,4 @@ class Homogenization {
     DeformoAssertion assertion;
 
     // Utilities
-    /*
-    \brief Flatten in fortran order.
-    */
-    template <typename T> auto Flatten(const MatrixX<T>& value) -> VectorX<T> {
-        const auto shape = value.rows() * value.cols();
-        return VectorX<T>(Eigen::Map<VectorX<T>> value.data(), shape);
-    }
-
-    auto Where(const Tensor3r& input, unsigned int value) const -> Tensor3r {
-        const auto layers = input.Dimension(0);
-        const auto rows = input.Dimension(1);
-        const auto cols = input.Dimension(2);
-        Tensor3r output(layers, rows, cols);
-        output.SetConstant(1);
-
-        for (auto i = 0u; i < layers; ++i) {
-            for (auto j = 0u; j < rows; ++j) {
-                for (auto k = 0u; k < cols; ++k) {
-                    if (input.At(i, j, k) != value) {
-                        output(i, j, k) = 0;
-                    }
-                }
-            }
-        }
-
-        return output;
-    }
 };

@@ -9,23 +9,23 @@ Homogenization::Homogenization(std::shared_ptr<Rve> rve) {
     cell_len_z_ = rve_->depth;
 
     // For two-material composites, we sum the material parameters
-    Tensor3r material_one_lambda = Where(voxel_, rve_->material_1.number);
+    Tensor3r material_one_lambda = voxel_.Where(rve_->material_1.number);
     Tensor3r scalar_tensor_placeholder(material_one_lambda.Dimension(0),
                                        material_one_lambda.Dimension(1),
                                        material_one_lambda.Dimension(2));
     scalar_tensor_placeholder.SetConstant(rve_->material_1.Lambda());
     material_one_lambda.Instance() *= scalar_tensor_placeholder.Instance();
-    Tensor3r material_two_lambda = Where(voxel_, rve_->material_2.number);
+    Tensor3r material_two_lambda = voxel_.Where(rve_->material_2.number);
     scalar_tensor_placeholder.SetConstant(rve_->material_2.Lambda());
     material_two_lambda.Instance() *= scalar_tensor_placeholder.Instance();
 
     lambda_ = Tensor3r(material_one_lambda.Instance() +
                        material_two_lambda.Instance());
 
-    Tensor3r material_one_mu = Where(voxel_, rve_->material_1.number);
+    Tensor3r material_one_mu = voxel_.Where(rve_->material_1.number);
     scalar_tensor_placeholder.SetConstant(rve_->material_1.Mu());
     material_one_mu.Instance() *= scalar_tensor_placeholder.Instance();
-    Tensor3r material_two_mu = Where(voxel_, rve_->material_2.number);
+    Tensor3r material_two_mu = voxel_.Where(rve_->material_2.number);
     scalar_tensor_placeholder.SetConstant(rve_->material_2.Mu());
     material_two_mu.Instance() *= scalar_tensor_placeholder.Instance();
 

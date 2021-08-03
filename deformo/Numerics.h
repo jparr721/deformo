@@ -128,6 +128,26 @@ template <typename T> class Tensor3 {
         return v;
     }
 
+    auto Where(T value) const -> Tensor3<T> {
+        const int rows = Dimension(0);
+        const int cols = Dimension(1);
+        const int layers = Dimension(2);
+        Tensor3<T> output(rows, cols, layers);
+        output.SetConstant(1);
+
+        for (int layer = 0; layer < layers; ++layer) {
+            for (int row = 0; row < rows; ++row) {
+                for (int col = 0; col < cols; ++col) {
+                    if (instance_(row, col, layer) != value) {
+                        output(row, col, layer) = 0;
+                    }
+                }
+            }
+        }
+
+        return output;
+    }
+
     /// <summary>
     /// Append to the tensor, creating a new one in the process.
     /// </summary>
@@ -188,7 +208,7 @@ template <typename T> class Tensor3 {
             for (auto layer_idx = 0u; layer_idx < layers; ++layer_idx) {
                 const VectorX<T> new_row = seqs.at(layer_idx);
                 MatrixX<T> layer = Layer(layer_idx);
-                layer.conservativeResize(Eigen::NoChange, rows);
+                layer.conservativeResize(rows, Eigen::NoChange);
 
                 // If we aren't at the end, we need to "scoot" the other rowumns
                 // over.
@@ -220,6 +240,7 @@ template <typename T> class Tensor3 {
         return Tensor3<T>::Expand(_d, rows, cols, layers);
     }
 
+    // TODO(@jparr721) - This only appends to the end right now.
     auto Append(const MatrixX<T>& layer, int index) -> Tensor3<T> {
         int rows = Dimension(0);
         int cols = Dimension(1);
@@ -230,7 +251,7 @@ template <typename T> class Tensor3 {
         numerics_assertion.Assert(
             layer.rows() == rows && layer.cols() == cols, __FUNCTION__,
             __FILE__, __LINE__,
-            "Layer does not match dimensions, got: " layer.rows(), " ",
+            "Layer does not match dimensions, got: ", layer.rows(), " ",
             layer.cols(), " wanted: ", rows, " ", cols);
 
         // "resize" sweeps the tensor instance so, instead, make a new one.
