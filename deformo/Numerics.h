@@ -86,7 +86,7 @@ template <typename T> class Tensor3 {
         return Vector3<int>(Dimension(0), Dimension(1), Dimension(2));
     }
 
-    auto Instance() -> Eigen::Tensor<T, 3>& { return instance_; }
+    auto Instance() noexcept -> Eigen::Tensor<T, 3>& { return instance_; }
 
     auto SetConstant(T value) -> void { instance_.setConstant(value); }
 
@@ -104,8 +104,8 @@ template <typename T> class Tensor3 {
 
     auto Layer(const int layer) const -> MatrixX<T> {
         MatrixX<T> m;
-        const int rows = instance_.dimension(0);
-        const int cols = instance_.dimension(1);
+        const int rows = Dimension(0);
+        const int cols = Dimension(1);
 
         m.resize(rows, cols);
         for (int i = 0; i < rows; ++i) {
@@ -117,12 +117,35 @@ template <typename T> class Tensor3 {
         return m;
     }
 
+    /// <summary>
+    /// Collect a row from the tensor
+    /// </summary>
+    /// <param name="layer">The layer index</param>
+    /// <param name="row">The row in the layer</param>
+    /// <returns>Vector with the row data</returns>
     auto Row(const int layer, const int row) const -> VectorX<T> {
-        const int cols = instance_.dimension(2);
+        const int cols = Dimension(1);
         VectorX<T> v(cols);
 
         for (int col = 0; col < cols; ++col) {
             v(col) = instance_(row, col, layer);
+        }
+
+        return v;
+    }
+
+    /// <summary>
+    /// Collect a col from the tensor
+    /// </summary>
+    /// <param name="layer">The layer index</param>
+    /// <param name="row">The col in the layer</param>
+    /// <returns>Vector with the col data</returns>
+    auto Col(const int layer, const int col) const -> VectorX<T> {
+        const int rows = Dimension(0);
+        VectorX<T> v(rows);
+
+        for (int row = 0; row < rows; ++row) {
+            v(row) = instance_(row, col, layer);
         }
 
         return v;

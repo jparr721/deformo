@@ -14,7 +14,7 @@ class Homogenization {
     auto ComputeHexahedron(Real a, Real b, Real c) -> std::array<MatrixXr, 4>;
 
     auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixX<int>;
-    auto ComputeUniqueNodes(unsigned int n_elements) -> MatrixX<int>;
+    auto ComputeUniqueNodes(unsigned int n_elements) -> Tensor3i;
 
     // Stiffness Calculations
     auto AssembleStiffnessMatrix(const MatrixXi& element_degrees_of_freedom,
@@ -51,6 +51,4 @@ class Homogenization {
     std::shared_ptr<Rve> rve_;
 
     DeformoAssertion assertion;
-
-    // Utilities
 };

@@ -50,5 +50,27 @@ TEST(TestHomogenizations, TestComputeUniqueNodes) {
   const auto homogenization = std::make_shared<Homogenization>(rve);
   ASSERT_TRUE(homogenization.get() != nullptr);
 
-  const MatrixX<int> unique_nodes = homogenization->ComputeUniqueNodes(1000);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(1000);
+
+  const MatrixX<int> first_layer = unique_nodes.At(0);
+  const MatrixX<int> last_layer = unique_nodes.At(0);
+
+  ASSERT_TRUE(first_layer.isApprox(last_layer));
+
+  const int rows = unique_nodes.Dimension(0);
+  const int cols = unique_nodes.Dimension(1);
+  const int layers = unique_nodes.Dimension(2);
+
+  // Ensure the mirroring worked as intended.
+  for (int l = 0; l < layers; ++l) {
+    const VectorX<int> top_row = unique_nodes.Row(l, 0);
+    const VectorX<int> bottom_row = unique_nodes.Row(l, rows - 1);
+
+    ASSERT_TRUE(top_row.isApprox(bottom_row));
+
+    const VectorX<int> left_col = unique_nodes.Col(l, 0);
+    const VectorX<int> right_col = unique_nodes.Col(l, cols - 1);
+
+    ASSERT_TRUE(left_col.isApprox(right_col));
+  }
 }

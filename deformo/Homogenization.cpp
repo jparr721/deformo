@@ -222,28 +222,42 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
 }
 
 auto Homogenization::ComputeUniqueNodes(unsigned int n_elements)
-    -> MatrixX<int> {
+    -> Tensor3i {
     assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__,
                      __LINE__, "Voxel is improperly shaped");
     const unsigned int n_el_x = voxel_.Dimension(0);
     const unsigned int n_el_y = voxel_.Dimension(1);
     const unsigned int n_el_z = voxel_.Dimension(2);
 
-    const VectorX<int> _uniq =
+    const VectorX<int> _uniq_el =
         VectorX<int>::LinSpaced(n_elements, 1, n_elements);
 
-    const Tensor3i unique_nodes_tensor = Tensor3i::Expand(_uniq, n_el_x, n_el_y, n_el_z);
+    Tensor3i _uniq_t_1 = Tensor3i::Expand(_uniq_el, n_el_x, n_el_y, n_el_z);
 
-    Tensor3i _index_tensor(
-        (unique_nodes_tensor.Dimensions().array() + 1).matrix());
+    Tensor3i _index_tensor((_uniq_t_1.Dimensions().array() + 1).matrix());
 
     // Extend with a mirror of the back border
     std::vector<VectorX<int>> back_borders;
     constexpr int row = 0;
-    for (auto layer_idx = 0u; layer_idx < n_el_x; ++layer_idx) {
-        back_borders.push_back(unique_nodes_tensor.At(layer_idx, row));
-        utils::GTestDebugPrint(back_borders.at(layer_idx));
+    for (auto layer_idx = 0u; layer_idx < n_el_z; ++layer_idx) {
+        back_borders.emplace_back(_uniq_t_1.At(layer_idx, row));
     }
 
-    return MatrixX<int>();
+    Tensor3i _uniq_t_2 =
+        _uniq_t_1.Append(back_borders, Tensor3i::InsertOpIndex::kEnd,
+                         Tensor3i::OpOrientation::kRow);
+
+    // Extend with a mirror of the left border
+    std::vector<VectorX<int>> left_borders;
+    constexpr int col = 0;
+    for (auto layer_idx = 0u; layer_idx < n_el_z; ++layer_idx) {
+        left_borders.emplace_back(_uniq_t_2.Col(layer_idx, col));
+    }
+
+    Tensor3i _uniq_t_3 =
+        _uniq_t_2.Append(left_borders, Tensor3i::InsertOpIndex::kEnd,
+                         Tensor3i::OpOrientation::kCol);
+
+    const MatrixX<int> first_layer = _uniq_t_3.At(0);
+    return _uniq_t_3.Append(first_layer, Tensor3i::InsertOpIndex::kEnd);
 }
