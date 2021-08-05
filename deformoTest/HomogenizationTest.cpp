@@ -10,7 +10,7 @@
 #include "../deformo/Rve.cpp"
 #include "../deformo/Rve.h"
 
-const auto rve = std::make_shared<Rve>(10, 10, 10, 0.1, 0.1, 0.1);
+auto rve = std::make_shared<Rve>(10, 10, 10, 0.1, 0.1, 0.1);
 
 TEST(TestHomogenization, TestHexahedron) {
   ASSERT_TRUE(rve.get() != nullptr);
@@ -101,4 +101,28 @@ TEST(TestHomogenization, TestComputeUniqueDegreesOfFreedom) {
 
   ASSERT_TRUE(
       row_n_comp.transpose().isApprox(unique_dof.row(unique_dof.rows() - 1)));
+}
+
+TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
+  rve->material_1 = Material(1, "one", 10, 10);
+  rve->material_2 = Material(2, "two", 0, 0);
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  const auto homogenization = std::make_shared<Homogenization>(rve);
+  ASSERT_TRUE(homogenization.get() != nullptr);
+  const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
+
+  constexpr unsigned int n_elements = 1000;
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(n_elements);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(n_elements);
+  const MatrixX<int> unique_dof =
+      homogenization->ComputeUniqueDegreesOfFreedom(edof, unique_nodes);
+  const MatrixXr K = homogenization->AssembleStiffnessMatrix(
+      3000,
+      unique_dof, hexahedron.at(0), hexahedron.at(1));
+
+
+  ASSERT_TRUE(std::fabs(K(0, 0) - 44.4445) < 0.0001);
+  ASSERT_TRUE(K(0, 1) < 0.0001);
 }

@@ -18,13 +18,17 @@ struct Material {
     // Poisson's Ratio
     Real v = -1;
 
-    auto Lambda() -> Real {
-        // TODO(@jparr721) - Implement
-        return E;
-    }
-    auto Mu() -> Real {
-        // TODO(@jparr721) - Implement
-        return v;
+    // Shear Modulus
+    Real G = -1;
+
+    // Lame's Lambda
+    Real lambda = -1;
+
+    Material() = default;
+    Material(unsigned int number, const std::string& name, Real G, Real lambda)
+        : number(number), name(name), G(G), lambda(lambda) {
+        E = (G * (3 * lambda + 2 * G)) / (lambda + G);
+        v = lambda / (2 * (lambda + G));
     }
 };
 
@@ -57,7 +61,8 @@ class Rve {
         const Real volume_fraction)
         : width(width), height(height), depth(depth), strain(strain),
           mesh_density(mesh_density), volume_fraction(volume_fraction) {}
-    auto ToImplicitSurface() -> Tensor3r;
+
+    auto ToImplicitSurface(bool homogenous = false) -> Tensor3r;
 
     /*
     @brief Set the dimensions for material_2. This might change the volume

@@ -341,21 +341,23 @@ template <typename T> constexpr auto Lerp(T a, T b, Real t) noexcept -> T {
 
 auto LinSpace(Real start, Real stop, unsigned int num) -> VectorXr;
 
-template <typename T> inline auto MatrixToVector(const MatrixX<T>& in) -> VectorX<T> {
+template <typename T>
+inline auto MatrixToVector(const MatrixX<T>& in) -> VectorX<T> {
     const T* data = in.data();
     const auto shape = in.rows() * in.cols();
     return VectorX<T>(Eigen::Map<const VectorX<T>>(data, shape));
 }
 
 template <typename T>
-inline auto VectorToMatrix(const VectorX<T>& in, int rows, int cols) -> MatrixX<T> {
+inline auto VectorToMatrix(const VectorX<T>& in, int rows, int cols)
+    -> MatrixX<T> {
     const T* data = in.data();
     return MatrixX<T>(Eigen::Map<const MatrixX<T>>(data, rows, cols));
 }
 
 template <typename T>
-inline auto IndexVectorByMatrix(const VectorX<T>& in,
-                                const MatrixX<T>& indices) -> MatrixX<T> {
+inline auto IndexVectorByMatrix(const VectorX<T>& in, const MatrixX<T>& indices)
+    -> MatrixX<T> {
     MatrixX<T> output(indices.rows(), indices.cols());
 
     for (int row = 0; row < indices.rows(); ++row) {
@@ -365,5 +367,22 @@ inline auto IndexVectorByMatrix(const VectorX<T>& in,
     }
 
     return output;
+}
+
+template <typename T>
+inline auto ToTriplets(const VectorX<int>& i, const VectorX<int>& j,
+                      const VectorX<T>& data)
+    -> std::vector<Eigen::Triplet<T>> {
+    numerics_assertion.Assert(utils::Shape(i) == utils::Shape(j) &&
+                                  utils::Shape(i) == utils::Shape(data),
+                              __FUNCTION__, __FILE__, __LINE__,
+                              "Shapes must match");
+
+    std::vector<Eigen::Triplet<T>> triplets;
+    for (int row = 0; row < i.rows(); ++row) {
+        triplets.emplace_back(Eigen::Triplet<T>(i(row), j(row), data(row)));
+    }
+
+    return triplets;
 }
 } // namespace linear_algebra

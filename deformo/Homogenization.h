@@ -21,14 +21,12 @@ class Homogenization {
                                   const Tensor3i& unique_nodes) -> MatrixXi;
 
     // Stiffness Calculations
-    auto AssembleStiffnessMatrix(const MatrixXi& element_degrees_of_freedom,
-                                 const MatrixXr& stiffness_lambda,
-                                 const MatrixXr& stiffness_mu,
-                                 unsigned int n_degrees_of_freedom) -> MatrixXr;
-    auto AssembleLoadMatrix(const MatrixXi& element_degrees_of_freedom,
-                            const MatrixXr& stiffness_lambda,
-                            const MatrixXr& stiffness_mu,
-                            unsigned int n_degrees_of_freedom) -> MatrixXr;
+    auto AssembleStiffnessMatrix(unsigned int n_degrees_of_freedom,
+                                 const MatrixXi& unique_degrees_of_freedom,
+                                 const MatrixXr& ke_lambda,
+                                 const MatrixXr& ke_mu) -> SparseMatrixXr;
+    auto AssembleLoadMatrix(const MatrixXi& unique_degrees_of_freedom)
+        -> MatrixXr;
     auto ComputeDisplacement(const MatrixXr& stiffness, const MatrixXr& load,
                              const MatrixXi& element_degrees_of_freedom,
                              unsigned int n_degrees_of_freedom) -> MatrixXr;

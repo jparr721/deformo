@@ -1,32 +1,32 @@
 #include "Homogenization.h"
 #include "Utils.h"
+#include <unsupported/Eigen/KroneckerProduct>
 
-Homogenization::Homogenization(std::shared_ptr<Rve> rve) {
-    rve_ = rve;
-    voxel_ = rve_->ToImplicitSurface();
+Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
+    // TODO(@jparr721) Remove (true) when done testing.
+    voxel_ = rve_->ToImplicitSurface(true);
     cell_len_x_ = rve_->width;
     cell_len_y_ = rve_->height;
     cell_len_z_ = rve_->depth;
 
     // For two-material composites, we sum the material parameters
     Tensor3r material_one_lambda = voxel_.Where(rve_->material_1.number);
-    Tensor3r scalar_tensor_placeholder(material_one_lambda.Dimension(0),
-                                       material_one_lambda.Dimension(1),
-                                       material_one_lambda.Dimension(2));
-    scalar_tensor_placeholder.SetConstant(rve_->material_1.Lambda());
+    Tensor3r scalar_tensor_placeholder(material_one_lambda.Dimensions());
+    scalar_tensor_placeholder.SetConstant(rve_->material_1.lambda);
     material_one_lambda.Instance() *= scalar_tensor_placeholder.Instance();
+
     Tensor3r material_two_lambda = voxel_.Where(rve_->material_2.number);
-    scalar_tensor_placeholder.SetConstant(rve_->material_2.Lambda());
+    scalar_tensor_placeholder.SetConstant(rve_->material_2.lambda);
     material_two_lambda.Instance() *= scalar_tensor_placeholder.Instance();
 
     lambda_ = Tensor3r(material_one_lambda.Instance() +
                        material_two_lambda.Instance());
 
     Tensor3r material_one_mu = voxel_.Where(rve_->material_1.number);
-    scalar_tensor_placeholder.SetConstant(rve_->material_1.Mu());
+    scalar_tensor_placeholder.SetConstant(rve_->material_1.G);
     material_one_mu.Instance() *= scalar_tensor_placeholder.Instance();
     Tensor3r material_two_mu = voxel_.Where(rve_->material_2.number);
-    scalar_tensor_placeholder.SetConstant(rve_->material_2.Mu());
+    scalar_tensor_placeholder.SetConstant(rve_->material_2.G);
     material_two_mu.Instance() *= scalar_tensor_placeholder.Instance();
 
     mu_ = Tensor3r(material_one_mu.Instance() + material_two_mu.Instance());
@@ -287,4 +287,48 @@ auto Homogenization::ComputeUniqueDegreesOfFreedom(
     const MatrixXi indices = (element_degrees_of_freedom.array() - 1).matrix();
 
     return linear_algebra::IndexVectorByMatrix(_dof, indices);
+}
+
+auto Homogenization::AssembleStiffnessMatrix(
+    const unsigned int n_degrees_of_freedom,
+    const MatrixXi& unique_degrees_of_freedom, const MatrixXr& ke_lambda,
+    const MatrixXr& ke_mu) -> SparseMatrixXr {
+    const MatrixXi idx_i_kron =
+        Eigen::kroneckerProduct(unique_degrees_of_freedom,
+                                MatrixXi::Ones(24, 1))
+            .adjoint();
+    const VectorXi idx_i =
+        ((linear_algebra::MatrixToVector(idx_i_kron)).array() - 1).matrix();
+
+    const MatrixXi idx_j_kron =
+        Eigen::kroneckerProduct(unique_degrees_of_freedom,
+                                MatrixXi::Ones(1, 24))
+            .adjoint();
+    const VectorXi idx_j =
+        ((linear_algebra::MatrixToVector(idx_j_kron)).array() - 1).matrix();
+
+    const MatrixXr sK =
+        (linear_algebra::MatrixToVector(ke_lambda) *
+         lambda_.Vector(lambda_.Dimensions().prod()).transpose()) +
+        (linear_algebra::MatrixToVector(ke_mu) *
+         mu_.Vector(mu_.Dimensions().prod()).transpose());
+
+    const VectorXr stiffness_entries = linear_algebra::MatrixToVector(sK);
+
+    const std::vector<Eigen::Triplet<Real>> K_entries =
+        linear_algebra::ToTriplets(idx_i, idx_j, stiffness_entries);
+
+    SparseMatrixXr K(n_degrees_of_freedom, n_degrees_of_freedom);
+    K.setFromTriplets(K_entries.begin(), K_entries.end());
+
+    SparseMatrixXr KT = K.adjoint();
+
+    K += KT;
+
+    return K * 1/2;
+}
+
+auto Homogenization::AssembleLoadMatrix(
+    const MatrixXi& unique_degrees_of_freedom) -> MatrixXr {
+    return MatrixXr();
 }
