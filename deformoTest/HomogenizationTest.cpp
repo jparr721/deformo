@@ -126,3 +126,29 @@ TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
   ASSERT_TRUE(std::fabs(K(0, 0) - 44.4445) < 0.0001);
   ASSERT_TRUE(K(0, 1) < 0.0001);
 }
+
+TEST(TestHomogenization, TestAssembleLoadMatrix) {
+  rve->material_1 = Material(1, "one", 10, 10);
+  rve->material_2 = Material(2, "two", 0, 0);
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  const auto homogenization = std::make_shared<Homogenization>(rve);
+  ASSERT_TRUE(homogenization.get() != nullptr);
+  const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
+
+  constexpr unsigned int n_elements = 1000;
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(n_elements);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(n_elements);
+  const MatrixX<int> unique_dof =
+      homogenization->ComputeUniqueDegreesOfFreedom(edof, unique_nodes);
+  const MatrixXr F = homogenization->AssembleLoadMatrix(
+      1000, 3000, unique_dof, hexahedron.at(2), hexahedron.at(3));
+
+  for (int row = 0; row < F.rows(); ++row) {
+    for (int col = 0; col < F.cols(); ++col) {
+      // Whole thing ends up being basically 0
+      ASSERT_TRUE(F(row, col) < 0.00001);
+    }
+  }
+}

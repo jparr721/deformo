@@ -102,3 +102,22 @@ TEST(TestNumerics, TestIntoVector) {
   const VectorX<int> v = t.Vector(4);
   ASSERT_TRUE(v.rows() == 4);
 }
+
+TEST(TestNumerics, TestVStack) {
+  MatrixX<int> one(2, 2);
+  one.setConstant(1);
+
+  MatrixX<int> two(2, 2);
+  two.setConstant(2);
+
+  MatrixX<int> three(2, 2);
+  three.setConstant(3);
+
+  MatrixX<int> comp(6, 2);
+  comp << 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3;
+
+  const MatrixX<int> stacked =
+      linear_algebra::VStack(std::vector{one, two, three});
+
+  ASSERT_TRUE(stacked.isApprox(comp));
+}

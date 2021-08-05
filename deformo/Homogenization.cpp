@@ -315,7 +315,7 @@ auto Homogenization::AssembleStiffnessMatrix(
 
     const VectorXr stiffness_entries = linear_algebra::MatrixToVector(sK);
 
-    const std::vector<Eigen::Triplet<Real>> K_entries =
+    const auto K_entries =
         linear_algebra::ToTriplets(idx_i, idx_j, stiffness_entries);
 
     SparseMatrixXr K(n_degrees_of_freedom, n_degrees_of_freedom);
@@ -325,10 +325,41 @@ auto Homogenization::AssembleStiffnessMatrix(
 
     K += KT;
 
-    return K * 1/2;
+    return K * 1 / 2;
 }
 
 auto Homogenization::AssembleLoadMatrix(
-    const MatrixXi& unique_degrees_of_freedom) -> MatrixXr {
-    return MatrixXr();
+    unsigned int n_elements, unsigned int n_degrees_of_freedom,
+    const MatrixXi& unique_degrees_of_freedom, const MatrixXr& fe_lambda,
+    const MatrixXr& fe_mu) -> SparseMatrixXr {
+    const MatrixXi idx_i_exp =
+        unique_degrees_of_freedom.transpose().replicate(6, 1);
+    const VectorXi idx_i =
+        (linear_algebra::MatrixToVector(idx_i_exp).array() - 1).matrix();
+
+    const MatrixXi idx_j_exp = linear_algebra::VStack(std::vector<MatrixXi>{
+        MatrixXi::Ones(24, n_elements),
+        2 * MatrixXi::Ones(24, n_elements),
+        3 * MatrixXi::Ones(24, n_elements),
+        4 * MatrixXi::Ones(24, n_elements),
+        5 * MatrixXi::Ones(24, n_elements),
+        6 * MatrixXi::Ones(24, n_elements),
+    });
+    const VectorXi idx_j =
+        (linear_algebra::MatrixToVector(idx_j_exp).array() - 1).matrix();
+
+    const MatrixXr sF =
+        (linear_algebra::MatrixToVector(fe_lambda) *
+         lambda_.Vector(lambda_.Dimensions().prod()).transpose()) +
+        (linear_algebra::MatrixToVector(fe_mu) *
+         mu_.Vector(mu_.Dimensions().prod()).transpose());
+    const VectorXr load_entries = linear_algebra::MatrixToVector(sF);
+
+    const auto F_entries =
+        linear_algebra::ToTriplets(idx_i, idx_j, load_entries);
+
+    SparseMatrixXr F(n_degrees_of_freedom, 6);
+    F.setFromTriplets(F_entries.begin(), F_entries.end());
+
+    return F;
 }

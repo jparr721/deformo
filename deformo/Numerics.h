@@ -385,4 +385,21 @@ inline auto ToTriplets(const VectorX<int>& i, const VectorX<int>& j,
 
     return triplets;
 }
+
+template <typename T>
+inline auto VStack(const std::vector<MatrixX<T>>& matrices) -> MatrixX<T> {
+    const unsigned int cols = matrices.at(0).cols();
+    const unsigned int total_rows = matrices.size() * matrices.at(0).rows();
+
+    MatrixX<T> stacked(total_rows, cols);
+    unsigned int current_row = 0;
+    for (auto i = 0u; i < matrices.size(); ++i) {
+        const MatrixX<T> mat = matrices.at(i);
+        stacked.middleRows(current_row, mat.rows()) = mat;
+
+        current_row += mat.rows();
+    }
+
+    return stacked;
+}
 } // namespace linear_algebra
