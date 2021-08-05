@@ -6,15 +6,19 @@
 #include <array>
 
 class Homogenization {
-    using MatrixXi = MatrixX<unsigned int>;
+    using MatrixXi = MatrixX<int>;
+    using VectorXi = VectorX<int>;
 
   public:
     explicit Homogenization(std::shared_ptr<Rve> rve);
 
     auto ComputeHexahedron(Real a, Real b, Real c) -> std::array<MatrixXr, 4>;
 
-    auto ComputeDegreesOfFreedom(unsigned int n_elements) -> MatrixX<int>;
+    auto ComputeElementDegreesOfFreedom(unsigned int n_elements) -> MatrixXi;
     auto ComputeUniqueNodes(unsigned int n_elements) -> Tensor3i;
+    auto
+    ComputeUniqueDegreesOfFreedom(const MatrixXi& element_degrees_of_freedom,
+                                  const Tensor3i& unique_nodes) -> MatrixXi;
 
     // Stiffness Calculations
     auto AssembleStiffnessMatrix(const MatrixXi& element_degrees_of_freedom,
@@ -25,9 +29,6 @@ class Homogenization {
                             const MatrixXr& stiffness_lambda,
                             const MatrixXr& stiffness_mu,
                             unsigned int n_degrees_of_freedom) -> MatrixXr;
-    auto
-    ComputeUniqueDegreesOfFreedom(const MatrixXi& element_degrees_of_freedom,
-                                  const MatrixXi& unique_nodes) -> MatrixXi;
     auto ComputeDisplacement(const MatrixXr& stiffness, const MatrixXr& load,
                              const MatrixXi& element_degrees_of_freedom,
                              unsigned int n_degrees_of_freedom) -> MatrixXr;

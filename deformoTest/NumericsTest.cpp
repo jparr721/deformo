@@ -94,3 +94,11 @@ TEST(TestNumerics, TestTensor3AppendLayer) {
   MatrixX<int> layer_1 = t2.At(1);
   ASSERT_TRUE(layer_1.isApprox(l1_comp));
 }
+
+TEST(TestNumerics, TestIntoVector) {
+  Tensor3i t(2, 2, 1);
+  t.SetConstant(2);
+
+  const VectorX<int> v = t.Vector(4);
+  ASSERT_TRUE(v.rows() == 4);
+}

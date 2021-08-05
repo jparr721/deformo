@@ -117,7 +117,7 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
                 // Compute the jacobian matrix
                 const MatrixXr J = qq * dims;
-                const MatrixXr qxyz = J.fullPivLu().solve(qq);
+                const MatrixXr qxyz = J.ldlt().solve(qq);
 
                 Tensor3r B_e = Tensor3r(6, 3, 8);
                 B_e.SetConstant(0);
@@ -156,8 +156,8 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
     return std::array{ke_lambda, ke_mu, fe_lambda, fe_mu};
 }
 
-auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
-    -> MatrixX<int> {
+auto Homogenization::ComputeElementDegreesOfFreedom(unsigned int n_elements)
+    -> MatrixXi {
     assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__,
                      __LINE__, "Voxel is improperly shaped");
     const unsigned int n_el_x = voxel_.Dimension(0);
@@ -170,8 +170,7 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     // Set up to apply the periodic boundary conditions for periodic volumes.
     // Here, we set up the node numbers and indexing degrees of freedom for
     // 3-D Homogenization.
-    VectorX<int> _nn =
-        VectorX<int>::LinSpaced(number_of_nodes, 1, number_of_nodes);
+    VectorXi _nn = VectorXi::LinSpaced(number_of_nodes, 1, number_of_nodes);
 
     assertion.Assert(_nn.size() == number_of_nodes, __FUNCTION__, __FILE__,
                      __LINE__, "Node numbers improperly formatted!",
@@ -199,7 +198,7 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     one.SetConstant(1);
     _dof.Instance() += one.Instance();
 
-    const VectorX<int> degrees_of_freedom =
+    const VectorXi degrees_of_freedom =
         _dof.Matrix(_dof.Dimensions().prod(), 1);
 
     Vector6<int> _mid;
@@ -212,32 +211,30 @@ auto Homogenization::ComputeDegreesOfFreedom(unsigned int n_elements)
     const Vector12<int> _add_xy =
         (_add_x.array() + (3 * (1 + n_el_y) * (1 + n_el_x))).matrix();
 
-    MatrixX<int> _add_combined(1, 24);
+    MatrixXi _add_combined(1, 24);
     _add_combined << _add_x.transpose(), _add_xy.transpose();
 
-    const MatrixX<int> _edof_lhs = degrees_of_freedom.replicate(1, 24);
-    const MatrixX<int> _edof_rhs = _add_combined.replicate(n_elements, 1);
+    const MatrixXi _edof_lhs = degrees_of_freedom.replicate(1, 24);
+    const MatrixXi _edof_rhs = _add_combined.replicate(n_elements, 1);
 
     return _edof_lhs + _edof_rhs;
 }
 
-auto Homogenization::ComputeUniqueNodes(unsigned int n_elements)
-    -> Tensor3i {
+auto Homogenization::ComputeUniqueNodes(unsigned int n_elements) -> Tensor3i {
     assertion.Assert(voxel_.Dimensions().size() == 3, __FUNCTION__, __FILE__,
                      __LINE__, "Voxel is improperly shaped");
     const unsigned int n_el_x = voxel_.Dimension(0);
     const unsigned int n_el_y = voxel_.Dimension(1);
     const unsigned int n_el_z = voxel_.Dimension(2);
 
-    const VectorX<int> _uniq_el =
-        VectorX<int>::LinSpaced(n_elements, 1, n_elements);
+    const VectorXi _uniq_el = VectorXi::LinSpaced(n_elements, 1, n_elements);
 
     Tensor3i _uniq_t_1 = Tensor3i::Expand(_uniq_el, n_el_x, n_el_y, n_el_z);
 
     Tensor3i _index_tensor((_uniq_t_1.Dimensions().array() + 1).matrix());
 
     // Extend with a mirror of the back border
-    std::vector<VectorX<int>> back_borders;
+    std::vector<VectorXi> back_borders;
     constexpr int row = 0;
     for (auto layer_idx = 0u; layer_idx < n_el_z; ++layer_idx) {
         back_borders.emplace_back(_uniq_t_1.At(layer_idx, row));
@@ -248,7 +245,7 @@ auto Homogenization::ComputeUniqueNodes(unsigned int n_elements)
                          Tensor3i::OpOrientation::kRow);
 
     // Extend with a mirror of the left border
-    std::vector<VectorX<int>> left_borders;
+    std::vector<VectorXi> left_borders;
     constexpr int col = 0;
     for (auto layer_idx = 0u; layer_idx < n_el_z; ++layer_idx) {
         left_borders.emplace_back(_uniq_t_2.Col(layer_idx, col));
@@ -258,6 +255,36 @@ auto Homogenization::ComputeUniqueNodes(unsigned int n_elements)
         _uniq_t_2.Append(left_borders, Tensor3i::InsertOpIndex::kEnd,
                          Tensor3i::OpOrientation::kCol);
 
-    const MatrixX<int> first_layer = _uniq_t_3.At(0);
+    // Finally, extend with a mirror of the top border
+    const MatrixXi first_layer = _uniq_t_3.At(0);
     return _uniq_t_3.Append(first_layer, Tensor3i::InsertOpIndex::kEnd);
+}
+
+auto Homogenization::ComputeUniqueDegreesOfFreedom(
+    const MatrixXi& element_degrees_of_freedom, const Tensor3i& unique_nodes)
+    -> MatrixXi {
+    const unsigned int n_nodes =
+        (voxel_.Dimensions().array() + 1).matrix().prod();
+
+    VectorXi _dof = VectorXi::Ones(3 * n_nodes);
+    VectorXi _uniq_vec = unique_nodes.Vector(unique_nodes.Dimensions().prod());
+
+    for (int i = 0; i < _dof.rows(); i += 3) {
+        const int idx = i / 3;
+        _dof(i) = 3 * _uniq_vec(idx) - 2;
+    }
+
+    for (int i = 1; i < _dof.rows(); i += 3) {
+        const int idx = i / 3;
+        _dof(i) = 3 * _uniq_vec(idx) - 1;
+    }
+
+    for (int i = 2; i < _dof.rows(); i += 3) {
+        const int idx = i / 3;
+        _dof(i) = 3 * _uniq_vec(idx);
+    }
+
+    const MatrixXi indices = (element_degrees_of_freedom.array() - 1).matrix();
+
+    return linear_algebra::IndexVectorByMatrix(_dof, indices);
 }

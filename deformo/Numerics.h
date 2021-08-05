@@ -70,12 +70,14 @@ template <typename T> class Tensor3 {
 
     Tensor3(int rows, int cols, int layers) { Resize(rows, cols, layers); }
 
-    auto Matrix(int rows, int cols) -> MatrixX<T> {
-        return Eigen::Map<const MatrixX<T>>(instance_.data(), rows, cols);
+    auto Matrix(int rows, int cols) const -> MatrixX<T> {
+        const T* d = instance_.data();
+        return Eigen::Map<const MatrixX<T>>(d, rows, cols);
     }
 
-    auto Vector(int rows) -> VectorX<T> {
-        return Eigen::Map<const VectorX<T>>(instance_.data(), rows);
+    auto Vector(int rows) const -> VectorX<T> {
+        const T* d = instance_.data();
+        return Eigen::Map<const VectorX<T>>(d, rows);
     }
 
     auto Dimension(const int dim) const -> int {
@@ -339,13 +341,29 @@ template <typename T> constexpr auto Lerp(T a, T b, Real t) noexcept -> T {
 
 auto LinSpace(Real start, Real stop, unsigned int num) -> VectorXr;
 
-template <typename T> inline auto MatrixToVector(MatrixX<T>& in) -> VectorX<T> {
-    auto shape = in.rows() * in.cols();
-    return VectorX<T>(Eigen::Map<VectorX<T>>(in.data(), shape));
+template <typename T> inline auto MatrixToVector(const MatrixX<T>& in) -> VectorX<T> {
+    const T* data = in.data();
+    const auto shape = in.rows() * in.cols();
+    return VectorX<T>(Eigen::Map<const VectorX<T>>(data, shape));
 }
 
 template <typename T>
-inline auto VectorToMatrix(VectorX<T>& in, int rows, int cols) -> MatrixX<T> {
-    return MatrixX<T>(Eigen::Map<MatrixX<T>>(in.data(), rows, cols));
+inline auto VectorToMatrix(const VectorX<T>& in, int rows, int cols) -> MatrixX<T> {
+    const T* data = in.data();
+    return MatrixX<T>(Eigen::Map<const MatrixX<T>>(data, rows, cols));
+}
+
+template <typename T>
+inline auto IndexVectorByMatrix(const VectorX<T>& in,
+                                const MatrixX<T>& indices) -> MatrixX<T> {
+    MatrixX<T> output(indices.rows(), indices.cols());
+
+    for (int row = 0; row < indices.rows(); ++row) {
+        for (int col = 0; col < indices.cols(); ++col) {
+            output(row, col) = in(indices(row, col));
+        }
+    }
+
+    return output;
 }
 } // namespace linear_algebra

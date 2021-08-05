@@ -28,7 +28,8 @@ TEST(TestHomogenization, TestComputeDegreesOfFreedom) {
   const auto homogenization = std::make_shared<Homogenization>(rve);
   ASSERT_TRUE(homogenization.get() != nullptr);
 
-  const MatrixX<int> edof = homogenization->ComputeDegreesOfFreedom(1000);
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(1000);
 
   ASSERT_EQ(edof.rows(), 1000);
   ASSERT_EQ(edof.cols(), 24);
@@ -73,4 +74,31 @@ TEST(TestHomogenizations, TestComputeUniqueNodes) {
 
     ASSERT_TRUE(left_col.isApprox(right_col));
   }
+}
+
+TEST(TestHomogenization, TestComputeUniqueDegreesOfFreedom) {
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  const auto homogenization = std::make_shared<Homogenization>(rve);
+  ASSERT_TRUE(homogenization.get() != nullptr);
+
+  constexpr unsigned int n_elements = 1000;
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(n_elements);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(n_elements);
+  const MatrixX<int> unique_dof =
+      homogenization->ComputeUniqueDegreesOfFreedom(edof, unique_nodes);
+
+  auto row_0_comp = VectorX<int>(24);
+  row_0_comp << 4, 5, 6, 34, 35, 36, 31, 32, 33, 1, 2, 3, 304, 305, 306, 334,
+      335, 336, 331, 332, 333, 301, 302, 303;
+
+  ASSERT_TRUE(row_0_comp.transpose().isApprox(unique_dof.row(0)));
+
+  auto row_n_comp = VectorX<int>(24);
+  row_n_comp << 2971, 2972, 2973, 2701, 2702, 2703, 2728, 2729, 2730, 2998,
+      2999, 3000, 271, 272, 273, 1, 2, 3, 28, 29, 30, 298, 299, 300;
+
+  ASSERT_TRUE(
+      row_n_comp.transpose().isApprox(unique_dof.row(unique_dof.rows() - 1)));
 }
