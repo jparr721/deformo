@@ -1,6 +1,7 @@
 #include "Homogenization.h"
 #include "Utils.h"
 #include <unsupported/Eigen/KroneckerProduct>
+#include <Eigen/Cholesky>
 
 Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
     // TODO(@jparr721) Remove (true) when done testing.
@@ -381,5 +382,29 @@ auto Homogenization::ComputeDisplacement(
 
     utils::SliceByIndices(K_sub, stiffness, x_indices, y_indices);
 
-	return MatrixXr();
+    SparseMatrixXr K_sub_sparse = K_sub.sparseView();
+    Eigen::ConjugateGradient<SparseMatrixXr, Eigen::Lower,
+                             Eigen::IncompleteCholesky<Real>>
+        pcg;
+    pcg.compute(K_sub_sparse);
+
+    std::vector<VectorXr> X_entries;
+    for (int i = 0; i < 6; ++i) {
+		const VectorXr F_sub = load.col(i).segment(3, end - 3);
+		const VectorXr result = pcg.solve(F_sub);
+        VectorXr entry = VectorXr::Zero(n_degrees_of_freedom);
+        entry.segment(3, end - 3) = F_sub;
+
+        X_entries.emplace_back(entry);
+    }
+
+    MatrixXr X = MatrixXr::Zero(n_degrees_of_freedom, 6);
+    X.col(0) = X_entries.at(0);
+    X.col(1) = X_entries.at(1);
+    X.col(2) = X_entries.at(2);
+    X.col(3) = X_entries.at(3);
+    X.col(4) = X_entries.at(4);
+    X.col(5) = X_entries.at(5);
+
+    return X;
 }

@@ -176,4 +176,11 @@ TEST(TestHomogenization, TestComputeDisplacement) {
 
   const MatrixXr X =
       homogenization->ComputeDisplacement(3000, K, F, unique_dof);
+
+  for (int row = 0; row < F.rows(); ++row) {
+    for (int col = 0; col < F.cols(); ++col) {
+      // Whole thing ends up being basically 0
+      ASSERT_TRUE(F(row, col) < 0.00001);
+    }
+  }
 }
