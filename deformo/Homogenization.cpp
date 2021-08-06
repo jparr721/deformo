@@ -1,7 +1,7 @@
 #include "Homogenization.h"
 #include "Utils.h"
-#include <unsupported/Eigen/KroneckerProduct>
 #include <Eigen/Cholesky>
+#include <unsupported/Eigen/KroneckerProduct>
 
 Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
     // TODO(@jparr721) Remove (true) when done testing.
@@ -32,6 +32,8 @@ Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
 
     mu_ = Tensor3r(material_one_mu.Instance() + material_two_mu.Instance());
 }
+
+auto Homogenization::Solve() -> void {}
 
 auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
     -> std::array<MatrixXr, 4> {
@@ -390,8 +392,8 @@ auto Homogenization::ComputeDisplacement(
 
     std::vector<VectorXr> X_entries;
     for (int i = 0; i < 6; ++i) {
-		const VectorXr F_sub = load.col(i).segment(3, end - 3);
-		const VectorXr result = pcg.solve(F_sub);
+        const VectorXr F_sub = load.col(i).segment(3, end - 3);
+        const VectorXr result = pcg.solve(F_sub);
         VectorXr entry = VectorXr::Zero(n_degrees_of_freedom);
         entry.segment(3, end - 3) = F_sub;
 
@@ -407,4 +409,59 @@ auto Homogenization::ComputeDisplacement(
     X.col(5) = X_entries.at(5);
 
     return X;
+}
+
+auto Homogenization::ComputeUnitStrainParameters(
+    const unsigned int n_elements, const std::array<MatrixXr, 4>& hexahedron)
+    -> Tensor3r {
+    // Unit strain displacements
+    Tensor3r X0(n_elements, 24, 6);
+
+    // Element displacements for each of the 6 epison strains
+    MatrixXr X0_epsilon = MatrixXr::Zero(24, 6);
+
+    // ke_lambda, ke_mu, fe_lambda, fe_mu;
+    const MatrixXr ke_lambda = hexahedron.at(0);
+    const MatrixXr ke_mu = hexahedron.at(1);
+    const MatrixXr fe_lambda = hexahedron.at(2);
+    const MatrixXr fe_mu = hexahedron.at(3);
+
+    // Fixes the DOF nodes [1, 2, 3, 5, 6, 12]
+    const MatrixXr ke = ke_mu + ke_lambda;
+    const MatrixXr fe = fe_mu + fe_lambda;
+
+    // Assign DOF indices
+    VectorXi epsilon_dof_indices(18);
+    epsilon_dof_indices << 3, 6, 7, 8, 9, 10, 12, 13, 14, 15, 16, 17, 18, 19,
+        20, 21, 22, 23;
+    const VectorXi epsilon_dof_cols =
+        VectorXi::LinSpaced(fe.cols(), 0, fe.cols());
+
+    // Correct fe to proper DOF
+    MatrixXr fe_sub;
+    utils::SliceByIndices(fe_sub, fe, epsilon_dof_indices, epsilon_dof_cols);
+
+    MatrixXr ke_sub;
+    utils::SliceByIndices(ke_sub, ke, epsilon_dof_indices, epsilon_dof_indices);
+
+    const MatrixXr epsilon_entries = ke_sub.lu().solve(fe_sub);
+
+    int row = 0;
+    for (int i = 0; i < epsilon_dof_indices.rows(); ++i, ++row) {
+        X0_epsilon.row(epsilon_dof_indices(i)) = epsilon_entries.row(row);
+    }
+
+	// epsilon_11 = (1,0,0,0,0,0)
+	// epsilon_22 = (0,1,0,0,0,0)
+	// epsilon_33 = (0,0,1,0,0,0)
+	// epsilon_12 = (0,0,0,1,0,0)
+	// epsilon_23 = (0,0,0,0,1,0)
+	// epsilon_13 = (0,0,0,0,0,1)
+    for (int i = 0; i < 6; ++i) {
+        const MatrixXr layer = Eigen::kroneckerProduct(
+            X0_epsilon.col(i).transpose(), VectorXr::Ones(n_elements));
+        X0.SetLayer(i, layer);
+    }
+
+    return X0;
 }

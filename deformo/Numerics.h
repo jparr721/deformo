@@ -119,6 +119,24 @@ template <typename T> class Tensor3 {
         return m;
     }
 
+    auto SetLayer(const int idx, const MatrixX<T>& layer) -> void {
+        const int rows = Dimension(0);
+        const int cols = Dimension(1);
+
+        numerics_assertion.Assert(layer.rows() == rows, __FUNCTION__, __FILE__,
+                                  __LINE__,
+                                  "Layer rows must match tensor dimensions");
+        numerics_assertion.Assert(layer.cols() == cols, __FUNCTION__, __FILE__,
+                                  __LINE__,
+                                  "Layer cols must match tensor dimensions");
+
+        for (int row = 0; row < rows; ++row) {
+            for (int col = 0; col < cols; ++col) {
+                instance_(row, col, idx) = layer(row, col);
+            } 
+        }
+    }
+
     /// <summary>
     /// Collect a row from the tensor
     /// </summary>
@@ -371,7 +389,7 @@ inline auto IndexVectorByMatrix(const VectorX<T>& in, const MatrixX<T>& indices)
 
 template <typename T>
 inline auto ToTriplets(const VectorX<int>& i, const VectorX<int>& j,
-                      const VectorX<T>& data)
+                       const VectorX<T>& data)
     -> std::vector<Eigen::Triplet<T>> {
     numerics_assertion.Assert(utils::Shape(i) == utils::Shape(j) &&
                                   utils::Shape(i) == utils::Shape(data),

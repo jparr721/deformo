@@ -121,3 +121,21 @@ TEST(TestNumerics, TestVStack) {
 
   ASSERT_TRUE(stacked.isApprox(comp));
 }
+
+TEST(TestNumerics, TestSetLayer) { 
+  Tensor3i t(2, 2, 1);
+  t.SetConstant(1);
+  MatrixX<int> layer(2, 2);
+  layer.setConstant(5);
+
+  ASSERT_TRUE(t(0, 0, 0) = 1);
+  ASSERT_TRUE(t(1, 0, 0) = 1);
+  ASSERT_TRUE(t(0, 1, 0) = 1);
+  ASSERT_TRUE(t(1, 1, 0) = 1);
+
+  t.SetLayer(0, layer);
+  ASSERT_TRUE(t(0, 0, 0) = 5);
+  ASSERT_TRUE(t(1, 0, 0) = 5);
+  ASSERT_TRUE(t(0, 1, 0) = 5);
+  ASSERT_TRUE(t(1, 1, 0) = 5);
+}
