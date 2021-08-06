@@ -152,3 +152,28 @@ TEST(TestHomogenization, TestAssembleLoadMatrix) {
     }
   }
 }
+
+TEST(TestHomogenization, TestComputeDisplacement) {
+  rve->material_1 = Material(1, "one", 10, 10);
+  rve->material_2 = Material(2, "two", 0, 0);
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  const auto homogenization = std::make_shared<Homogenization>(rve);
+  ASSERT_TRUE(homogenization.get() != nullptr);
+  const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
+
+  constexpr unsigned int n_elements = 1000;
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(n_elements);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(n_elements);
+  const MatrixX<int> unique_dof =
+      homogenization->ComputeUniqueDegreesOfFreedom(edof, unique_nodes);
+  const MatrixXr F = homogenization->AssembleLoadMatrix(
+      1000, 3000, unique_dof, hexahedron.at(2), hexahedron.at(3));
+  const MatrixXr K = homogenization->AssembleStiffnessMatrix(
+      3000,
+      unique_dof, hexahedron.at(0), hexahedron.at(1));
+
+  const MatrixXr X =
+      homogenization->ComputeDisplacement(3000, K, F, unique_dof);
+}

@@ -30,9 +30,11 @@ class Homogenization {
                             const MatrixXi& unique_degrees_of_freedom,
                             const MatrixXr& fe_lambda, const MatrixXr& fe_mu)
         -> SparseMatrixXr;
-    auto ComputeDisplacement(const MatrixXr& stiffness, const MatrixXr& load,
-                             const MatrixXi& element_degrees_of_freedom,
-                             unsigned int n_degrees_of_freedom) -> MatrixXr;
+    auto ComputeDisplacement(unsigned int n_degrees_of_freedom,
+                             const MatrixXr& stiffness,
+                             const MatrixXr& load,
+                             const MatrixXi& element_degrees_of_freedom)
+        -> MatrixXr;
     auto ComputeUnitStrainParameters() -> MatrixXr;
 
   private:

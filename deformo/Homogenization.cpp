@@ -363,3 +363,23 @@ auto Homogenization::AssembleLoadMatrix(
 
     return F;
 }
+
+auto Homogenization::ComputeDisplacement(
+    unsigned int n_degrees_of_freedom, const MatrixXr& stiffness,
+    const MatrixXr& load, const MatrixXi& element_degrees_of_freedom)
+    -> MatrixXr {
+    VectorXi active_dofs =
+        linear_algebra::MatrixToVector(element_degrees_of_freedom);
+    utils::RemoveDuplicatesFromVector(active_dofs);
+    active_dofs -= VectorXi::Ones(active_dofs.rows());
+
+    MatrixXr K_sub;
+    const unsigned int end = active_dofs.rows();
+
+    const VectorXi x_indices = VectorXi::LinSpaced(end - 3, 3, end);
+    const VectorXi y_indices = VectorXi::LinSpaced(end - 3, 3, end);
+
+    utils::SliceByIndices(K_sub, stiffness, x_indices, y_indices);
+
+	return MatrixXr();
+}

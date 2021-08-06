@@ -31,6 +31,7 @@ auto OpenFile(const std::string& filename) -> std::ifstream;
 auto ReadFile(const std::string& path) -> std::string;
 auto Split(const std::string& input, const std::string& delimiter)
     -> std::pair<std::string, std::string>;
+
 template <typename Derived>
 void MatrixToList(std::vector<std::vector<typename Derived::Scalar>>& V,
                   const Eigen::PlainObjectBase<Derived>& M) {
@@ -55,6 +56,27 @@ void ListToMatrix(Eigen::PlainObjectBase<Derived>& M,
     }
 }
 
+template <typename T>
+auto VectorToSTLVector(const VectorX<T>& in) -> std::vector<T> {
+    std::vector<T> v;
+    v.reserve(in.rows());
+    for (int row = 0; row < in.rows(); ++row) {
+        v.push_back(in(row));
+    }
+
+    return v;
+}
+
+template <typename T>
+auto STLVectorToVector(const std::vector<T>& in) -> VectorX<T> {
+    VectorX<T> v(in.size());
+    for (int row = 0; row < in.size(); ++row) {
+        v(row) = in.at(row);
+    }
+
+    return v;
+}
+
 template <typename Derived>
 void SliceEigenVector(Eigen::PlainObjectBase<Derived>& out,
                       const Eigen::DenseBase<Derived>& in, const int start,
@@ -70,6 +92,23 @@ void SliceEigenVector(Eigen::PlainObjectBase<Derived>& out,
         out(++out_idx) = in(i);
     }
 }
+
+template <typename T>
+auto SortVector(VectorX<T>& out) -> void {
+    auto v = VectorToSTLVector(out);
+    std::sort(v.begin(), v.end());
+    
+    out = STLVectorToVector(v);
+}
+
+template <typename T>
+auto RemoveDuplicatesFromVector(VectorX<T>& out) -> void {
+    SortVector(out);
+    auto v = VectorToSTLVector(out);
+    v.erase(std::unique(v.begin(), v.end()), v.end());
+    out = STLVectorToVector(v);
+}
+
 /*
  * Calculates the union of two lists, removing duplicates which would originate
  * from the second list
