@@ -133,7 +133,7 @@ template <typename T> class Tensor3 {
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
                 instance_(row, col, idx) = layer(row, col);
-            } 
+            }
         }
     }
 
@@ -388,6 +388,38 @@ inline auto IndexVectorByMatrix(const VectorX<T>& in, const MatrixX<T>& indices)
 }
 
 template <typename T>
+inline auto ReArrange(const MatrixX<T>& in, const VectorX<T>& indices)
+    -> MatrixX<T> {
+    numerics_assertion.Assert(indices.maxCoeff() < in.rows(), __FUNCTION__,
+                              __FILE__, __LINE__, "Index out of bounds");
+
+    MatrixX<T> output(indices.rows(), in.cols());
+    for (int r = 0; r < indices.rows(); ++r) {
+        const T row = indices(r);
+        output.row(r) = in.row(row);
+    }
+
+    return output;
+}
+
+template <typename T>
+inline auto IndexMatrixByMatrix(const MatrixX<T>& in, const MatrixX<T>& indices)
+    -> MatrixX<T> {
+    numerics_assertion.Assert(
+        indices.cols() == in.cols(), __FUNCTION__, __FILE__, __LINE__,
+        "Indices must have same column dimension as input matrix");
+    std::vector<MatrixX<T>> h_stack;
+
+    for (int row = 0; row < indices.rows(); ++row) {
+        const VectorX<T> index_row = indices.row(row);
+        const MatrixX<T> m = linear_algebra::ReArrange(in, index_row);
+        h_stack.emplace_back(m);
+    }
+
+    return linear_algebra::HStack(h_stack);
+}
+
+template <typename T>
 inline auto ToTriplets(const VectorX<int>& i, const VectorX<int>& j,
                        const VectorX<T>& data)
     -> std::vector<Eigen::Triplet<T>> {
@@ -405,7 +437,7 @@ inline auto ToTriplets(const VectorX<int>& i, const VectorX<int>& j,
 }
 
 template <typename T>
-inline auto VStack(const std::vector<MatrixX<T>>& matrices) -> MatrixX<T> {
+inline auto HStack(const std::vector<MatrixX<T>>& matrices) -> MatrixX<T> {
     const unsigned int cols = matrices.at(0).cols();
     const unsigned int total_rows = matrices.size() * matrices.at(0).rows();
 

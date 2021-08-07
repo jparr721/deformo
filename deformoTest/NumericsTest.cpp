@@ -117,7 +117,7 @@ TEST(TestNumerics, TestVStack) {
   comp << 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3;
 
   const MatrixX<int> stacked =
-      linear_algebra::VStack(std::vector{one, two, three});
+      linear_algebra::HStack(std::vector{one, two, three});
 
   ASSERT_TRUE(stacked.isApprox(comp));
 }
@@ -138,4 +138,59 @@ TEST(TestNumerics, TestSetLayer) {
   ASSERT_TRUE(t(1, 0, 0) = 5);
   ASSERT_TRUE(t(0, 1, 0) = 5);
   ASSERT_TRUE(t(1, 1, 0) = 5);
+}
+
+TEST(TestNumerics, TestReArrange) { 
+  MatrixX<int> m(6, 3); 
+  m.row(0) << 1, 2, 3;
+  m.row(1) << 4, 5, 6;
+  m.row(2) << 7, 8, 9;
+  m.row(3) << 10, 11, 12;
+  m.row(4) << 13, 14, 15;
+  m.row(5) << 16, 17, 18;
+
+  VectorX<int> indices(3);
+  indices << 1, 2, 0;
+
+  const MatrixX<int> m2 = linear_algebra::ReArrange(m, indices);
+
+  MatrixX<int> comp(3, 3);
+  comp.row(0) << 4, 5, 6;
+  comp.row(1) << 7, 8, 9;
+  comp.row(2) << 1, 2, 3;
+
+  ASSERT_TRUE(m2.isApprox(comp));
+}
+
+TEST(TestNumerics, TestIndexMatrixByMatrix) {
+  MatrixX<int> m(6, 3); 
+  m.row(0) << 1, 2, 3;
+  m.row(1) << 4, 5, 6;
+  m.row(2) << 7, 8, 9;
+  m.row(3) << 10, 11, 12;
+  m.row(4) << 13, 14, 15;
+  m.row(5) << 16, 17, 18;
+
+  MatrixX<int> indices(3, 3);
+  indices.row(0) << 0, 1, 2;
+  indices.row(1) << 1, 2, 0;
+  indices.row(2) << 4, 5, 2;
+
+  const MatrixX<int> m2 = linear_algebra::IndexMatrixByMatrix(m, indices);
+  std::cout << m2 << std::endl;
+
+  MatrixX<int> comp(9, 3);
+  comp.row(0) << 1, 2, 3;
+  comp.row(1) << 4, 5, 6;
+  comp.row(2) << 7, 8, 9;
+
+  comp.row(3) << 4, 5, 6;
+  comp.row(4) << 7, 8, 9;
+  comp.row(5) << 1, 2, 3;
+
+  comp.row(6) << 13, 14, 15;
+  comp.row(7) << 16, 17, 18;
+  comp.row(8) << 7, 8, 9;
+
+  ASSERT_TRUE(m2.isApprox(comp));
 }

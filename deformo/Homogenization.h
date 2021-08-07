@@ -37,7 +37,7 @@ class Homogenization {
         -> SparseMatrixXr;
     auto ComputeDisplacement(unsigned int n_degrees_of_freedom,
                              const MatrixXr& stiffness, const MatrixXr& load,
-                             const MatrixXi& element_degrees_of_freedom)
+                             const MatrixXi& unique_degrees_of_freedom)
         -> MatrixXr;
     auto ComputeUnitStrainParameters(unsigned int n_elements,
                                      const std::array<MatrixXr, 4>& hexahedron)
@@ -61,4 +61,12 @@ class Homogenization {
     std::shared_ptr<Rve> rve_;
 
     DeformoAssertion assertion;
+
+    // Constitutive Tensor Collection
+    auto AssembleConstitutiveTensor(const MatrixXi& unique_degrees_of_freedom,
+                                    const MatrixXr& ke_lambda,
+                                    const MatrixXr& ke_mu,
+                                    const MatrixXr& displacement,
+                                    const Tensor3r& unit_strain_parameter)
+        -> void;
 };

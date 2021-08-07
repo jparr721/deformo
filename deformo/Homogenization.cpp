@@ -33,7 +33,39 @@ Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
     mu_ = Tensor3r(material_one_mu.Instance() + material_two_mu.Instance());
 }
 
-auto Homogenization::Solve() -> void {}
+auto Homogenization::Solve() -> void {
+    const unsigned int rows = voxel_.Dimension(0);
+    const unsigned int cols = voxel_.Dimension(1);
+    const unsigned int layers = voxel_.Dimension(2);
+    const unsigned int n_elements = voxel_.Dimensions().prod();
+    // DOF is 3 * number of total nodes
+    const unsigned int n_degrees_of_freedom = 3 * n_elements;
+
+    const Real dx = cell_len_x_ / rows;
+    const Real dy = cell_len_y_ / cols;
+    const Real dz = cell_len_z_ / layers;
+
+    const auto hexahedron = ComputeHexahedron(dx / 2, dy / 2, dz / 2);
+    const MatrixXr ke_lambda = hexahedron.at(0);
+    const MatrixXr ke_mu = hexahedron.at(1);
+    const MatrixXr fe_lambda = hexahedron.at(2);
+    const MatrixXr fe_mu = hexahedron.at(3);
+
+    const MatrixXi element_degrees_of_freedom =
+        ComputeElementDegreesOfFreedom(n_elements);
+    const Tensor3i unique_nodes_tensor = ComputeUniqueNodes(n_elements);
+    const MatrixXi unique_degrees_of_freedom = ComputeUniqueDegreesOfFreedom(
+        element_degrees_of_freedom, unique_nodes_tensor);
+
+    const SparseMatrixXr K = AssembleStiffnessMatrix(
+        n_degrees_of_freedom, unique_degrees_of_freedom, ke_lambda, ke_mu);
+    const SparseMatrixXr F =
+        AssembleLoadMatrix(n_elements, n_degrees_of_freedom,
+                           unique_degrees_of_freedom, fe_lambda, fe_mu);
+    const MatrixXr X = ComputeDisplacement(n_degrees_of_freedom, K, F,
+                                           unique_degrees_of_freedom);
+    const Tensor3r X0 = ComputeUnitStrainParameters(n_elements, hexahedron);
+}
 
 auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
     -> std::array<MatrixXr, 4> {
@@ -340,7 +372,7 @@ auto Homogenization::AssembleLoadMatrix(
     const VectorXi idx_i =
         (linear_algebra::MatrixToVector(idx_i_exp).array() - 1).matrix();
 
-    const MatrixXi idx_j_exp = linear_algebra::VStack(std::vector<MatrixXi>{
+    const MatrixXi idx_j_exp = linear_algebra::HStack(std::vector<MatrixXi>{
         MatrixXi::Ones(24, n_elements),
         2 * MatrixXi::Ones(24, n_elements),
         3 * MatrixXi::Ones(24, n_elements),
@@ -369,10 +401,10 @@ auto Homogenization::AssembleLoadMatrix(
 
 auto Homogenization::ComputeDisplacement(
     unsigned int n_degrees_of_freedom, const MatrixXr& stiffness,
-    const MatrixXr& load, const MatrixXi& element_degrees_of_freedom)
+    const MatrixXr& load, const MatrixXi& unique_degrees_of_freedom)
     -> MatrixXr {
     VectorXi active_dofs =
-        linear_algebra::MatrixToVector(element_degrees_of_freedom);
+        linear_algebra::MatrixToVector(unique_degrees_of_freedom);
     utils::RemoveDuplicatesFromVector(active_dofs);
     active_dofs -= VectorXi::Ones(active_dofs.rows());
 
@@ -451,12 +483,12 @@ auto Homogenization::ComputeUnitStrainParameters(
         X0_epsilon.row(epsilon_dof_indices(i)) = epsilon_entries.row(row);
     }
 
-	// epsilon_11 = (1,0,0,0,0,0)
-	// epsilon_22 = (0,1,0,0,0,0)
-	// epsilon_33 = (0,0,1,0,0,0)
-	// epsilon_12 = (0,0,0,1,0,0)
-	// epsilon_23 = (0,0,0,0,1,0)
-	// epsilon_13 = (0,0,0,0,0,1)
+    // epsilon_11 = (1,0,0,0,0,0)
+    // epsilon_22 = (0,1,0,0,0,0)
+    // epsilon_33 = (0,0,1,0,0,0)
+    // epsilon_12 = (0,0,0,1,0,0)
+    // epsilon_23 = (0,0,0,0,1,0)
+    // epsilon_13 = (0,0,0,0,0,1)
     for (int i = 0; i < 6; ++i) {
         const MatrixXr layer = Eigen::kroneckerProduct(
             X0_epsilon.col(i).transpose(), VectorXr::Ones(n_elements));
@@ -464,4 +496,19 @@ auto Homogenization::ComputeUnitStrainParameters(
     }
 
     return X0;
+}
+
+auto Homogenization::AssembleConstitutiveTensor(
+    const MatrixXi& unique_degrees_of_freedom, const MatrixXr& ke_lambda,
+    const MatrixXr& ke_mu, const MatrixXr& displacement,
+    const Tensor3r& unit_strain_parameter) -> void {
+    const unsigned int volume = cell_len_x_ * cell_len_y_ * cell_len_z_;
+
+    for (int i = 0; i < 6; ++i) {
+        for (int j = 0; j < 6; ++j) {
+            const MatrixXi indices =
+                (unique_degrees_of_freedom.array() - 1).matrix();
+            
+        }
+    }
 }
