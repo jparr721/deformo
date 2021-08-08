@@ -1,4 +1,5 @@
-#pragma once
+#ifndef UTILS_H
+#define UTILS_H
 
 #include "Numerics.h"
 #include <algorithm>
@@ -93,16 +94,14 @@ void SliceEigenVector(Eigen::PlainObjectBase<Derived>& out,
     }
 }
 
-template <typename T>
-auto SortVector(VectorX<T>& out) -> void {
+template <typename T> auto SortVector(VectorX<T>& out) -> void {
     auto v = VectorToSTLVector(out);
     std::sort(v.begin(), v.end());
-    
+
     out = STLVectorToVector(v);
 }
 
-template <typename T>
-auto RemoveDuplicatesFromVector(VectorX<T>& out) -> void {
+template <typename T> auto RemoveDuplicatesFromVector(VectorX<T>& out) -> void {
     SortVector(out);
     auto v = VectorToSTLVector(out);
     v.erase(std::unique(v.begin(), v.end()), v.end());
@@ -220,6 +219,16 @@ template <typename T> void GTestDebugPrint(T value, bool sep = true) {
 void FindMaxVertices(std::vector<unsigned int>& indices,
                      const VectorXr& positions);
 
+template <typename Derived>
+auto WriteMatrixToFile(const Eigen::PlainObjectBase<Derived>& value,
+                       const std::string& filename) -> void {
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        file << value;
+    }
+    file.close();
+}
+
 namespace stopwatch {
 
 /*Some performance analysis tools*/
@@ -292,3 +301,5 @@ auto sample(Func&& function) -> std::array<typename Clock::duration, N> {
 }
 } // namespace stopwatch
 } // namespace utils
+
+#endif

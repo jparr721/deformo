@@ -81,11 +81,18 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
     Matrix6r C_lambda;
     C_lambda.setZero();
     C_lambda(0, 0) = 1;
+
     C_lambda(1, 0) = 1;
     C_lambda(2, 0) = 1;
+
     C_lambda(0, 1) = 1;
     C_lambda(0, 2) = 1;
+
+    C_lambda(1, 1) = 1;
     C_lambda(1, 2) = 1;
+
+    C_lambda(2, 1) = 1;
+    C_lambda(2, 2) = 1;
 
     const auto xx = Vector3r(-std::sqrt(3. / 5.), 0, std::sqrt(3. / 5.));
     const auto yy = Vector3r(-std::sqrt(3. / 5.), 0, std::sqrt(3. / 5.));
@@ -175,7 +182,7 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
                 MatrixXr B = MatrixXr::Zero(6, 24);
                 B << B_e.At(0), B_e.At(1), B_e.At(2), B_e.At(3), B_e.At(4),
                     B_e.At(5), B_e.At(6), B_e.At(7);
-                const MatrixXr BT = B.transpose();
+                const MatrixXr BT = B.adjoint();
 
                 const Real weight = J.determinant() * ww(ii) * ww(jj) * ww(kk);
 
@@ -544,12 +551,6 @@ auto Homogenization::AssembleConstitutiveTensor(
                 Tensor3r::Expand(sum_L, lambda_.Dimension(0),
                                  lambda_.Dimension(1), lambda_.Dimension(2))
                     .Instance();
-
-            if (i == 2 && j == 2) {
-                //utils::GTestDebugPrint(prod_L);
-                //utils::GTestDebugPrint(sum_L);
-                //utils::GTestDebugPrint(lambda_contribution);
-            }
 
             Tensor3r mu_contribution =
                 mu_.Instance() * Tensor3r::Expand(sum_M, mu_.Dimension(0),

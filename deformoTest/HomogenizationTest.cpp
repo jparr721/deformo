@@ -12,6 +12,11 @@
 
 auto rve = std::make_shared<Rve>(10, 10, 10, 0.1, 0.1, 0.1);
 
+auto IsApprox(Real lhs, Real rhs, Real epsilon) -> bool {
+    return std::fabs(lhs - rhs) < epsilon;
+}
+
+
 TEST(TestHomogenization, TestHexahedron) {
   ASSERT_TRUE(rve.get() != nullptr);
 
@@ -121,7 +126,7 @@ TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
   const MatrixXr K = homogenization->AssembleStiffnessMatrix(
       3000, unique_dof, hexahedron.at(0), hexahedron.at(1));
 
-  ASSERT_TRUE(std::fabs(K(0, 0) - 44.4445) < 0.0001);
+  ASSERT_TRUE(IsApprox(K(0, 0), 44.4445, 0.0001));
   ASSERT_TRUE(K(0, 1) < 0.0001);
 }
 
@@ -193,7 +198,59 @@ TEST(TestHomogenization, TestComputeUnitStrainParameters) {
   const Tensor3r strain_param =
       homogenization->ComputeUnitStrainParameters(1000, hexahedron);
 
-  // Can't really check this since it's YUGE. Let's hope it worked?
+  const MatrixXr l0 = strain_param.Layer(0);
+  VectorXr row = l0.row(0);
+  Real sum = row.sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(3), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(6), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(15), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(18), 1, 0.0001));
+
+  const MatrixXr l1 = strain_param.Layer(1);
+  row = l1.row(0);
+  sum = row.sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(7), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(10), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(19), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(22), 1, 0.0001));
+
+  const MatrixXr l2 = strain_param.Layer(2);
+  row = l2.row(0);
+  sum = row.sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(14), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(17), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(20), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(23), 1, 0.0001));
+
+  const MatrixXr l3 = strain_param.Layer(3);
+  row = l3.row(0);
+  sum = l3.row(0).sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(6), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(9), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(18), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(21), 1, 0.0001));
+
+  const MatrixXr l4 = strain_param.Layer(4);
+  row = l4.row(0);
+  sum = l4.row(0).sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(13), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(16), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(19), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(22), 1, 0.0001));
+
+  const MatrixXr l5 = strain_param.Layer(5);
+  row = l5.row(0);
+  sum = l5.row(0).sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(12), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(15), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(18), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(21), 1, 0.0001));
 }
 
 TEST(TestHomogenization, TestSolverStep) {
@@ -205,5 +262,15 @@ TEST(TestHomogenization, TestSolverStep) {
   ASSERT_TRUE(homogenization.get() != nullptr);
 
   homogenization->Solve();
-  std::cout << homogenization->Stiffness() << std::endl;
+  const MatrixXr constitutive_tensor = homogenization->Stiffness();
+
+  Matrix6r comp;
+  comp.row(0) << 30, 10, 10, 0, 0, 0;
+  comp.row(1) << 10, 30, 10, 0, 0, 0;
+  comp.row(2) << 10, 10, 30, 0, 0, 0;
+  comp.row(3) << 0, 0, 0, 10, 0, 0;
+  comp.row(4) << 0, 0, 0, 0, 10, 0;
+  comp.row(5) << 0, 0, 0, 0, 0, 10;
+
+  ASSERT_TRUE(constitutive_tensor.isApprox(comp));
 }
