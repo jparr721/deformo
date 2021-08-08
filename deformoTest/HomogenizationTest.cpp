@@ -10,7 +10,7 @@
 #include "../deformo/Rve.cpp"
 #include "../deformo/Rve.h"
 
-auto rve = std::make_shared<Rve>(10, 10, 10, 0.1, 0.1, 0.1);
+auto rve = std::make_shared<Rve>(true, 10, 10, 10, 0.1, 0.1, 0.1);
 
 auto IsApprox(Real lhs, Real rhs, Real epsilon) -> bool {
     return std::fabs(lhs - rhs) < epsilon;

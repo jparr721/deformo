@@ -34,6 +34,9 @@ struct Material {
 
 class Rve {
   public:
+    // Homogenous 1-material structure
+    const bool homogenous;
+
     // RVE Dimenions
     const unsigned int width;
     const unsigned int height;
@@ -56,13 +59,14 @@ class Rve {
     Material material_1;
     Material material_2;
 
-    Rve(const unsigned int width, const unsigned int height,
-        const unsigned int depth, const Real strain, const Real mesh_density,
-        const Real volume_fraction)
-        : width(width), height(height), depth(depth), strain(strain),
-          mesh_density(mesh_density), volume_fraction(volume_fraction) {}
+    Rve(const bool homogenous, const unsigned int width,
+        const unsigned int height, const unsigned int depth, const Real strain,
+        const Real mesh_density, const Real volume_fraction)
+        : homogenous(homogenous), width(width), height(height), depth(depth),
+          strain(strain), mesh_density(mesh_density),
+          volume_fraction(volume_fraction) {}
 
-    auto ToImplicitSurface(bool homogenous = false) -> Tensor3r;
+    auto ToImplicitSurface() -> Tensor3r;
 
     /*
     @brief Set the dimensions for material_2. This might change the volume

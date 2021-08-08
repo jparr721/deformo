@@ -4,8 +4,7 @@
 #include <unsupported/Eigen/KroneckerProduct>
 
 Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
-    // TODO(@jparr721) Remove (true) when done testing.
-    voxel_ = rve_->ToImplicitSurface(true);
+    voxel_ = rve_->ToImplicitSurface();
     cell_len_x_ = rve_->width;
     cell_len_y_ = rve_->height;
     cell_len_z_ = rve_->depth;
