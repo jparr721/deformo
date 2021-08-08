@@ -65,6 +65,8 @@ auto Homogenization::Solve() -> void {
     const MatrixXr X = ComputeDisplacement(n_degrees_of_freedom, K, F,
                                            unique_degrees_of_freedom);
     const Tensor3r X0 = ComputeUnitStrainParameters(n_elements, hexahedron);
+    AssembleConstitutiveTensor(unique_degrees_of_freedom, ke_lambda, ke_mu, X,
+                               X0);
 }
 
 auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
@@ -152,7 +154,7 @@ auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
 
                 // Compute the jacobian matrix
                 const MatrixXr J = qq * dims;
-                const MatrixXr qxyz = J.ldlt().solve(qq);
+                const MatrixXr qxyz = J.fullPivLu().solve(qq);
 
                 Tensor3r B_e = Tensor3r(6, 3, 8);
                 B_e.SetConstant(0);
@@ -476,7 +478,7 @@ auto Homogenization::ComputeUnitStrainParameters(
     MatrixXr ke_sub;
     utils::SliceByIndices(ke_sub, ke, epsilon_dof_indices, epsilon_dof_indices);
 
-    const MatrixXr epsilon_entries = ke_sub.lu().solve(fe_sub);
+    const MatrixXr epsilon_entries = ke_sub.fullPivLu().solve(fe_sub);
 
     int row = 0;
     for (int i = 0; i < epsilon_dof_indices.rows(); ++i, ++row) {
@@ -502,13 +504,65 @@ auto Homogenization::AssembleConstitutiveTensor(
     const MatrixXi& unique_degrees_of_freedom, const MatrixXr& ke_lambda,
     const MatrixXr& ke_mu, const MatrixXr& displacement,
     const Tensor3r& unit_strain_parameter) -> void {
-    const unsigned int volume = cell_len_x_ * cell_len_y_ * cell_len_z_;
+    const unsigned int rows = voxel_.Dimension(0);
+    const unsigned int cols = voxel_.Dimension(1);
+    const unsigned int layers = voxel_.Dimension(2);
 
+    const Real volume = cell_len_x_ * cell_len_y_ * cell_len_z_;
+
+    const MatrixXi indices = (unique_degrees_of_freedom.array() - 1).matrix();
     for (int i = 0; i < 6; ++i) {
         for (int j = 0; j < 6; ++j) {
-            const MatrixXi indices =
-                (unique_degrees_of_freedom.array() - 1).matrix();
-            
+            const MatrixXr sum_L_lhs = (unit_strain_parameter.Layer(i) -
+                                        linear_algebra::IndexMatrixByMatrix(
+                                            displacement, indices, i)) *
+                                       ke_lambda;
+            const MatrixXr sum_L_rhs =
+                unit_strain_parameter.Layer(j) -
+                linear_algebra::IndexMatrixByMatrix(displacement, indices, i);
+
+            const MatrixXr prod_L =
+                (sum_L_lhs.array() * sum_L_rhs.array()).matrix();
+
+            const VectorXr sum_L = prod_L.rowwise().sum();
+
+            const MatrixXr sum_M_lhs = (unit_strain_parameter.Layer(i) -
+                                        linear_algebra::IndexMatrixByMatrix(
+                                            displacement, indices, i)) *
+                                       ke_mu;
+            const MatrixXr sum_M_rhs =
+                unit_strain_parameter.Layer(j) -
+                linear_algebra::IndexMatrixByMatrix(displacement, indices, i);
+
+            const MatrixXr prod_M =
+                (sum_M_lhs.array() * sum_M_rhs.array()).matrix();
+
+            const VectorXr sum_M = prod_M.rowwise().sum();
+
+            Tensor3r lambda_contribution =
+                lambda_.Instance() *
+                Tensor3r::Expand(sum_L, lambda_.Dimension(0),
+                                 lambda_.Dimension(1), lambda_.Dimension(2))
+                    .Instance();
+
+            if (i == 2 && j == 2) {
+                //utils::GTestDebugPrint(prod_L);
+                //utils::GTestDebugPrint(sum_L);
+                //utils::GTestDebugPrint(lambda_contribution);
+            }
+
+            Tensor3r mu_contribution =
+                mu_.Instance() * Tensor3r::Expand(sum_M, mu_.Dimension(0),
+                                                  mu_.Dimension(1),
+                                                  mu_.Dimension(2))
+                                     .Instance();
+
+            const Real contribution_sum =
+                Tensor3r(lambda_contribution.Instance() +
+                         mu_contribution.Instance())
+                    .Sum();
+
+            constitutive_tensor_(i, j) = static_cast<Real>(1) / volume * contribution_sum;
         }
     }
 }

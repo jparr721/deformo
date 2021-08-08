@@ -195,3 +195,15 @@ TEST(TestHomogenization, TestComputeUnitStrainParameters) {
 
   // Can't really check this since it's YUGE. Let's hope it worked?
 }
+
+TEST(TestHomogenization, TestSolverStep) {
+  rve->material_1 = Material(1, "one", 10, 10);
+  rve->material_2 = Material(2, "two", 0, 0);
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  const auto homogenization = std::make_shared<Homogenization>(rve);
+  ASSERT_TRUE(homogenization.get() != nullptr);
+
+  homogenization->Solve();
+  std::cout << homogenization->Stiffness() << std::endl;
+}

@@ -48,6 +48,8 @@ template <typename T> using Matrix2 = Eigen::Matrix<T, 2, 2>;
 template <typename T> using Matrix3 = Eigen::Matrix<T, 3, 3>;
 template <typename T> using Matrix4 = Eigen::Matrix<T, 4, 4>;
 
+template <typename T> using TensorReduction0 = Eigen::Tensor<T, 0>;
+
 template <typename T> class Tensor3 {
   public:
     enum class OpOrientation {
@@ -94,6 +96,11 @@ template <typename T> class Tensor3 {
 
     auto Resize(int rows, int cols, int layers) -> void {
         instance_.resize(rows, cols, layers);
+    }
+
+    auto Sum() -> T {
+        const TensorReduction0<T> sum = instance_.sum();
+        return sum(0);
     }
 
     friend std::ostream& operator<<(std::ostream& out, const Tensor3& t) {
@@ -388,7 +395,7 @@ inline auto IndexVectorByMatrix(const VectorX<T>& in, const MatrixX<T>& indices)
 }
 
 template <typename T>
-inline auto ReArrange(const MatrixX<T>& in, const VectorX<T>& indices)
+inline auto ReArrange(const MatrixX<T>& in, const VectorX<int>& indices)
     -> MatrixX<T> {
     numerics_assertion.Assert(indices.maxCoeff() < in.rows(), __FUNCTION__,
                               __FILE__, __LINE__, "Index out of bounds");
@@ -403,19 +410,37 @@ inline auto ReArrange(const MatrixX<T>& in, const VectorX<T>& indices)
 }
 
 template <typename T>
-inline auto IndexMatrixByMatrix(const MatrixX<T>& in, const MatrixX<T>& indices)
-    -> MatrixX<T> {
-    numerics_assertion.Assert(
-        indices.cols() == in.cols(), __FUNCTION__, __FILE__, __LINE__,
-        "Indices must have same column dimension as input matrix");
+inline auto IndexMatrixByMatrix(const MatrixX<T>& in,
+                                const MatrixX<int>& indices) -> MatrixX<T> {
     std::vector<MatrixX<T>> h_stack;
 
     for (int row = 0; row < indices.rows(); ++row) {
-        const VectorX<T> index_row = indices.row(row);
+        const VectorX<int> index_row = indices.row(row);
         const MatrixX<T> m = linear_algebra::ReArrange(in, index_row);
         h_stack.emplace_back(m);
     }
 
+    return linear_algebra::HStack(h_stack);
+}
+
+template <typename T>
+inline auto IndexMatrixByMatrix(const MatrixX<T>& in,
+                                const MatrixX<int>& indices, const int col)
+    -> MatrixX<T> {
+    const MatrixX<T> stack = linear_algebra::IndexMatrixByMatrix(in, indices);
+
+    // Get the column we're slicing from
+    const VectorX<T> column = stack.col(col);
+
+    // Then, extract by segment into an STL container
+    std::vector<MatrixX<T>> h_stack;
+    const unsigned int stride = indices.cols();
+    for (int i = 0; i < column.rows(); i += stride) {
+        const MatrixX<T> v = column.segment(i, stride).transpose();
+        h_stack.emplace_back(v);
+    }
+
+    // Return everything stacked out as a matrix
     return linear_algebra::HStack(h_stack);
 }
 
@@ -451,5 +476,25 @@ inline auto HStack(const std::vector<MatrixX<T>>& matrices) -> MatrixX<T> {
     }
 
     return stacked;
+}
+
+/// <summary>
+/// Stacks an STL Vector of Eigen Vectors into a matrix.
+/// </summary>
+/// <typeparam name="T">Numeric Type</typeparam>
+/// <param name="vetors">The list of vectors</param>
+/// <returns>The vectors stacked horizontally</returns>
+template <typename T>
+inline auto HStack(const std::vector<VectorX<T>>& vectors) -> MatrixX<T> {
+    const unsigned int rows = vectors.size();
+    const unsigned int cols = vectors.at(0).cols();
+
+    std::vector<MatrixX<T>> stacked;
+    for (const VectorX<T>& vector : vectors) {
+        const MatrixX<T> v = vector.transpose();
+        stacked.emplace_back(v);
+    }
+
+    return HStack(stacked);
 }
 } // namespace linear_algebra

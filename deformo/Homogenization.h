@@ -12,8 +12,9 @@ class Homogenization {
   public:
     explicit Homogenization(std::shared_ptr<Rve> rve);
 
-    auto E() -> Real { return homogenized_E_; }
-    auto v() -> Real { return homogenized_v_; }
+    auto E() const noexcept -> Real { return homogenized_E_; }
+    auto v() const noexcept -> Real { return homogenized_v_; }
+    auto Stiffness() const -> Matrix6r { return constitutive_tensor_; }
 
     auto Solve() -> void;
 
