@@ -62,6 +62,39 @@ class WindowController : public QObject {
     void PlaybackPlayButtonPressed();
     void PlaybackSliderChanged(int value);
 
+    // ====== Designer Controls Window
+    void TabBarClicked(int index);
+
+    // Designer -- Dimensions
+    void SetForceSquareDimensions(bool checked);
+
+    // Designer -- Size of shape
+    void SetImplicitSurfaceHeight(double value); // Rows
+    void SetImplicitSurfaceWidth(double value);  // Cols
+    void SetImplicitSurfaceDepth(double value);  // Layers
+
+    // Designer -- 1-Material
+    void SetUniformMaterial(bool checked);
+
+    // Designer -- Isotropic Material
+    void SetIsotropicMaterial(bool checked);
+
+    // Designer -- Size of inclusion
+    void SetInclusionRatio(double value);
+
+    // Designer -- Material 1 Specifications
+    void SetMaterialOneName(const QString& value);
+    void SetMaterialOnePoissionsRatio(double value);
+    void SetMaterialOneYoungsModulus(double value);
+
+    // Designer -- Material 2 Specifications
+    void SetMaterialTwoName(const QString& value);
+    void SetMaterialTwoPoissionsRatio(double value);
+    void SetMaterialTwoYoungsModulus(double value);
+
+    // Designer -- Compute Button
+    void ComputeDesignedShapeButtonPressed();
+
   signals:
     // Simulation Settings Window
     // Simulation Settings -- FEA Parameters
@@ -83,6 +116,11 @@ class WindowController : public QObject {
     void OnPlaybackSliderChange(int value);
 
   private:
+    enum TabWindow {
+        kDesigner = 0x00,
+        kSimulation = 0x01,
+    };
+
     bool simulating_ = false;
     // Simulation Runtime Parameters
     Real dt_ = 0.01f;
@@ -118,6 +156,7 @@ class WindowController : public QObject {
     Ui::deformoClass ui_;
 
     void ConnectUiElementsToSimulation();
+    void ConnectUiElementsToDesigner();
     void DisableStaticUiElements();
     void EnableStaticUiElements();
     void ResetPlaybackControls();

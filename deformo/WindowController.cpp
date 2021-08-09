@@ -13,6 +13,7 @@ WindowController::WindowController(Ui::deformoClass& ui) : ui_(ui) {
                                      nodal_mass_, mesh, boundary_conditions);
 
     ConnectUiElementsToSimulation();
+    ConnectUiElementsToDesigner();
 }
 
 void WindowController::SetRenderer(const std::shared_ptr<Renderer>& renderer) {
@@ -130,10 +131,69 @@ void WindowController::PlaybackSliderChanged(int value) {
     mesh->Update(recorded_displacements_.at(value));
 }
 
+void WindowController::TabBarClicked(int index) {
+    if (index == TabWindow::kDesigner) {
+        if (!recorded_displacements_.empty()) {
+            PlaybackPauseButtonPressed();
+            PlaybackSliderChanged(0);
+        }
+    }
+}
+
+void WindowController::SetForceSquareDimensions(bool checked) {
+    if (checked) {
+        ui_.designer_width_spinbox->setDisabled(true);
+        ui_.designer_depth_spinbox->setDisabled(true);
+        ui_.designer_height_spinbox_label->setText("Dimensions (X, Y, Z):");
+    } else {
+        ui_.designer_width_spinbox->setDisabled(false);
+        ui_.designer_depth_spinbox->setDisabled(false);
+        ui_.designer_height_spinbox_label->setText("Height:");
+    }
+}
+
+void WindowController::SetImplicitSurfaceHeight(double value) {}
+
+void WindowController::SetImplicitSurfaceWidth(double value) {}
+
+void WindowController::SetImplicitSurfaceDepth(double value) {}
+
+void WindowController::SetUniformMaterial(bool checked) {
+    if (checked) {
+        ui_.designer_material_2_name_line_edit->setDisabled(true);
+        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(true);
+        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(true);
+        ui_.designer_isotropic_material_checkbox->setDisabled(true);
+    } else {
+        ui_.designer_material_2_name_line_edit->setDisabled(false);
+        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(false);
+        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(false);
+        ui_.designer_isotropic_material_checkbox->setDisabled(false);
+    }
+}
+
+void WindowController::SetIsotropicMaterial(bool checked) {
+}
+
+void WindowController::SetInclusionRatio(double value) {}
+
+void WindowController::SetMaterialOneName(const QString& value) {}
+
+void WindowController::SetMaterialOnePoissionsRatio(double value) {}
+
+void WindowController::SetMaterialOneYoungsModulus(double value) {}
+
+void WindowController::SetMaterialTwoName(const QString& value) {}
+
+void WindowController::SetMaterialTwoPoissionsRatio(double value) {}
+
+void WindowController::SetMaterialTwoYoungsModulus(double value) {}
+
+void WindowController::ComputeDesignedShapeButtonPressed() {}
+
 BoundaryConditions WindowController::GenerateDefaultBoundaryConditions(
     const std::shared_ptr<Mesh>& mesh) {
     const Eigen::Vector3f force(0.f, -100.f, 0.f);
-
     std::vector<unsigned int> indices;
     utils::FindMaxVertices(indices, mesh->positions);
     return AssignBoundaryConditionToFixedNodes(indices, force);
@@ -241,6 +301,11 @@ void WindowController::ConnectUiElementsToSimulation() {
 
     SetRayleighLambda(simulation_->RayleighLambda());
     SetRayleighMu(simulation_->RayleighMu());
+}
+
+void WindowController::ConnectUiElementsToDesigner() {
+    connect(ui_.tabWidget, &QTabWidget::tabBarClicked, this,
+            &WindowController::TabBarClicked);
 }
 
 void WindowController::DisableStaticUiElements() {}
