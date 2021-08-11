@@ -5,6 +5,7 @@
 #include "../deformo/Material.h"
 #include "../deformo/Material.cpp"
 #include "../deformo/ImplicitSurfaceGenerator.h"
+#include "../deformo/ImplicitSurfaceGenerator.cpp"
 #include "../deformo/Rve.h"
 
 TEST(TestImplicitSurfaceGenerator, TestConstructor) {
@@ -20,7 +21,7 @@ TEST(TestImplicitSurfaceGenerator, TestConstructor) {
   GTEST_ASSERT_NE(generator.get(), nullptr);
 }
 
- TEST(TestImplicitSurfaceGenerator, TestGenerator) {
+ TEST(TestImplicitSurfaceGenerator, TestIsotropicGenerator) {
   const Material m1 = MaterialFromEandv(1, "m1", 10, 10);
   const Material m2 = MaterialFromEandv(0, "m2", 10, 10);
   const ImplicitSurfaceGenerator<Real>::Inclusion inclusion{15, 4, 5, 5, 5};
@@ -86,4 +87,22 @@ TEST(TestImplicitSurfaceGenerator, TestConstructor) {
   comp.row(48) << 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1;
   
   ASSERT_TRUE(layer.isApprox(comp));
+ } 
+
+ TEST(TestImplicitSurfaceGenerator, TestAnisotropicGenerator) {
+  const Material m1 = MaterialFromEandv(1, "m1", 10, 10);
+  const Material m2 = MaterialFromEandv(0, "m2", 10, 10);
+  const ImplicitSurfaceGenerator<Real>::Inclusion inclusion{15, 4, 5, 5, 5};
+  const auto generator = std::make_unique<ImplicitSurfaceGenerator<Real>>(
+      50, 50, 50,
+      ImplicitSurfaceGenerator<
+          Real>::ImplicitSurfaceCharacteristics::kAnisotropic,
+      ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure::kComposite,
+      inclusion, m1, m2);
+
+  const Tensor3r generated = generator->Generate();
+  const bool has_secondary_material = generated.Where(0).Sum() > 0;
+
+  // We can trivially check if the material has two components, counting squares sounds annoying...
+  ASSERT_TRUE(has_secondary_material);
  }

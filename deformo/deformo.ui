@@ -412,7 +412,7 @@ QMenu::separator {
                      <enum>QLayout::SetMinimumSize</enum>
                     </property>
                     <property name="horizontalSpacing">
-                     <number>0</number>
+                     <number>6</number>
                     </property>
                     <property name="verticalSpacing">
                      <number>10</number>
@@ -481,8 +481,24 @@ QMenu::separator {
                      </layout>
                     </item>
                     <item row="0" column="0" colspan="3">
-                     <layout class="QVBoxLayout" name="verticalLayout_14">
-                      <item>
+                     <layout class="QGridLayout" name="gridLayout_7">
+                      <property name="horizontalSpacing">
+                       <number>10</number>
+                      </property>
+                      <item row="0" column="2">
+                       <widget class="QCheckBox" name="designer_isotropic_material_checkbox">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>9</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Isotropic</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="0">
                        <widget class="QCheckBox" name="designer_force_square_dimensions_checkbox">
                         <property name="font">
                          <font>
@@ -495,6 +511,19 @@ QMenu::separator {
                         </property>
                        </widget>
                       </item>
+                      <item row="0" column="1">
+                       <widget class="QCheckBox" name="designer_uniform_material_checkbox">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>9</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Uniform Material</string>
+                        </property>
+                       </widget>
+                      </item>
                      </layout>
                     </item>
                    </layout>
@@ -502,7 +531,7 @@ QMenu::separator {
                  </layout>
                 </item>
                 <item>
-                 <layout class="QVBoxLayout" name="verticalLayout_6" stretch="5,10,10">
+                 <layout class="QVBoxLayout" name="verticalLayout_6" stretch="5,10">
                   <property name="spacing">
                    <number>15</number>
                   </property>
@@ -529,36 +558,6 @@ QMenu::separator {
                      <set>Qt::AlignCenter</set>
                     </property>
                    </widget>
-                  </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout">
-                    <item>
-                     <widget class="QCheckBox" name="designer_uniform_material_checkbox">
-                      <property name="font">
-                       <font>
-                        <family>Segoe UI</family>
-                        <pointsize>9</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>Uniform Material</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QCheckBox" name="designer_isotropic_material_checkbox">
-                      <property name="font">
-                       <font>
-                        <family>Segoe UI</family>
-                        <pointsize>9</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>Isotropic</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
                   </item>
                   <item>
                    <layout class="QVBoxLayout" name="verticalLayout_15">
@@ -909,8 +908,8 @@ QMenu::separator {
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>461</width>
-                 <height>938</height>
+                 <width>98</width>
+                 <height>28</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1073,8 +1072,8 @@ QMenu::separator {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>461</width>
-               <height>816</height>
+               <width>267</width>
+               <height>486</height>
               </rect>
              </property>
              <attribute name="label">

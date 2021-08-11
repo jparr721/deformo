@@ -5,10 +5,11 @@
 #include "Numerics.h"
 #include "Rve.h"
 #include "Utils.h"
+#include <random>
 #include <vector>
 
-const auto UnsignedVectorComparison = [](const Vector3<unsigned>& lhs,
-                                         const Vector3<unsigned>& rhs) -> bool {
+inline auto UnsignedVectorComparison(const Vector3<unsigned>& lhs,
+                                     const Vector3<unsigned>& rhs) -> bool {
     if (lhs.x() < rhs.x())
         return true;
     if (rhs.x() < lhs.x())
@@ -20,11 +21,36 @@ const auto UnsignedVectorComparison = [](const Vector3<unsigned>& lhs,
     return lhs.z() < rhs.z();
 };
 
-const auto UnsignedVectorEqual = [](const Vector3<unsigned>& lhs,
-                                    const Vector3<unsigned> rhs) -> bool {
+inline auto UnsignedVectorEqual(const Vector3<unsigned>& lhs,
+                                const Vector3<unsigned> rhs) -> bool {
     return lhs.x() == rhs.x() && lhs.y() == rhs.y() && lhs.z() == rhs.z();
 };
 
+class _Cube {
+  public:
+    /// <summary>
+    /// _Cube is an anonymous cube structure for cuboid-based inclusions.
+    /// </summary>
+    /// <param name="rows">The rows of the cube</param>
+    /// <param name="cols">The cols of the cube</param>
+    /// <param name="layers">The layers of the cube</param>
+    /// <param name="starting_index">The xyz coordinate of the
+    /// bottom-left position to build the cube from</param>
+    _Cube(int rows, int cols, int layers,
+          const Vector3<unsigned int>& starting_index);
+
+    auto Indices() const -> std::vector<Vector3<unsigned int>> {
+        return indices_;
+    }
+
+    bool operator==(const _Cube& rhs) const;
+
+  private:
+    int rows_ = 0;
+    int cols_ = 0;
+    int layers_ = 0;
+    std::vector<Vector3<unsigned int>> indices_;
+};
 
 template <typename T> class ImplicitSurfaceGenerator {
   public:
@@ -36,9 +62,14 @@ template <typename T> class ImplicitSurfaceGenerator {
         unsigned int cols;
     };
 
+    enum class GeneratorInfo {
+        kSuccess = 0x00,
+        kFailure = 0x01,
+    };
+
     enum class ImplicitSurfaceCharacteristics {
         kIsotropic = 0x00,
-        kAnIsotropic = 0x01,
+        kAnisotropic = 0x01,
     };
 
     enum class ImplicitSurfaceMicrostructure {
@@ -52,13 +83,14 @@ template <typename T> class ImplicitSurfaceGenerator {
                              const unsigned int width, const unsigned int depth,
                              ImplicitSurfaceCharacteristics behavior,
                              ImplicitSurfaceMicrostructure microstructure,
-                             const Inclusion inclusion, const Material& material_1,
+                             const Inclusion inclusion,
+                             const Material& material_1,
                              const Material& material_2)
         : behavior_(behavior), microstructure_(microstructure),
           inclusion_(inclusion), material_1_(material_1),
           material_2_(material_2) {
         implicit_surface_.Resize(height, width, depth);
-        implicit_surface_.SetConstant(material_1_.number);
+        implicit_surface_.SetConstant(static_cast<T>(material_1_.number));
     }
 
     auto Generate() -> Tensor3<T> {
@@ -66,6 +98,8 @@ template <typename T> class ImplicitSurfaceGenerator {
                    ? GenerateIsotropicMaterial()
                    : GenerateAnisotropicMaterial();
     }
+
+    auto Info() -> GeneratorInfo { return info_; }
 
   private:
     DeformoAssertion deformo_assert_;
@@ -80,6 +114,10 @@ template <typename T> class ImplicitSurfaceGenerator {
 
     Material material_1_;
     Material material_2_;
+
+    std::vector<_Cube> cubes_;
+
+    GeneratorInfo info_ = GeneratorInfo::kSuccess;
 
     // Helpers ======================
     auto LayerContainsSecondaryMaterial(const MatrixXr& layer) -> bool {
@@ -160,7 +198,81 @@ template <typename T> class ImplicitSurfaceGenerator {
         return implicit_surface_;
     }
 
-    auto GenerateAnisotropicMaterial() -> Tensor3<T> {
+    auto
+    GenerateAnisotropicMaterial(const unsigned int size_variability = 1,
+                                const unsigned int min_inclusion_separation = 1,
+                                const unsigned int max_iter = 1000)
+        -> Tensor3<T> {
+        constexpr unsigned int min = 0;
+
+        // Ensure the cutoff conditions are met
+        const unsigned int max_rows =
+            implicit_surface_.Dimension(0) - inclusion_.rows;
+        const unsigned int max_cols =
+            implicit_surface_.Dimension(1) - inclusion_.cols;
+        const unsigned int max_layers =
+            implicit_surface_.Dimension(2) - inclusion_.depth;
+
+        // Iteration cutoff point for normalizing cubes
+        int n_iterations = 0;
+
+        // RNG
+        std::default_random_engine generator;
+        std::uniform_int_distribution<int> rows_distribution(min,
+                                                                   max_rows);
+        std::uniform_int_distribution<int> cols_distribution(min,
+                                                                   max_cols);
+        std::uniform_int_distribution<int> layers_distribution(
+            min, max_layers);
+
+        for (unsigned int i = 0; i < inclusion_.n_inclusions; ++i) {
+            unsigned int rows = rows_distribution(generator);
+            unsigned int cols = cols_distribution(generator);
+            unsigned int layers = layers_distribution(generator);
+            Vector3<unsigned int> start(rows, cols, layers);
+
+            auto c = _Cube(inclusion_.rows, inclusion_.cols, inclusion_.depth,
+                           start);
+
+            if (!cubes_.empty()) {
+                for (const _Cube& cube : cubes_) {
+                    if (cube == c) {
+                        while (cube == c && n_iterations < max_iter) {
+                            rows = rows_distribution(generator);
+                            cols = cols_distribution(generator);
+                            layers = layers_distribution(generator);
+                            start = Vector3<unsigned int>(rows, cols, layers);
+
+                            c = _Cube(inclusion_.rows, inclusion_.cols,
+                                      inclusion_.depth, start);
+                            ++n_iterations;
+                        }
+
+                        if (n_iterations >= max_iter) {
+                            info_ = GeneratorInfo::kFailure;
+                            return implicit_surface_;
+                        } else {
+                            n_iterations = 0;
+                        }
+                    }
+                }
+            }
+
+            // TODO(@jparr721) - Tri-axial rotation
+            cubes_.emplace_back(c);
+        }
+
+        for (const _Cube& cube : cubes_) {
+            for (const Vector3<unsigned int>& index : cube.Indices()) {
+                const unsigned int row = index.x();
+                const unsigned int col = index.y();
+                const unsigned int layer = index.z();
+
+                implicit_surface_(row, col, layer) =
+                    static_cast<T>(material_2_.number);
+            }
+        }
+
         return implicit_surface_;
     }
 
