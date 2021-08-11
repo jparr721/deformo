@@ -7,6 +7,7 @@
 #include <QString>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 class WindowController : public QObject {
@@ -69,9 +70,9 @@ class WindowController : public QObject {
     void SetForceSquareDimensions(bool checked);
 
     // Designer -- Size of shape
-    void SetImplicitSurfaceHeight(double value); // Rows
-    void SetImplicitSurfaceWidth(double value);  // Cols
-    void SetImplicitSurfaceDepth(double value);  // Layers
+    void SetImplicitSurfaceHeight(int value); // Rows
+    void SetImplicitSurfaceWidth(int value);  // Cols
+    void SetImplicitSurfaceDepth(int value);  // Layers
 
     // Designer -- 1-Material
     void SetUniformMaterial(bool checked);
@@ -80,7 +81,7 @@ class WindowController : public QObject {
     void SetIsotropicMaterial(bool checked);
 
     // Designer -- Size of inclusion
-    void SetInclusionRatio(double value);
+    void SetNumberOfInclusions(int value);
 
     // Designer -- Material 1 Specifications
     void SetMaterialOneName(const QString& value);
@@ -115,12 +116,34 @@ class WindowController : public QObject {
     // Playback Controls
     void OnPlaybackSliderChange(int value);
 
+    // ====== Designer Controls Window
+    // Implicit surface
+    void OnSetImplicitSurfaceHeight(int value);
+    void OnSetImplicitSurfaceWidth(int value);
+    void OnSetImplicitSurfaceDepth(int value);
+
+    // Designer -- Size of inclusion
+    void OnSetNumberOfInclusions(int value);
+
+    // Designer -- Material 1 Specifications
+    void OnSetMaterialOneName(const QString& value);
+    void OnSetMaterialOnePoissionsRatio(double value);
+    void OnSetMaterialOneYoungsModulus(double value);
+
+    // Designer -- Material 2 Specifications
+    void OnSetMaterialTwoName(const QString& value);
+    void OnSetMaterialTwoPoissionsRatio(double value);
+    void OnSetMaterialTwoYoungsModulus(double value);
+
   private:
     enum TabWindow {
         kDesigner = 0x00,
         kSimulation = 0x01,
     };
 
+    Ui::deformoClass ui_;
+
+    // =========== Simulator ==============
     bool simulating_ = false;
     // Simulation Runtime Parameters
     Real dt_ = 0.01f;
@@ -153,7 +176,31 @@ class WindowController : public QObject {
     BoundaryConditions
     GenerateDefaultBoundaryConditions(const std::shared_ptr<Mesh>& mesh);
 
-    Ui::deformoClass ui_;
+    // =========== Simulator ==============
+
+    // =========== Designer ==============
+
+    // Implicit Surface Options
+    int designer_implicit_surface_height = 0;
+    int designer_implicit_surface_width = 0;
+    int designer_implicit_surface_depth = 0;
+
+    // Is material made of only material 1
+    bool designer_is_uniform = false;
+
+    // Isotropic Material Generator
+    bool designer_is_isotropic = false;
+
+    // Inclusion ratio for material 2
+    int designer_material_2_number_of_inclusions = 0;
+
+    // Material 1
+    Material material_1;
+
+    // Material 2
+    Material material_2;
+
+    // =========== Designer ==============
 
     void ConnectUiElementsToSimulation();
     void ConnectUiElementsToDesigner();

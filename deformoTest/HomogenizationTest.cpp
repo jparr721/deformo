@@ -109,8 +109,8 @@ TEST(TestHomogenization, TestComputeUniqueDegreesOfFreedom) {
 }
 
 TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
-  rve->material_1 = Material(1, "one", 10, 10);
-  rve->material_2 = Material(2, "two", 0, 0);
+  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
   ASSERT_TRUE(rve.get() != nullptr);
 
   const auto homogenization = std::make_shared<Homogenization>(rve);
@@ -131,8 +131,8 @@ TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
 }
 
 TEST(TestHomogenization, TestAssembleLoadMatrix) {
-  rve->material_1 = Material(1, "one", 10, 10);
-  rve->material_2 = Material(2, "two", 0, 0);
+  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
   ASSERT_TRUE(rve.get() != nullptr);
 
   const auto homogenization = std::make_shared<Homogenization>(rve);
@@ -157,8 +157,8 @@ TEST(TestHomogenization, TestAssembleLoadMatrix) {
 }
 
 TEST(TestHomogenization, TestComputeDisplacement) {
-  rve->material_1 = Material(1, "one", 10, 10);
-  rve->material_2 = Material(2, "two", 0, 0);
+  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
   ASSERT_TRUE(rve.get() != nullptr);
 
   const auto homogenization = std::make_shared<Homogenization>(rve);
@@ -188,8 +188,8 @@ TEST(TestHomogenization, TestComputeDisplacement) {
 }
 
 TEST(TestHomogenization, TestComputeUnitStrainParameters) {
-  rve->material_1 = Material(1, "one", 10, 10);
-  rve->material_2 = Material(2, "two", 0, 0);
+  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
   ASSERT_TRUE(rve.get() != nullptr);
 
   const auto homogenization = std::make_shared<Homogenization>(rve);
@@ -254,8 +254,8 @@ TEST(TestHomogenization, TestComputeUnitStrainParameters) {
 }
 
 TEST(TestHomogenization, TestSolverStep) {
-  rve->material_1 = Material(1, "one", 10, 10);
-  rve->material_2 = Material(2, "two", 0, 0);
+  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
   ASSERT_TRUE(rve.get() != nullptr);
 
   const auto homogenization = std::make_shared<Homogenization>(rve);

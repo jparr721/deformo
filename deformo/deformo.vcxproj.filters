@@ -148,6 +148,9 @@
     <ClCompile Include="Rve.cpp">
       <Filter>Physics</Filter>
     </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Engine\Meshing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -242,6 +245,9 @@
     </ClInclude>
     <ClInclude Include="DeformoAssert.h">
       <Filter>Utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Engine\Meshing</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

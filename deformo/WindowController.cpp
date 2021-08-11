@@ -152,44 +152,93 @@ void WindowController::SetForceSquareDimensions(bool checked) {
     }
 }
 
-void WindowController::SetImplicitSurfaceHeight(double value) {}
+void WindowController::SetImplicitSurfaceHeight(int value) {
+    designer_implicit_surface_height = value;
+    emit OnSetImplicitSurfaceHeight(value);
+}
 
-void WindowController::SetImplicitSurfaceWidth(double value) {}
+void WindowController::SetImplicitSurfaceWidth(int value) {
+    designer_implicit_surface_width = value;
+    emit OnSetImplicitSurfaceWidth(value);
+}
 
-void WindowController::SetImplicitSurfaceDepth(double value) {}
+void WindowController::SetImplicitSurfaceDepth(int value) {
+    designer_implicit_surface_depth = value;
+    emit OnSetImplicitSurfaceDepth(value);
+}
 
 void WindowController::SetUniformMaterial(bool checked) {
     if (checked) {
         ui_.designer_material_2_name_line_edit->setDisabled(true);
-        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(true);
-        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(true);
+        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(
+            true);
+        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(
+            true);
         ui_.designer_isotropic_material_checkbox->setDisabled(true);
     } else {
         ui_.designer_material_2_name_line_edit->setDisabled(false);
-        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(false);
-        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(false);
+        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(
+            false);
+        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(
+            false);
         ui_.designer_isotropic_material_checkbox->setDisabled(false);
     }
 }
 
 void WindowController::SetIsotropicMaterial(bool checked) {
+    designer_is_isotropic = checked;
 }
 
-void WindowController::SetInclusionRatio(double value) {}
+void WindowController::SetNumberOfInclusions(int value) {
+    designer_material_2_number_of_inclusions = value;
+    emit OnSetNumberOfInclusions(value);
+}
 
-void WindowController::SetMaterialOneName(const QString& value) {}
+void WindowController::SetMaterialOneName(const QString& value) {
+    const std::string name = utils::qt::QStringToString(value);
+    material_1.name = name;
+    emit OnSetMaterialOneName(value);
+}
 
-void WindowController::SetMaterialOnePoissionsRatio(double value) {}
+void WindowController::SetMaterialOnePoissionsRatio(double value) {
+    Real v = value;
+    material_1.v = v;
+    emit OnSetMaterialOnePoissionsRatio(value);
+}
 
-void WindowController::SetMaterialOneYoungsModulus(double value) {}
+void WindowController::SetMaterialOneYoungsModulus(double value) {
+    Real E = value;
+    material_1.E = E;
+    emit OnSetMaterialOneYoungsModulus(value);
+}
 
-void WindowController::SetMaterialTwoName(const QString& value) {}
+void WindowController::SetMaterialTwoName(const QString& value) {
+    const std::string name = utils::qt::QStringToString(value);
+    material_2.name = name;
+    emit OnSetMaterialOneName(value);
+}
 
-void WindowController::SetMaterialTwoPoissionsRatio(double value) {}
+void WindowController::SetMaterialTwoPoissionsRatio(double value) {
+    Real v = value;
+    material_2.v = v;
+    emit OnSetMaterialTwoPoissionsRatio(value);
+}
 
-void WindowController::SetMaterialTwoYoungsModulus(double value) {}
+void WindowController::SetMaterialTwoYoungsModulus(double value) {
+    Real E = value;
+    material_2.E = E;
+    emit OnSetMaterialTwoYoungsModulus(value);
+}
 
-void WindowController::ComputeDesignedShapeButtonPressed() {}
+void WindowController::ComputeDesignedShapeButtonPressed() {
+    material_1 =
+        MaterialFromEandv(1, material_1.name, material_1.E, material_1.v);
+
+    if (!designer_is_uniform) {
+        material_2 =
+            MaterialFromEandv(1, material_2.name, material_2.E, material_2.v);
+    }
+}
 
 BoundaryConditions WindowController::GenerateDefaultBoundaryConditions(
     const std::shared_ptr<Mesh>& mesh) {

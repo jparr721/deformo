@@ -399,7 +399,7 @@ QMenu::separator {
                      </font>
                     </property>
                     <property name="text">
-                     <string>Implicit Surface Size</string>
+                     <string>Implicit Surface</string>
                     </property>
                     <property name="alignment">
                      <set>Qt::AlignCenter</set>
@@ -487,7 +487,7 @@ QMenu::separator {
                         <property name="font">
                          <font>
                           <family>Segoe UI</family>
-                          <pointsize>10</pointsize>
+                          <pointsize>9</pointsize>
                          </font>
                         </property>
                         <property name="text">
@@ -537,7 +537,7 @@ QMenu::separator {
                       <property name="font">
                        <font>
                         <family>Segoe UI</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                        </font>
                       </property>
                       <property name="text">
@@ -550,7 +550,7 @@ QMenu::separator {
                       <property name="font">
                        <font>
                         <family>Segoe UI</family>
-                        <pointsize>10</pointsize>
+                        <pointsize>9</pointsize>
                        </font>
                       </property>
                       <property name="text">
@@ -562,6 +562,9 @@ QMenu::separator {
                   </item>
                   <item>
                    <layout class="QVBoxLayout" name="verticalLayout_15">
+                    <property name="spacing">
+                     <number>10</number>
+                    </property>
                     <property name="sizeConstraint">
                      <enum>QLayout::SetMinimumSize</enum>
                     </property>
@@ -570,16 +573,97 @@ QMenu::separator {
                       <property name="font">
                        <font>
                         <family>Segoe UI</family>
-                        <pointsize>9</pointsize>
+                        <pointsize>10</pointsize>
                        </font>
                       </property>
                       <property name="text">
-                       <string>Inclusion Ratio</string>
+                       <string>Number of Inclusions</string>
                       </property>
                      </widget>
                     </item>
                     <item>
-                     <widget class="QDoubleSpinBox" name="designer_material_2_ratio_double_spinbox"/>
+                     <widget class="QSpinBox" name="designer_material_2_number_of_inclusions"/>
+                    </item>
+                    <item>
+                     <layout class="QGridLayout" name="gridLayout_5">
+                      <property name="verticalSpacing">
+                       <number>15</number>
+                      </property>
+                      <item row="1" column="0" colspan="3">
+                       <widget class="QCheckBox" name="designer_inclusion_force_square_dimensions_checkbox">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>9</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Force Square Dimensions</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="1">
+                       <widget class="QLabel" name="label_29">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>9</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Width:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="2">
+                       <widget class="QLabel" name="label_30">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>9</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Depth:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="0">
+                       <widget class="QLabel" name="label_28">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>9</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Height:</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="0">
+                       <widget class="QSpinBox" name="designer_inclusion_height_spinbox"/>
+                      </item>
+                      <item row="3" column="1">
+                       <widget class="QSpinBox" name="designer_inclusion_width_spinbox"/>
+                      </item>
+                      <item row="3" column="2">
+                       <widget class="QSpinBox" name="designer_inclusion_depth_spinbox"/>
+                      </item>
+                      <item row="0" column="0" colspan="3">
+                       <widget class="QLabel" name="label_27">
+                        <property name="font">
+                         <font>
+                          <family>Segoe UI</family>
+                          <pointsize>10</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Inclusion Dimensions</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
                     </item>
                    </layout>
                   </item>
@@ -587,6 +671,9 @@ QMenu::separator {
                 </item>
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_7">
+                  <property name="spacing">
+                   <number>12</number>
+                  </property>
                   <item>
                    <widget class="QLabel" name="label_16">
                     <property name="font">
@@ -621,6 +708,9 @@ QMenu::separator {
                   </item>
                   <item>
                    <layout class="QGridLayout" name="gridLayout_8" columnstretch="10,5,5" columnminimumwidth="10,5,5">
+                    <property name="verticalSpacing">
+                     <number>10</number>
+                    </property>
                     <item row="0" column="1">
                      <widget class="QLabel" name="label_21">
                       <property name="font">
@@ -699,6 +789,9 @@ QMenu::separator {
                   </item>
                   <item>
                    <layout class="QGridLayout" name="gridLayout_9" columnstretch="10,5,5" columnminimumwidth="10,5,5">
+                    <property name="verticalSpacing">
+                     <number>10</number>
+                    </property>
                     <item row="0" column="0">
                      <widget class="QLabel" name="label_24">
                       <property name="font">
@@ -907,8 +1000,8 @@ QMenu::separator {
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../../../../.designer/backup/Assets/step-backward-solid.svg</normaloff>
-                <normalon>../../../.designer/backup/Assets/step-backward-solid.svg</normalon>../../../../.designer/backup/Assets/step-backward-solid.svg</iconset>
+                <normaloff>../../../../../.designer/backup/Assets/step-backward-solid.svg</normaloff>
+                <normalon>../../../../.designer/backup/Assets/step-backward-solid.svg</normalon>../../../../../.designer/backup/Assets/step-backward-solid.svg</iconset>
               </property>
              </widget>
             </item>
@@ -922,7 +1015,7 @@ QMenu::separator {
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../../../.designer/backup/Assets/play-solid.svg</normaloff>../../../.designer/backup/Assets/play-solid.svg</iconset>
+                <normaloff>../../../../.designer/backup/Assets/play-solid.svg</normaloff>../../../../.designer/backup/Assets/play-solid.svg</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -942,7 +1035,7 @@ QMenu::separator {
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../../../.designer/backup/Assets/pause-solid.svg</normaloff>../../../.designer/backup/Assets/pause-solid.svg</iconset>
+                <normaloff>../../../../.designer/backup/Assets/pause-solid.svg</normaloff>../../../../.designer/backup/Assets/pause-solid.svg</iconset>
               </property>
              </widget>
             </item>
@@ -956,7 +1049,7 @@ QMenu::separator {
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../../../.designer/backup/Assets/step-forward-solid.svg</normaloff>../../../.designer/backup/Assets/step-forward-solid.svg</iconset>
+                <normaloff>../../../../.designer/backup/Assets/step-forward-solid.svg</normaloff>../../../../.designer/backup/Assets/step-forward-solid.svg</iconset>
               </property>
              </widget>
             </item>
