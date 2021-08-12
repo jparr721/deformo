@@ -54,6 +54,9 @@
     <Filter Include="Physics\Parameterization">
       <UniqueIdentifier>{a516dc70-3ed1-4f55-b835-e49773dbaeb8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Windowing\Controllers">
+      <UniqueIdentifier>{62fe412d-1d30-4f09-b7c6-49bc7ad50817}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -150,6 +153,12 @@
     </ClCompile>
     <ClCompile Include="Material.cpp">
       <Filter>Engine\Meshing</Filter>
+    </ClCompile>
+    <ClCompile Include="SimulationController.cpp">
+      <Filter>Windowing\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="DesignerController.cpp">
+      <Filter>Windowing\Controllers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -248,6 +257,15 @@
     </ClInclude>
     <ClInclude Include="Material.h">
       <Filter>Engine\Meshing</Filter>
+    </ClInclude>
+    <ClInclude Include="AbstractGenerator.h">
+      <Filter>Machine Learning</Filter>
+    </ClInclude>
+    <ClInclude Include="SimulationController.h">
+      <Filter>Windowing\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="DesignerController.h">
+      <Filter>Windowing\Controllers</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

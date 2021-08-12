@@ -290,5 +290,6 @@ inline std::array<std::array<int, 16>, 256> triangle_table = {
      {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
      {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}};
 
-void GenerateImplicitSurface(MatrixXr& V, MatrixXr& F, Real iso_level,
-                             Real cell_length, const Tensor3r& scalar_field);
+void GenerateFacesFromScalarField(MatrixXr& V, Eigen::MatrixXi& F,
+                                  Real iso_level, Real cell_length,
+                                  const Tensor3r& scalar_field);

@@ -3,6 +3,7 @@
 #include "DeformoAssert.h"
 #include "Numerics.h"
 #include "Rve.h"
+#include "AbstractGenerator.h"
 #include <array>
 
 class Homogenization {

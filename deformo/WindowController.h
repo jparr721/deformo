@@ -1,7 +1,9 @@
 #pragma once
 
 #include "BoundaryCondition.h"
+#include "DesignerController.h"
 #include "Simulation.h"
+#include "SimulationController.h"
 #include "ui_deformo.h"
 #include <QObject>
 #include <QString>
@@ -74,6 +76,9 @@ class WindowController : public QObject {
     void SetImplicitSurfaceWidth(int value);  // Cols
     void SetImplicitSurfaceDepth(int value);  // Layers
 
+    // Designer -- Square Material
+    void SetSquareShapedMaterial(bool checked);
+
     // Designer -- 1-Material
     void SetUniformMaterial(bool checked);
 
@@ -85,16 +90,25 @@ class WindowController : public QObject {
 
     // Designer -- Material 1 Specifications
     void SetMaterialOneName(const QString& value);
-    void SetMaterialOnePoissionsRatio(double value);
+    void SetMaterialOnePoissonsRatio(double value);
     void SetMaterialOneYoungsModulus(double value);
 
     // Designer -- Material 2 Specifications
     void SetMaterialTwoName(const QString& value);
-    void SetMaterialTwoPoissionsRatio(double value);
+    void SetMaterialTwoPoissonsRatio(double value);
     void SetMaterialTwoYoungsModulus(double value);
 
     // Designer -- Compute Button
     void ComputeDesignedShapeButtonPressed();
+
+    // Designer -- Inclusion Shape Options
+    void SetInclusionHeight(int value);
+    void SetInclusionWidth(int value);
+    void SetInclusionDepth(int value);
+
+    // Designer -- Inclusion Is Square.
+    void SetSquareShapedInclusion(bool checked);
+
 
   signals:
     // Simulation Settings Window
@@ -127,85 +141,40 @@ class WindowController : public QObject {
 
     // Designer -- Material 1 Specifications
     void OnSetMaterialOneName(const QString& value);
-    void OnSetMaterialOnePoissionsRatio(double value);
+    void OnSetMaterialOnePoissonsRatio(double value);
     void OnSetMaterialOneYoungsModulus(double value);
 
     // Designer -- Material 2 Specifications
     void OnSetMaterialTwoName(const QString& value);
-    void OnSetMaterialTwoPoissionsRatio(double value);
+    void OnSetMaterialTwoPoissonsRatio(double value);
     void OnSetMaterialTwoYoungsModulus(double value);
 
-  private:
-    enum TabWindow {
-        kDesigner = 0x00,
-        kSimulation = 0x01,
-    };
+    // Designer -- Inclusion Shape Options
+    void OnSetInclusionHeight(int value);
+    void OnSetInclusionWidth(int value);
+    void OnSetInclusionDepth(int value);
 
+  private:
     Ui::deformoClass ui_;
 
     // =========== Simulator ==============
-    bool simulating_ = false;
-    // Simulation Runtime Parameters
-    Real dt_ = 0.01f;
-
-    // Physical Parameters
-    Real nodal_mass_ = 5.f;
-
-    // Damping Parameters
-    Real rayleigh_mu_ = 0.5f;
-    Real rayleigh_lambda_ = 0.5f;
-
-    // FEA Parameters
-    Real youngs_modulus_ = 10000.f;
-    Real poissons_ratio_ = 0.3f;
+    std::unique_ptr<SimulationController> simulation_controller_;
+    std::unique_ptr<DesignerController> designer_controller_;
 
     GLenum render_mode_ = GL_LINES;
 
     // Render Parameters
     std::string tetgen_flags_ = "zpq";
+
     // Render-Mutation Parameters
     Real slice_value_;
     std::string slice_axis_;
 
-    std::unique_ptr<Simulation> simulation_;
-
     std::shared_ptr<Renderer> renderer_;
-
-    std::vector<VectorXr> recorded_displacements_;
-
-    BoundaryConditions
-    GenerateDefaultBoundaryConditions(const std::shared_ptr<Mesh>& mesh);
 
     // =========== Simulator ==============
 
-    // =========== Designer ==============
-
-    // Implicit Surface Options
-    int designer_implicit_surface_height = 0;
-    int designer_implicit_surface_width = 0;
-    int designer_implicit_surface_depth = 0;
-
-    // Is material made of only material 1
-    bool designer_is_uniform = false;
-
-    // Isotropic Material Generator
-    bool designer_is_isotropic = false;
-
-    // Inclusion ratio for material 2
-    int designer_material_2_number_of_inclusions = 0;
-
-    // Material 1
-    Material material_1;
-
-    // Material 2
-    Material material_2;
-
-    // =========== Designer ==============
-
     void ConnectUiElementsToSimulation();
     void ConnectUiElementsToDesigner();
-    void DisableStaticUiElements();
-    void EnableStaticUiElements();
     void ResetPlaybackControls();
-    void RecomputeSliceValueRange();
 };

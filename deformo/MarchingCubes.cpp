@@ -17,7 +17,7 @@ auto Interpolate(const Real x1, const Real y1, const Real z1, const Real x2,
 
     const Real mu = (iso_level - val1) / (val1 - val2);
     return Vector3r(mu_interpolate(x1, x2, mu), mu_interpolate(y1, y2, mu),
-                   mu_interpolate(z1, z2, mu));
+                    mu_interpolate(z1, z2, mu));
 }
 
 auto Intersection(const unsigned int x, const unsigned int y,
@@ -93,7 +93,8 @@ auto Intersection(const unsigned int x, const unsigned int y,
         v2z += 1;
         break;
     default:
-        assert(edge_number <= 11 && edge_number >= 0 && "INVALID EDGE NUMBER FOUND");
+        assert(edge_number <= 11 && edge_number >= 0 &&
+               "INVALID EDGE NUMBER FOUND");
     }
 
     const Real x1 = v1x * cell_length;
@@ -180,9 +181,9 @@ void CalculateFacesAndVertices(MatrixXr& V, Eigen::MatrixXi& F,
 }
 } // namespace
 
-void GenerateImplicitSurface(MatrixXr& V, Eigen::MatrixXi& F, const Real iso_level,
-                             const Real cell_length,
-                             const Tensor3r& scalar_field) {
+void GenerateFacesFromScalarField(MatrixXr& V, Eigen::MatrixXi& F,
+                                  const Real iso_level, const Real cell_length,
+                                  const Tensor3r& scalar_field) {
     std::vector<Eigen::Vector3i> triangles;
     std::map<unsigned int, Position> vertices;
 
@@ -194,7 +195,7 @@ void GenerateImplicitSurface(MatrixXr& V, Eigen::MatrixXi& F, const Real iso_lev
                                     const unsigned int z,
                                     const unsigned int edge_number) -> void {
         const Vector3r point = Intersection(x, y, z, edge_number, cell_length,
-                                           iso_level, scalar_field);
+                                            iso_level, scalar_field);
         const unsigned int id =
             EdgeId(x, y, z, n_cells_x, n_cells_y, edge_number);
         vertices.insert({id, Position{0, point}});
@@ -205,35 +206,35 @@ void GenerateImplicitSurface(MatrixXr& V, Eigen::MatrixXi& F, const Real iso_lev
             for (unsigned int x = 0; x < n_cells_x; ++x) {
                 // Calculate lookup index in table
                 unsigned int table_index = 0;
-                if (scalar_field.At(z, y, x) < iso_level) {
+                if (scalar_field(x, y, z) < iso_level) {
                     table_index |= 1;
                 }
 
-                if (scalar_field.At(z, y + 1, x) < iso_level) {
+                if (scalar_field(x, y + 1, z) < iso_level) {
                     table_index |= 2;
                 }
 
-                if (scalar_field.At(z, y + 1, x + 1) < iso_level) {
+                if (scalar_field(x + 1, y + 1, z) < iso_level) {
                     table_index |= 4;
                 }
 
-                if (scalar_field.At(z, y, x + 1) < iso_level) {
+                if (scalar_field(x + 1, y, z) < iso_level) {
                     table_index |= 8;
                 }
 
-                if (scalar_field.At(z + 1, y, x) < iso_level) {
+                if (scalar_field(x, y, z + 1) < iso_level) {
                     table_index |= 16;
                 }
 
-                if (scalar_field.At(z + 1, y + 1, x) < iso_level) {
+                if (scalar_field(x, y + 1, z + 1) < iso_level) {
                     table_index |= 32;
                 }
 
-                if (scalar_field.At(z + 1, y + 1, x + 1) < iso_level) {
+                if (scalar_field(x + 1, y + 1, z + 1) < iso_level) {
                     table_index |= 64;
                 }
 
-                if (scalar_field.At(z + 1, y, x + 1) < iso_level) {
+                if (scalar_field(x + 1, y, z + 1) < iso_level) {
                     table_index |= 128;
                 }
 

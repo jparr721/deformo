@@ -111,6 +111,10 @@ template <typename T> class Tensor3 {
         return instance_(row, col, layer);
     }
 
+    T operator()(int row, int col, int layer) const {
+        return instance_(row, col, layer);
+    }
+
     auto Layer(const int layer) const -> MatrixX<T> {
         MatrixX<T> m;
         const int rows = Dimension(0);

@@ -7,37 +7,25 @@ WindowController::WindowController(Ui::deformoClass& ui) : ui_(ui) {
 
     const std::string default_mesh_path = "cube.ply";
     mesh = std::make_shared<Mesh>(default_mesh_path, tetgen_flags_);
-    boundary_conditions = GenerateDefaultBoundaryConditions(mesh);
-    simulation_ =
-        std::make_unique<Simulation>(youngs_modulus_, poissons_ratio_,
-                                     nodal_mass_, mesh, boundary_conditions);
+
+    simulation_controller_ = std::make_unique<SimulationController>(mesh);
+    designer_controller_ = std::make_unique<DesignerController>();
 
     ConnectUiElementsToSimulation();
     ConnectUiElementsToDesigner();
+    ui_.designer_dataset_generator_progressbar->setVisible(false);
 }
 
 void WindowController::SetRenderer(const std::shared_ptr<Renderer>& renderer) {
     renderer_ = renderer;
 }
 
-bool WindowController::IsSimulating() { return simulating_; }
+void WindowController::StepForward() { simulation_controller_->StepForward(); }
 
-void WindowController::StepForward() {
-    simulation_->Solve();
-    recorded_displacements_.push_back(simulation_->Integrate());
-    RecomputeSliceValueRange();
-}
+void WindowController::Reset() { simulation_controller_->Reset(ui_); }
 
-void WindowController::Reset() {
-    mesh->Reset();
-    simulation_ =
-        std::make_unique<Simulation>(youngs_modulus_, poissons_ratio_,
-                                     nodal_mass_, mesh, boundary_conditions);
-    simulation_->dt = dt_;
-    simulation_->current_time = 0.f;
-    steps_taken = 0;
-    max_steps = 0;
-    ResetPlaybackControls();
+bool WindowController::IsSimulating() {
+    return simulation_controller_->simulating;
 }
 
 void WindowController::SetSliceAxis(const QString& value) {
@@ -51,36 +39,38 @@ void WindowController::SetSliceValue(Real value) {
 }
 
 void WindowController::SetNodalMass(Real value) {
-    nodal_mass_ = value;
+    simulation_controller_->SetNodalMass(value);
     emit OnNodalMassChange(value);
 }
 
 void WindowController::SetPoissonsRatio(double value) {
-    poissons_ratio_ = value;
+    simulation_controller_->SetPoissonsRatio(value);
     emit OnPoissonsRatioChange(value);
 }
 
 void WindowController::SetYoungsModulus(double value) {
-    youngs_modulus_ = value;
+    simulation_controller_->SetYoungsModulus(value);
     emit OnYoungsModulusChange(value);
 }
 
 void WindowController::SetTimestepSize(double value) {
-    dt_ = value;
+    simulation_controller_->SetTimestepSize(value);
     emit OnTimestepSizeChange(value);
 }
 
 void WindowController::SetRayleighLambda(double value) {
-    rayleigh_lambda_ = value;
+    simulation_controller_->SetRayleighLambda(value);
     emit OnRayleighLambdaChange(value);
 }
 
 void WindowController::SetRayleighMu(double value) {
-    rayleigh_mu_ = value;
+    simulation_controller_->SetRayleighMu(value);
     emit OnRayleighMuChange(value);
 }
 
-void WindowController::RunSimulationButtonPressed() { Reset(); }
+void WindowController::RunSimulationButtonPressed() {
+    simulation_controller_->RunSimulationButtonPressed(ui_);
+}
 
 void WindowController::SetTetgenFlags(const QString& value) {
     tetgen_flags_ = utils::qt::QStringToString(value);
@@ -105,39 +95,27 @@ void WindowController::RenderSimulationButtonPressed() {
 }
 
 void WindowController::PlaybackSkipStartButtonPressed() {
-    ui_.playback_controller->setValue(0);
+    simulation_controller_->PlaybackSkipStartButtonPressed(ui_);
 }
 
 void WindowController::PlaybackSkipEndButtonPressed() {
-    if (!recorded_displacements_.empty()) {
-        ui_.playback_controller->setValue(recorded_displacements_.size() - 1);
-    }
+    simulation_controller_->PlaybackSkipEndButtonPressed(ui_);
 }
 
 void WindowController::PlaybackPauseButtonPressed() {
-    EnableStaticUiElements();
-    if (!recorded_displacements_.empty()) {
-        ui_.playback_controller->setMaximum(recorded_displacements_.size() - 1);
-    }
-    simulating_ = false;
+    simulation_controller_->PlaybackPauseButtonPressed(ui_);
 }
 
 void WindowController::PlaybackPlayButtonPressed() {
-    DisableStaticUiElements();
-    simulating_ = true;
+    simulation_controller_->PlaybackPlayButtonPressed();
 }
 
 void WindowController::PlaybackSliderChanged(int value) {
-    mesh->Update(recorded_displacements_.at(value));
+    simulation_controller_->PlaybackSliderChanged(value);
 }
 
 void WindowController::TabBarClicked(int index) {
-    if (index == TabWindow::kDesigner) {
-        if (!recorded_displacements_.empty()) {
-            PlaybackPauseButtonPressed();
-            PlaybackSliderChanged(0);
-        }
-    }
+    simulation_controller_->TabBarClicked(index, ui_);
 }
 
 void WindowController::SetForceSquareDimensions(bool checked) {
@@ -153,99 +131,94 @@ void WindowController::SetForceSquareDimensions(bool checked) {
 }
 
 void WindowController::SetImplicitSurfaceHeight(int value) {
-    designer_implicit_surface_height = value;
+    designer_controller_->SetImplicitSurfaceHeight(value);
     emit OnSetImplicitSurfaceHeight(value);
 }
 
 void WindowController::SetImplicitSurfaceWidth(int value) {
-    designer_implicit_surface_width = value;
+    designer_controller_->SetImplicitSurfaceWidth(value);
     emit OnSetImplicitSurfaceWidth(value);
 }
 
 void WindowController::SetImplicitSurfaceDepth(int value) {
-    designer_implicit_surface_depth = value;
+    designer_controller_->SetImplicitSurfaceDepth(value);
     emit OnSetImplicitSurfaceDepth(value);
 }
 
+void WindowController::SetSquareShapedMaterial(bool checked) {
+    designer_controller_->SetSquareShapedMaterial(checked);
+}
+
 void WindowController::SetUniformMaterial(bool checked) {
-    if (checked) {
-        ui_.designer_material_2_name_line_edit->setDisabled(true);
-        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(
-            true);
-        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(
-            true);
-        ui_.designer_isotropic_material_checkbox->setDisabled(true);
-    } else {
-        ui_.designer_material_2_name_line_edit->setDisabled(false);
-        ui_.designer_material_2_poissons_ratio_double_spinbox->setDisabled(
-            false);
-        ui_.designer_material_2_youngs_modulus_double_spinbox->setDisabled(
-            false);
-        ui_.designer_isotropic_material_checkbox->setDisabled(false);
-    }
+    designer_controller_->SetUniformMaterial(checked, ui_);
 }
 
 void WindowController::SetIsotropicMaterial(bool checked) {
-    designer_is_isotropic = checked;
+    designer_controller_->SetIsotropicMaterial(checked);
 }
 
 void WindowController::SetNumberOfInclusions(int value) {
-    designer_material_2_number_of_inclusions = value;
+    designer_controller_->SetNumberOfInclusions(value);
     emit OnSetNumberOfInclusions(value);
 }
 
 void WindowController::SetMaterialOneName(const QString& value) {
     const std::string name = utils::qt::QStringToString(value);
-    material_1.name = name;
+    designer_controller_->SetMaterialOneName(name);
     emit OnSetMaterialOneName(value);
 }
 
-void WindowController::SetMaterialOnePoissionsRatio(double value) {
+void WindowController::SetMaterialOnePoissonsRatio(double value) {
     Real v = value;
-    material_1.v = v;
-    emit OnSetMaterialOnePoissionsRatio(value);
+    designer_controller_->SetMaterialOnePoissonsRatio(value);
+    emit OnSetMaterialOnePoissonsRatio(value);
 }
 
 void WindowController::SetMaterialOneYoungsModulus(double value) {
     Real E = value;
-    material_1.E = E;
+    designer_controller_->SetMaterialOneYoungsModulus(value);
     emit OnSetMaterialOneYoungsModulus(value);
 }
 
 void WindowController::SetMaterialTwoName(const QString& value) {
     const std::string name = utils::qt::QStringToString(value);
-    material_2.name = name;
-    emit OnSetMaterialOneName(value);
+    designer_controller_->SetMaterialTwoName(name);
+    emit OnSetMaterialTwoName(value);
 }
 
-void WindowController::SetMaterialTwoPoissionsRatio(double value) {
+void WindowController::SetMaterialTwoPoissonsRatio(double value) {
     Real v = value;
-    material_2.v = v;
-    emit OnSetMaterialTwoPoissionsRatio(value);
+    designer_controller_->SetMaterialTwoPoissonsRatio(value);
+    emit OnSetMaterialTwoPoissonsRatio(value);
 }
 
 void WindowController::SetMaterialTwoYoungsModulus(double value) {
     Real E = value;
-    material_2.E = E;
+    designer_controller_->SetMaterialTwoYoungsModulus(value);
     emit OnSetMaterialTwoYoungsModulus(value);
 }
 
 void WindowController::ComputeDesignedShapeButtonPressed() {
-    material_1 =
-        MaterialFromEandv(1, material_1.name, material_1.E, material_1.v);
-
-    if (!designer_is_uniform) {
-        material_2 =
-            MaterialFromEandv(1, material_2.name, material_2.E, material_2.v);
-    }
+    designer_controller_->ComputeDesignedShapeButtonPressed();
 }
 
-BoundaryConditions WindowController::GenerateDefaultBoundaryConditions(
-    const std::shared_ptr<Mesh>& mesh) {
-    const Eigen::Vector3f force(0.f, -100.f, 0.f);
-    std::vector<unsigned int> indices;
-    utils::FindMaxVertices(indices, mesh->positions);
-    return AssignBoundaryConditionToFixedNodes(indices, force);
+void WindowController::SetInclusionHeight(int value) {
+    designer_controller_->SetInclusionHeight(value);
+    emit OnSetInclusionHeight(value);
+}
+
+void WindowController::SetInclusionWidth(int value) {
+    designer_controller_->SetInclusionWidth(value);
+    emit OnSetInclusionWidth(value);
+}
+
+void WindowController::SetInclusionDepth(int value) {
+    designer_controller_->SetInclusionDepth(value);
+    emit OnSetInclusionDepth(value);
+}
+
+void WindowController::SetSquareShapedInclusion(bool checked) {
+    designer_controller_->SetSquareShapedInclusion(checked);
 }
 
 void WindowController::ConnectUiElementsToSimulation() {
@@ -340,52 +313,119 @@ void WindowController::ConnectUiElementsToSimulation() {
     connect(this, &WindowController::OnPlaybackSliderChange,
             ui_.playback_controller, &QSlider::setValue);
 
+    // Tab Bar Affects Sim State
+    connect(ui_.tabWidget, &QTabWidget::tabBarClicked, this,
+            &WindowController::TabBarClicked);
+
     // Initializers for UI Components
-    SetSliceValue(simulation_->SliceValue());
-    SetNodalMass(simulation_->NodalMass());
-    SetPoissonsRatio(simulation_->PoissonsRatio());
-    SetYoungsModulus(simulation_->YoungsModulus());
-    SetTimestepSize(simulation_->TimestepSize());
+    SetSliceValue(simulation_controller_->simulation->SliceValue());
+    SetNodalMass(simulation_controller_->simulation->NodalMass());
+    SetPoissonsRatio(simulation_controller_->simulation->PoissonsRatio());
+    SetYoungsModulus(simulation_controller_->simulation->YoungsModulus());
+    SetTimestepSize(simulation_controller_->simulation->TimestepSize());
     SetTetgenFlags(QString::fromUtf8(tetgen_flags_.c_str()));
 
-    SetRayleighLambda(simulation_->RayleighLambda());
-    SetRayleighMu(simulation_->RayleighMu());
+    SetRayleighLambda(simulation_controller_->simulation->RayleighLambda());
+    SetRayleighMu(simulation_controller_->simulation->RayleighMu());
 }
 
 void WindowController::ConnectUiElementsToDesigner() {
-    connect(ui_.tabWidget, &QTabWidget::tabBarClicked, this,
-            &WindowController::TabBarClicked);
+    // First 3 checkboxes
+    connect(ui_.designer_force_square_dimensions_checkbox, &QCheckBox::clicked,
+            this, &WindowController::SetForceSquareDimensions);
+    connect(ui_.designer_uniform_material_checkbox, &QCheckBox::clicked, this,
+            &WindowController::SetUniformMaterial);
+    connect(ui_.designer_isotropic_material_checkbox, &QCheckBox::clicked, this,
+            &WindowController::SetIsotropicMaterial);
+
+    // Implicit Surface Values
+    connect(ui_.designer_height_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetImplicitSurfaceHeight);
+    connect(this, &WindowController::OnSetImplicitSurfaceHeight,
+            ui_.designer_height_spinbox, &QSpinBox::setValue);
+
+    connect(ui_.designer_width_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetImplicitSurfaceWidth);
+    connect(this, &WindowController::OnSetImplicitSurfaceWidth,
+            ui_.designer_width_spinbox, &QSpinBox::setValue);
+
+    connect(ui_.designer_depth_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetImplicitSurfaceDepth);
+    connect(this, &WindowController::OnSetImplicitSurfaceDepth,
+            ui_.designer_depth_spinbox, &QSpinBox::setValue);
+
+    // Inclusions Menu Section
+    connect(ui_.designer_material_2_number_of_inclusions,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetNumberOfInclusions);
+    connect(this, &WindowController::OnSetNumberOfInclusions,
+            ui_.designer_material_2_number_of_inclusions, &QSpinBox::setValue);
+
+    connect(ui_.designer_inclusion_force_square_dimensions_checkbox,
+            &QCheckBox::clicked, this,
+            &WindowController::SetSquareShapedInclusion);
+
+    connect(ui_.designer_inclusion_height_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetInclusionHeight);
+    connect(this, &WindowController::OnSetInclusionHeight,
+            ui_.designer_inclusion_height_spinbox, &QSpinBox::setValue);
+
+    connect(ui_.designer_inclusion_width_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetInclusionWidth);
+    connect(this, &WindowController::OnSetInclusionWidth,
+            ui_.designer_inclusion_width_spinbox, &QSpinBox::setValue);
+
+    connect(ui_.designer_inclusion_depth_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetInclusionDepth);
+    connect(this, &WindowController::OnSetInclusionDepth,
+            ui_.designer_inclusion_depth_spinbox, &QSpinBox::setValue);
+
+    // Materials Menu Section
+    connect(ui_.designer_material_1_name_line_edit, &QLineEdit::textChanged,
+            this, &WindowController::SetMaterialOneName);
+    connect(this, &WindowController::OnSetMaterialOneName,
+            ui_.designer_material_1_name_line_edit, &QLineEdit::setText);
+
+    connect(ui_.designer_material_1_poissons_ratio_double_spinbox,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+            &WindowController::SetMaterialOnePoissonsRatio);
+    connect(this, &WindowController::OnSetMaterialOnePoissonsRatio,
+            ui_.designer_material_1_poissons_ratio_double_spinbox,
+            &QDoubleSpinBox::setValue);
+
+    connect(ui_.designer_material_1_youngs_modulus_double_spinbox,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+            &WindowController::SetMaterialOneYoungsModulus);
+    connect(this, &WindowController::OnSetMaterialOneYoungsModulus,
+            ui_.designer_material_1_youngs_modulus_double_spinbox,
+            &QDoubleSpinBox::setValue);
+
+    connect(ui_.designer_material_2_name_line_edit, &QLineEdit::textChanged,
+            this, &WindowController::SetMaterialTwoName);
+    connect(this, &WindowController::OnSetMaterialTwoName,
+            ui_.designer_material_2_name_line_edit, &QLineEdit::setText);
+
+    connect(ui_.designer_material_2_poissons_ratio_double_spinbox,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+            &WindowController::SetMaterialTwoPoissonsRatio);
+    connect(this, &WindowController::OnSetMaterialTwoPoissonsRatio,
+            ui_.designer_material_2_poissons_ratio_double_spinbox,
+            &QDoubleSpinBox::setValue);
+
+    connect(ui_.designer_material_2_youngs_modulus_double_spinbox,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged), this,
+            &WindowController::SetMaterialTwoYoungsModulus);
+    connect(this, &WindowController::OnSetMaterialTwoYoungsModulus,
+            ui_.designer_material_2_youngs_modulus_double_spinbox,
+            &QDoubleSpinBox::setValue);
 }
-
-void WindowController::DisableStaticUiElements() {}
-
-void WindowController::EnableStaticUiElements() {}
 
 void WindowController::ResetPlaybackControls() {
-    recorded_displacements_.clear();
-    recorded_displacements_.resize(0);
-    PlaybackPauseButtonPressed();
-}
-
-void WindowController::RecomputeSliceValueRange() {
-    unsigned int i = 0;
-
-    if (mesh->slice_axis == SliceAxis::x_axis) {
-        i = 0;
-    } else if (mesh->slice_axis == SliceAxis::y_axis) {
-        i = 1;
-    } else if (mesh->slice_axis == SliceAxis::z_axis) {
-        i = 2;
-    }
-
-    Real minimum = 0.f;
-    Real maximum = 0.f;
-
-    for (int i = 0; i < mesh->positions.size(); ++i) {
-        minimum = std::fmin(minimum, mesh->positions(i));
-        maximum = std::fmax(maximum, mesh->positions(i));
-    }
-
-    ui_.slice_value_slider->setMinimum(minimum);
-    ui_.slice_value_slider->setMaximum(maximum);
+    simulation_controller_->ResetPlaybackControls(ui_);
 }
