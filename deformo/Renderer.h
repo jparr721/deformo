@@ -51,4 +51,5 @@ class Renderer {
     auto BuildBuffers() -> void;
     auto ReloadRenderMode() -> void;
     auto ReloadVertexBuffers() -> void;
+    auto DestroyBuffers() -> void;
 };

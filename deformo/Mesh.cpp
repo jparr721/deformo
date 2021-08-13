@@ -1,5 +1,9 @@
+// Apparently windows defines its own min and max
+#define NOMINMAX
+
 #include "Mesh.h"
 
+#include <igl/boundary_facets.h>
 #include <igl/readPLY.h>
 
 #include <Eigen/Core>
@@ -8,7 +12,7 @@
 #include "MeshGenerator.h"
 #include "Utils.h"
 
-SliceAxis StringToSliceAxis(const std::string& input) {
+auto StringToSliceAxis(const std::string& input) -> SliceAxis {
     assert(input == "X-Axis" || input == "Y-Axis" ||
            input == "Z-Axis" && "INVALID CUT PLANE AXIS INPUT");
 
@@ -33,7 +37,7 @@ Mesh::Mesh(const std::string& ply_path, const std::string& tetgen_flags)
     InitializeFromTetgenFlagsAndFile(ply_path, tetgen_flags);
 }
 
-Mesh::Mesh(const MatrixXr& V, const Eigen::MatrixXi& T) {
+Mesh::Mesh(const MatrixXr& V, const MatrixX<int>& T) {
     Vectorize(tetrahedral_elements, T);
     InitializeRenderableSurfaces(V, T);
 }
@@ -55,7 +59,7 @@ int Mesh::GetPositionAtFaceIndex(const int face_index) const {
 }
 
 void Mesh::InitializeRenderableSurfaces(const MatrixXr& V,
-                                        const Eigen::MatrixXi& T) {
+                                        const MatrixX<int>& T) {
     Vectorize(positions, V);
     rest_positions = positions;
     Vectorize(faces, T);
@@ -65,27 +69,12 @@ void Mesh::InitializeRenderableSurfaces(const MatrixXr& V,
     }
 }
 
-void Mesh::ConstructMesh(MatrixXr& TV, Eigen::MatrixXi& TF, Eigen::MatrixXi& TT,
-                         const MatrixXr& V, const Eigen::MatrixXi& F,
+void Mesh::ConstructMesh(MatrixXr& TV, MatrixX<int>& TF, MatrixX<int>& TT,
+                         const MatrixXr& V, const MatrixX<int>& F,
                          const std::string& tetgen_flags) const {
     tetgenio out;
     Tetrahedralize(out, V, F, tetgen_flags);
     assert(TetgenioToMesh(TV, TF, TT, out));
-}
-
-Eigen::MatrixXi
-Mesh::ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
-                                                    const Eigen::VectorXi& T) {
-    Eigen::MatrixXi TTF;
-    TTF.resize(T.rows() / 3, 3);
-
-    for (int i = 0; i < TTF.rows(); ++i) {
-        TTF.row(i) << T(i * 3), T(i * 3 + 1), T(i * 3 + 2);
-    }
-
-    Eigen::MatrixXi all_faces;
-    utils::MatrixUnion(all_faces, TTF, F);
-    return all_faces;
 }
 
 void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
@@ -93,48 +82,26 @@ void Mesh::InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
     assert(std::filesystem::path(ply_path).extension() == ".ply" &&
            "INVALID PLY FILE");
     MatrixXr V;
-    Eigen::MatrixXi F;
+    MatrixX<int> F;
     igl::readPLY(ply_path, V, F);
     InitializeFromVerticesFacesAndTetgenFlags(V, F, tetgen_flags);
 }
 
 void Mesh::InitializeFromVerticesFacesAndTetgenFlags(
-    const MatrixXr& V, const Eigen::MatrixXi& F,
-    const std::string& tetgen_flags) {
+    const MatrixXr& V, const MatrixX<int>& F, const std::string& tetgen_flags) {
     MatrixXr TV;
-    Eigen::MatrixXi TF;
-    Eigen::MatrixXi TT;
+    MatrixX<int> TF;
+    MatrixX<int> TT;
 
     ConstructMesh(TV, TF, TT, V, F, tetgen_flags);
     Vectorize(tetrahedral_elements, TT);
 
-    const Eigen::MatrixXi faces =
-        ConstructRenderedFacesFromTetrahedralElements(TF, tetrahedral_elements);
-
-    // Convert TT for the matrix union
-    InitializeRenderableSurfaces(TV, faces);
+    igl::boundary_facets(TT, TF);
+    InitializeRenderableSurfaces(TV, TF);
 }
 
 // ================ SETTERS
-void Mesh::SetSliceValue(Real value) {
-    unsigned short mod = 0;
-
-    if (slice_axis == SliceAxis::x_axis) {
-        mod = 0;
-    } else if (slice_axis == SliceAxis::y_axis) {
-        mod = 1;
-    } else if (slice_axis == SliceAxis::z_axis) {
-        mod = 2;
-    }
-
-    /*  for (int i = mod; i < positions.size(); i += 2) {
-          if (positions(i) >= value) {
-              colors.segment(i - mod, 4) << kMeshDefaultColorInvisible;
-          } else {
-              colors.segment(i - mod, 4) << kMeshDefaultColor;
-          }
-      }*/
-}
+void Mesh::SetSliceValue(Real value) {}
 
 void Mesh::SetSliceAxis(const SliceAxis axis) { slice_axis = axis; }
 

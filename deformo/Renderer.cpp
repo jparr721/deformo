@@ -30,12 +30,7 @@ Renderer::Renderer(std::shared_ptr<Mesh> mesh,
     dirty_.set(DirtyStatus::render_mode);
 }
 
-Renderer::~Renderer() {
-    glDeleteBuffers(1, &vbo);
-    glDeleteBuffers(1, &c_vbo);
-    glDeleteBuffers(1, &ibo);
-    glDeleteVertexArrays(1, &vao);
-}
+Renderer::~Renderer() { DestroyBuffers(); }
 
 auto Renderer::Render() -> void {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -61,7 +56,8 @@ auto Renderer::Render() -> void {
 auto Renderer::Resize(const int width, const int height) const -> void {
     shader_program_->Bind();
     camera_->Resize(width, height);
-    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix() * camera_->ToViewMatrix());
+    shader_program_->SetMatrixUniform(mvp, camera_->GetProjectionMatrix() *
+                                               camera_->ToViewMatrix());
     shader_program_->Release();
     LogErrors("Renderer::Resize");
 }
@@ -114,9 +110,15 @@ auto Renderer::ReloadRenderMode() -> void {
 auto Renderer::ReloadVertexBuffers() -> void {
     BindVertexAttributeArray(shader_program_->id, "position", vbo, 3,
                              mesh_->positions);
-    // if (dirty_[DirtyStatus::colors]) {
     BindVertexAttributeArray(shader_program_->id, "color", c_vbo, 4,
                              mesh_->colors);
-    //    dirty_.flip(DirtyStatus::colors);
-    //}
+    BindElementArrayObject(ibo, mesh_->faces, true);
+    LogErrors("Renderer::ReloadVertexBuffers");
+}
+
+auto Renderer::DestroyBuffers() -> void {
+    glDeleteBuffers(1, &vbo);
+    glDeleteBuffers(1, &c_vbo);
+    glDeleteBuffers(1, &ibo);
+    glDeleteVertexArrays(1, &vao);
 }

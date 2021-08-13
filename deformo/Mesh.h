@@ -17,7 +17,8 @@ class Mesh {
     SliceAxis slice_axis = SliceAxis::x_axis;
     Real slice_value = 0;
 
-    inline const static Vector4r kMeshDefaultColor = Vector4r(0.f, 0.f, 1.f, 1.f);
+    inline const static Vector4r kMeshDefaultColor =
+        Vector4r(0.f, 0.f, 1.f, 1.f);
     inline const static Vector4r kMeshDefaultColorInvisible =
         Vector4r(0.f, 0.f, 0.f, 0.f);
     inline const static Vector4r kMeshDefaultSelectedColor =
@@ -31,13 +32,11 @@ class Mesh {
     VectorXr rest_positions;
 
     // Geometry Faces / Tetrahedra
-    Eigen::VectorXi tetrahedral_elements;
-    Eigen::VectorXi faces;
+    VectorX<int> tetrahedral_elements;
+    VectorX<int> faces;
 
     Mesh(const std::string& ply_path, const std::string& tetgen_flags = "zpq");
-    Mesh(const MatrixXr& V, const Eigen::MatrixXi& T);
-    Mesh(const MatrixXr& V, const Eigen::MatrixXi& F,
-         const std::string& tetgen_flags);
+    Mesh(const MatrixXr& V, const MatrixX<int>& T);
 
     void Update(const VectorXr& displacements);
 
@@ -68,18 +67,14 @@ class Mesh {
         out = Eigen::Map<Out>(in_t.data(), in_t.rows() * in_t.cols());
     }
 
-    void InitializeRenderableSurfaces(const MatrixXr& V,
-                                      const Eigen::MatrixXi& T);
-    void ConstructMesh(MatrixXr& TV, Eigen::MatrixXi& TF, Eigen::MatrixXi& TT,
-                       const MatrixXr& V, const Eigen::MatrixXi& F,
+    void InitializeRenderableSurfaces(const MatrixXr& V, const MatrixX<int>& T);
+    void ConstructMesh(MatrixXr& TV, MatrixX<int>& TF, MatrixX<int>& TT,
+                       const MatrixXr& V, const MatrixX<int>& F,
                        const std::string& tetgen_flags) const;
     void InitializeFromTetgenFlagsAndFile(const std::string& ply_path,
                                           const std::string& tetgen_flags);
     void
     InitializeFromVerticesFacesAndTetgenFlags(const MatrixXr& V,
-                                              const Eigen::MatrixXi& F,
+                                              const MatrixX<int>& F,
                                               const std::string& tetgen_flags);
-    auto ConstructRenderedFacesFromTetrahedralElements(const Eigen::MatrixXi& F,
-                                                       const Eigen::VectorXi& T)
-        -> Eigen::MatrixXi;
 };

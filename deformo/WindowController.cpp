@@ -89,9 +89,7 @@ void WindowController::RenderSimulationButtonPressed() {
     Reset();
     renderer_->SetRenderMode(render_mode_);
 
-    // TODO(@jparr721) Re-generate new mesh and sim (more work than I originally
-    // thought).
-    // mesh->SetTetgenFlags(tetgen_flags_);
+    mesh->SetTetgenFlags(tetgen_flags_);
 }
 
 void WindowController::PlaybackSkipStartButtonPressed() {

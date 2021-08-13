@@ -48,10 +48,6 @@ class Simulation {
         integrator_->SetDamping(rayleigh_mu_, rayleigh_lambda_);
     }
 
-    void SetTetgenFlags(const std::string& value) const {
-        mesh_->SetTetgenFlags(value);
-    }
-
     void SetSliceValue(Real value) const { mesh_->SetSliceValue(value); }
     void SetSliceAxis(const std::string& value) const {
         mesh_->SetSliceAxis(StringToSliceAxis(value));
