@@ -35,7 +35,6 @@ class Renderer {
     auto SetPositionDisplacement(const VectorXr& positions) -> void;
     auto SetColors(const VectorXr& colors) -> void;
     auto SetRenderMode(GLenum mode) -> void;
-    void SetTetgenFlags(const std::string& flags);
     void SetCutPlane(Real cut_plane);
     void SetCutPlaneAxis(SliceAxis cut_plane_axis);
 

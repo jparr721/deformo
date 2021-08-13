@@ -6,5 +6,6 @@
 #pragma once
 
 #define TETLIBRARY
+#define NOMINMAX
 
 #include "gtest/gtest.h"

@@ -77,8 +77,6 @@ auto Renderer::SetRenderMode(const GLenum mode) -> void {
     dirty_.set(DirtyStatus::render_mode);
 }
 
-void Renderer::SetTetgenFlags(const std::string& flags) {}
-
 void Renderer::SetCutPlane(Real cut_plane) { mesh_->SetSliceValue(cut_plane); }
 
 void Renderer::SetCutPlaneAxis(SliceAxis cut_plane_axis) {

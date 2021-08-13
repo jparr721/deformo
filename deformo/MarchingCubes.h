@@ -290,6 +290,46 @@ inline std::array<std::array<int, 16>, 256> triangle_table = {
      {0, 3, 8, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
      {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}};
 
-void GenerateFacesFromScalarField(MatrixXr& V, Eigen::MatrixXi& F,
-                                  Real iso_level, Real cell_length,
-                                  const Tensor3r& scalar_field);
+class MarchingCubes {
+  public:
+    MarchingCubes(Real iso_level, Real cell_length, const Real* scalar_field)
+        : iso_level_(iso_level), cell_length_(cell_length),
+          scalar_field_(scalar_field) {}
+    void GenerateGeometry(MatrixXr& V, MatrixX<int>& F, unsigned int n_cells_x,
+                          unsigned int n_cells_y, unsigned int n_cells_z);
+
+  private:
+    struct Position {
+        unsigned int index;
+        Vector3r position;
+    };
+
+    unsigned int n_cells_x_ = 0;
+    unsigned int n_cells_y_ = 0;
+    unsigned int n_cells_z_ = 0;
+
+    const Real iso_level_ = 1;
+
+    const Real cell_length_ = 1;
+
+    const Real* scalar_field_;
+
+    auto Interpolate(const Real x1, const Real y1, const Real z1, const Real x2,
+                     const Real y2, const Real z2, const Real val1,
+                     const Real val2) -> Vector3r;
+
+    auto Intersection(const unsigned int x, const unsigned int y,
+                      const unsigned int z, const unsigned int edge_number)
+        -> Vector3r;
+
+    auto VertexId(const unsigned int x, const unsigned int y,
+                  const unsigned int z) -> unsigned int;
+
+    auto EdgeId(const unsigned int x, const unsigned int y,
+                const unsigned int z, const unsigned int edge_number)
+        -> unsigned int;
+
+    void CalculateFacesAndVertices(MatrixXr& V, MatrixX<int>& F,
+                                   std::vector<Vector3<int>>& triangles,
+                                   std::map<unsigned int, Position>& vertices);
+};
