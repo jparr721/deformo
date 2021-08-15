@@ -55,11 +55,11 @@ class _Cube {
 template <typename T> class ImplicitSurfaceGenerator {
   public:
     struct Inclusion {
-        unsigned int n_inclusions;
-        unsigned int area;
-        unsigned int depth;
-        unsigned int rows;
-        unsigned int cols;
+        int n_inclusions;
+        int area; // DELETE THIS FIELD
+        int depth;
+        int rows;
+        int cols;
     };
 
     enum class GeneratorInfo {
@@ -94,9 +94,13 @@ template <typename T> class ImplicitSurfaceGenerator {
     }
 
     auto Generate() -> Tensor3<T> {
-        return behavior_ == ImplicitSurfaceCharacteristics::kIsotropic
-                   ? GenerateIsotropicMaterial()
-                   : GenerateAnisotropicMaterial();
+        if (microstructure_ == ImplicitSurfaceMicrostructure::kComposite) {
+            return behavior_ == ImplicitSurfaceCharacteristics::kIsotropic
+                       ? GenerateIsotropicMaterial()
+                       : GenerateAnisotropicMaterial();
+        } else {
+            return implicit_surface_;
+        }
     }
 
     auto Info() -> GeneratorInfo { return info_; }
@@ -218,12 +222,9 @@ template <typename T> class ImplicitSurfaceGenerator {
 
         // RNG
         std::default_random_engine generator;
-        std::uniform_int_distribution<int> rows_distribution(min,
-                                                                   max_rows);
-        std::uniform_int_distribution<int> cols_distribution(min,
-                                                                   max_cols);
-        std::uniform_int_distribution<int> layers_distribution(
-            min, max_layers);
+        std::uniform_int_distribution<int> rows_distribution(min, max_rows);
+        std::uniform_int_distribution<int> cols_distribution(min, max_cols);
+        std::uniform_int_distribution<int> layers_distribution(min, max_layers);
 
         for (unsigned int i = 0; i < inclusion_.n_inclusions; ++i) {
             unsigned int rows = rows_distribution(generator);

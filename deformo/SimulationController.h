@@ -13,7 +13,7 @@ class SimulationController {
 
     std::unique_ptr<Simulation> simulation;
 
-    SimulationController(const std::shared_ptr<Mesh>& mesh);
+    explicit SimulationController(const std::shared_ptr<Mesh>& mesh);
 
     void StepForward();
 

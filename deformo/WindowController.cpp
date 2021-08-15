@@ -9,7 +9,7 @@ WindowController::WindowController(Ui::deformoClass& ui) : ui_(ui) {
     mesh = std::make_shared<Mesh>(default_mesh_path, tetgen_flags_);
 
     simulation_controller_ = std::make_unique<SimulationController>(mesh);
-    designer_controller_ = std::make_unique<DesignerController>();
+    designer_controller_ = std::make_unique<DesignerController>(mesh);
 
     ConnectUiElementsToSimulation();
     ConnectUiElementsToDesigner();
@@ -422,6 +422,10 @@ void WindowController::ConnectUiElementsToDesigner() {
     connect(this, &WindowController::OnSetMaterialTwoYoungsModulus,
             ui_.designer_material_2_youngs_modulus_double_spinbox,
             &QDoubleSpinBox::setValue);
+
+    // Compute Button
+    connect(ui_.designer_compute_shape_push_button, &QPushButton::pressed, this,
+            &WindowController::ComputeDesignedShapeButtonPressed);
 }
 
 void WindowController::ResetPlaybackControls() {

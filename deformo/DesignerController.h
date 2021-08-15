@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Material.h"
+#include "Mesh.h"
 #include "Numerics.h"
 #include "ui_deformo.h"
 #include <string>
@@ -9,6 +10,9 @@ class DesignerController {
   public:
     Material material_1;
     Material material_2;
+
+    explicit DesignerController(const std::shared_ptr<Mesh> mesh)
+        : mesh_(mesh) {}
 
     // Implicit surface
     void SetImplicitSurfaceHeight(int value);
@@ -65,4 +69,6 @@ class DesignerController {
 
     // Inclusion ratio for material 2
     int material_2_number_of_inclusions_ = 0;
+
+    std::shared_ptr<Mesh> mesh_;
 };

@@ -1,4 +1,6 @@
 #include "DesignerController.h"
+#include "MarchingCubes.h"
+#include <igl/unique_rows.h>
 
 void DesignerController::SetImplicitSurfaceHeight(int value) {
     implicit_surface_height_ = value;
@@ -52,6 +54,7 @@ void DesignerController::SetUniformMaterial(const bool checked,
         ui.designer_material_2_poissons_ratio_double_spinbox->setDisabled(true);
         ui.designer_material_2_youngs_modulus_double_spinbox->setDisabled(true);
         ui.designer_isotropic_material_checkbox->setDisabled(true);
+        ui.designer_isotropic_material_checkbox->setChecked(true);
     } else {
         ui.designer_material_2_name_line_edit->setDisabled(false);
         ui.designer_material_2_poissons_ratio_double_spinbox->setDisabled(
@@ -59,6 +62,7 @@ void DesignerController::SetUniformMaterial(const bool checked,
         ui.designer_material_2_youngs_modulus_double_spinbox->setDisabled(
             false);
         ui.designer_isotropic_material_checkbox->setDisabled(false);
+        ui.designer_isotropic_material_checkbox->setChecked(false);
     }
 }
 
@@ -74,6 +78,76 @@ void DesignerController::ComputeDesignedShapeButtonPressed() {
         material_2 =
             MaterialFromEandv(1, material_2.name, material_2.E, material_2.v);
     }
+
+    // Generate the shape
+    const ImplicitSurfaceGenerator<Real>::Inclusion inclusion{
+        material_2_number_of_inclusions_,
+        0,
+        inclusion_height_,
+        inclusion_width_,
+        inclusion_depth_,
+    };
+
+    const ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure micro =
+        is_uniform_ ? ImplicitSurfaceGenerator<
+                          Real>::ImplicitSurfaceMicrostructure::kUniform
+                    : ImplicitSurfaceGenerator<
+                          Real>::ImplicitSurfaceMicrostructure::kComposite;
+
+    const ImplicitSurfaceGenerator<Real>::ImplicitSurfaceCharacteristics
+        behavior =
+            is_isotropic_
+                ? ImplicitSurfaceGenerator<
+                      Real>::ImplicitSurfaceCharacteristics::kIsotropic
+                : ImplicitSurfaceGenerator<
+                      Real>::ImplicitSurfaceCharacteristics::kAnisotropic;
+
+    ImplicitSurfaceGenerator<Real> generator(
+        implicit_surface_height_, implicit_surface_width_,
+        implicit_surface_depth_, behavior, micro, inclusion, material_1,
+        material_2);
+
+    std::cout << "Generating implicit surface" << std::endl;
+    Tensor3r implicit_surface = generator.Generate();
+
+    Real* data =
+        new Real[(implicit_surface_height_ + 1) *
+                 (implicit_surface_width_ + 1) * (implicit_surface_depth_ + 1)];
+    int np = implicit_surface_width_ + 1;
+    int ns = np * (implicit_surface_height_ + 1);
+    for (int k = 0; k < implicit_surface_depth_; ++k) {
+        for (int i = 0; i < implicit_surface_width_; ++i) {
+            for (int j = 0; j < implicit_surface_height_; ++j) {
+                if (k == implicit_surface_depth_ - 1 || k == 0 ||
+                    i == implicit_surface_width_ - 1 || i == 0 ||
+                    j == implicit_surface_height_ - 1 || j == 0) {
+                    data[k * ns + i * np + j] = Real(0);
+                } else {
+                    data[k * ns + i * np + j] = Real(1);
+                }
+            }
+        }
+    }
+
+    MarchingCubes marching_cubes(material_1.number, 1, data);
+    // MarchingCubes marching_cubes(material_1.number, 1,
+    //                             implicit_surface.Instance().data());
+    MatrixXr dV;
+    MatrixX<int> dF;
+    std::cout << "Marching cubes on iso surface" << std::endl;
+    marching_cubes.GenerateGeometry(dV, dF, implicit_surface_height_,
+                                    implicit_surface_width_,
+                                    implicit_surface_depth_);
+
+    // MatrixXr V;
+    // MatrixXr ia;
+    // MatrixXr ic;
+    // igl::unique_rows(dV, V, ia, ic);
+    // MatrixX<int> F;
+    // igl::unique_rows(dF, F, ia, ic);
+
+    std::cout << "Reloading mesh" << std::endl;
+    mesh_->RefreshData(dV, dF);
 }
 
 void DesignerController::SetInclusionHeight(int value) {

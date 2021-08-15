@@ -108,3 +108,9 @@ void Mesh::SetSliceAxis(const SliceAxis axis) { slice_axis = axis; }
 void Mesh::SetTetgenFlags(const std::string& flags) {
     InitializeFromTetgenFlagsAndFile(current_file_path_, flags);
 }
+
+void Mesh::RefreshData(const MatrixXr& V, const MatrixX<int>& F,
+                       const std::string& tetgen_flags) {
+    InitializeFromVerticesFacesAndTetgenFlags(V, F, tetgen_flags);
+    //InitializeRenderableSurfaces(V, F);
+}

@@ -311,22 +311,41 @@ template <typename T> class Tensor3 {
         // "resize" sweeps the tensor instance so, instead, make a new one.
         Tensor3<T> new_tensor(rows, cols, layers);
 
-        // Add the old indices back into the tensor
-        for (int l = 0; l < layers - 1; ++l) {
+        if (index == InsertOpIndex::kEnd) {
+            // Add the old indices back into the tensor
+            for (int l = 0; l < layers - 1; ++l) {
+                for (int row = 0; row < rows; ++row) {
+                    for (int col = 0; col < cols; ++col) {
+                        new_tensor(row, col, l) = instance_(row, col, l);
+                    }
+                }
+            }
+
+            // Insert the new last layer.
             for (int row = 0; row < rows; ++row) {
                 for (int col = 0; col < cols; ++col) {
-                    new_tensor(row, col, l) = instance_(row, col, l);
+                    new_tensor(row, col, layers - 1) = layer(row, col);
                 }
             }
         }
 
-        // Insert the new last layer.
-        for (int row = 0; row < rows; ++row) {
-            for (int col = 0; col < cols; ++col) {
-                new_tensor(row, col, layers - 1) = layer(row, col);
+        if (index == InsertOpIndex::kStart) {
+            // Insert the new first layer.
+            for (int row = 0; row < rows; ++row) {
+                for (int col = 0; col < cols; ++col) {
+                    new_tensor(row, col, 0) = layer(row, col);
+                }
+            }
+
+            // Add the old indices back into the tensor
+            for (int l = 0; l < layers - 1; ++l) {
+                for (int row = 0; row < rows; ++row) {
+                    for (int col = 0; col < cols; ++col) {
+                        new_tensor(row, col, l + 1) = instance_(row, col, l);
+                    }
+                }
             }
         }
-
         return new_tensor;
     }
 

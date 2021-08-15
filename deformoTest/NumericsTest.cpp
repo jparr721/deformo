@@ -95,6 +95,31 @@ TEST(TestNumerics, TestTensor3AppendLayer) {
   ASSERT_TRUE(layer_1.isApprox(l1_comp));
 }
 
+TEST(TestNumerics, TestTensor3AppendLayerToFront) {
+  Tensor3i t(2, 2, 1);
+  t.SetConstant(1);
+
+  MatrixX<int> layer(2, 2);
+  layer.setConstant(2);
+
+  Tensor3i t2 = t.Append(layer, Tensor3i::InsertOpIndex::kStart);
+  std::cout << t2 << std::endl;
+  ASSERT_TRUE(t2.Dimension(0) == 2);
+  ASSERT_TRUE(t2.Dimension(1) == 2);
+  ASSERT_TRUE(t2.Dimension(2) == 2);
+
+  MatrixX<int> l0_comp(2, 2);
+  l0_comp.setConstant(2);
+  MatrixX<int> layer_0 = t2.At(0);
+
+  ASSERT_TRUE(layer_0.isApprox(l0_comp));
+
+  MatrixX<int> l1_comp(2, 2);
+  l1_comp.setConstant(1);
+  MatrixX<int> layer_1 = t2.At(1);
+  ASSERT_TRUE(layer_1.isApprox(l1_comp));
+}
+
 TEST(TestNumerics, TestIntoVector) {
   Tensor3i t(2, 2, 1);
   t.SetConstant(2);

@@ -43,6 +43,8 @@ class Mesh {
     void SetSliceValue(Real value);
     void SetSliceAxis(SliceAxis axis);
     void SetTetgenFlags(const std::string& flags);
+    void RefreshData(const MatrixXr& V, const MatrixX<int>& F,
+                     const std::string& tetgen_flags = "zpq");
 
     void Reset();
 

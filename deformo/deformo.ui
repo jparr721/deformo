@@ -921,7 +921,7 @@ QMenu::separator {
                   <property name="verticalSpacing">
                    <number>20</number>
                   </property>
-                  <item row="2" column="0">
+                  <item row="0" column="0">
                    <widget class="QLabel" name="label_32">
                     <property name="font">
                      <font>
@@ -934,45 +934,25 @@ QMenu::separator {
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_5">
+                  <item row="1" column="0">
+                   <widget class="QDoubleSpinBox" name="designer_homogenized_youngs_modulus_double_spinbox">
                     <property name="font">
                      <font>
                       <family>Segoe UI</family>
-                      <pointsize>9</pointsize>
                      </font>
                     </property>
-                    <property name="text">
-                     <string>Input E:</string>
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                    <property name="minimum">
+                     <double>-10000000.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>100000000.000000000000000</double>
                     </property>
                    </widget>
                   </item>
                   <item row="0" column="1">
-                   <widget class="QLabel" name="label_31">
-                    <property name="font">
-                     <font>
-                      <family>Segoe UI</family>
-                      <pointsize>9</pointsize>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>Input v:</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="QDoubleSpinBox" name="doubleSpinBox"/>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="QDoubleSpinBox" name="doubleSpinBox_3"/>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="QDoubleSpinBox" name="doubleSpinBox_4"/>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="QDoubleSpinBox" name="doubleSpinBox_2"/>
-                  </item>
-                  <item row="2" column="1">
                    <widget class="QLabel" name="label_33">
                     <property name="font">
                      <font>
@@ -985,7 +965,7 @@ QMenu::separator {
                     </property>
                    </widget>
                   </item>
-                  <item row="4" column="0" colspan="2">
+                  <item row="2" column="0" colspan="2">
                    <spacer name="verticalSpacer_4">
                     <property name="orientation">
                      <enum>Qt::Vertical</enum>
@@ -998,11 +978,37 @@ QMenu::separator {
                     </property>
                    </spacer>
                   </item>
+                  <item row="1" column="1">
+                   <widget class="QDoubleSpinBox" name="designer_homogenized_poissons_ratio_double_spinbox">
+                    <property name="font">
+                     <font>
+                      <family>Segoe UI</family>
+                     </font>
+                    </property>
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                    <property name="minimum">
+                     <double>-10000000.000000000000000</double>
+                    </property>
+                    <property name="maximum">
+                     <double>100000000.000000000000000</double>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </item>
                </layout>
               </widget>
               <widget class="QWidget" name="page">
+               <property name="geometry">
+                <rect>
+                 <x>0</x>
+                 <y>0</y>
+                 <width>461</width>
+                 <height>907</height>
+                </rect>
+               </property>
                <attribute name="label">
                 <string>Dataset Generator</string>
                </attribute>
@@ -1243,7 +1249,7 @@ QMenu::separator {
              </font>
             </property>
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="sim_settings_page">
              <property name="geometry">
@@ -1733,8 +1739,8 @@ QMenu::separator {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>161</width>
-               <height>138</height>
+               <width>461</width>
+               <height>816</height>
               </rect>
              </property>
              <property name="font">
