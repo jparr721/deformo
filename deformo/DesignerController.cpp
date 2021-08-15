@@ -1,6 +1,5 @@
 #include "DesignerController.h"
 #include "MarchingCubes.h"
-#include <igl/unique_rows.h>
 
 void DesignerController::SetImplicitSurfaceHeight(int value) {
     implicit_surface_height_ = value;
@@ -76,13 +75,13 @@ void DesignerController::ComputeDesignedShapeButtonPressed() {
 
     if (!is_uniform_) {
         material_2 =
-            MaterialFromEandv(1, material_2.name, material_2.E, material_2.v);
+            MaterialFromEandv(0, material_2.name, material_2.E, material_2.v);
     }
 
     // Generate the shape
     const ImplicitSurfaceGenerator<Real>::Inclusion inclusion{
         material_2_number_of_inclusions_,
-        0,
+        inclusion_height_,
         inclusion_height_,
         inclusion_width_,
         inclusion_depth_,
@@ -109,42 +108,16 @@ void DesignerController::ComputeDesignedShapeButtonPressed() {
 
     std::cout << "Generating implicit surface" << std::endl;
     Tensor3r implicit_surface = generator.Generate();
+    utils::GTestDebugPrint(implicit_surface);
 
-    Real* data =
-        new Real[(implicit_surface_height_ + 1) *
-                 (implicit_surface_width_ + 1) * (implicit_surface_depth_ + 1)];
-    int np = implicit_surface_width_ + 1;
-    int ns = np * (implicit_surface_height_ + 1);
-    for (int k = 0; k < implicit_surface_depth_; ++k) {
-        for (int i = 0; i < implicit_surface_width_; ++i) {
-            for (int j = 0; j < implicit_surface_height_; ++j) {
-                if (k == implicit_surface_depth_ - 1 || k == 0 ||
-                    i == implicit_surface_width_ - 1 || i == 0 ||
-                    j == implicit_surface_height_ - 1 || j == 0) {
-                    data[k * ns + i * np + j] = Real(0);
-                } else {
-                    data[k * ns + i * np + j] = Real(1);
-                }
-            }
-        }
-    }
-
-    MarchingCubes marching_cubes(material_1.number, 1, data);
-    // MarchingCubes marching_cubes(material_1.number, 1,
-    //                             implicit_surface.Instance().data());
+    MarchingCubes marching_cubes(material_1.number, 1,
+                                 implicit_surface.Instance().data());
     MatrixXr dV;
     MatrixX<int> dF;
     std::cout << "Marching cubes on iso surface" << std::endl;
-    marching_cubes.GenerateGeometry(dV, dF, implicit_surface_height_,
-                                    implicit_surface_width_,
-                                    implicit_surface_depth_);
-
-    // MatrixXr V;
-    // MatrixXr ia;
-    // MatrixXr ic;
-    // igl::unique_rows(dV, V, ia, ic);
-    // MatrixX<int> F;
-    // igl::unique_rows(dF, F, ia, ic);
+    marching_cubes.GenerateGeometry(dV, dF, implicit_surface_height_ + 1,
+                                    implicit_surface_width_ + 1,
+                                    implicit_surface_depth_ + 1);
 
     std::cout << "Reloading mesh" << std::endl;
     mesh_->RefreshData(dV, dF);

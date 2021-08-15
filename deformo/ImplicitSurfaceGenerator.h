@@ -95,12 +95,12 @@ template <typename T> class ImplicitSurfaceGenerator {
 
     auto Generate() -> Tensor3<T> {
         if (microstructure_ == ImplicitSurfaceMicrostructure::kComposite) {
-            return behavior_ == ImplicitSurfaceCharacteristics::kIsotropic
+            behavior_ == ImplicitSurfaceCharacteristics::kIsotropic
                        ? GenerateIsotropicMaterial()
                        : GenerateAnisotropicMaterial();
-        } else {
-            return implicit_surface_;
-        }
+        } 
+
+        return AddSquarePaddingLayers();
     }
 
     auto Info() -> GeneratorInfo { return info_; }
@@ -222,9 +222,12 @@ template <typename T> class ImplicitSurfaceGenerator {
 
         // RNG
         std::default_random_engine generator;
-        std::uniform_int_distribution<int> rows_distribution(min, max_rows);
-        std::uniform_int_distribution<int> cols_distribution(min, max_cols);
-        std::uniform_int_distribution<int> layers_distribution(min, max_layers);
+        const std::uniform_int_distribution<int> rows_distribution(min,
+                                                                   max_rows);
+        const std::uniform_int_distribution<int> cols_distribution(min,
+                                                                   max_cols);
+        const std::uniform_int_distribution<int> layers_distribution(
+            min, max_layers);
 
         for (unsigned int i = 0; i < inclusion_.n_inclusions; ++i) {
             unsigned int rows = rows_distribution(generator);
@@ -315,5 +318,29 @@ template <typename T> class ImplicitSurfaceGenerator {
             implicit_surface_(index.x(), index.y(), index.z()) =
                 material_2_.number;
         }
+    }
+
+    auto AddSquarePaddingLayers() -> Tensor3<T> {
+        const int rows = implicit_surface_.Dimension(0) + 2;
+        const int cols = implicit_surface_.Dimension(1) + 2;
+        const int layers = implicit_surface_.Dimension(2) + 2;
+
+        Tensor3<T> new_surface(rows, cols, layers);
+
+        for (int layer = 0; layer < layers; ++layer) {
+            for (int row = 0; row < rows; ++row) {
+                for (int col = 0; col < cols; ++col) {
+                    if (layer == 0 || layer == layers - 1 || row == 0 ||
+                            row == rows - 1 || col == 0 || col == cols - 1) {
+                        new_surface(row, col, layer) = 0;
+                    } else {
+                        new_surface(row, col, layer) =
+                            implicit_surface_(row - 1, col - 1, layer - 1); 
+                    }
+                }
+            }
+        }
+
+        return new_surface;
     }
 };

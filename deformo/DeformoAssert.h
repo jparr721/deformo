@@ -3,6 +3,7 @@
 #include <cassert>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 class DeformoAssertion {
   public:

@@ -34,7 +34,9 @@ auto linear_algebra::LinSpace(Real start, Real stop, unsigned int num)
         return interval;
     }
 
-    assert(stop > start && "STOP CANNOT BE GREATER THAN START");
+    numerics_assertion.Assert(stop > start && "STOP CANNOT BE LESS THAN START",
+                              __FUNCTION__, __FILE__, __LINE__, "Stop: ", stop,
+                              "Start: ", start);
 
     const Real div = num - 1;
 
