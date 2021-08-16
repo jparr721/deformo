@@ -108,7 +108,6 @@ void DesignerController::ComputeDesignedShapeButtonPressed() {
 
     std::cout << "Generating implicit surface" << std::endl;
     Tensor3r implicit_surface = generator.Generate();
-    utils::GTestDebugPrint(implicit_surface);
 
     MarchingCubes marching_cubes(material_1.number, 1,
                                  implicit_surface.Instance().data());
