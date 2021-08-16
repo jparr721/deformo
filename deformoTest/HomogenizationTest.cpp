@@ -10,17 +10,18 @@
 #include "../deformo/Rve.cpp"
 #include "../deformo/Rve.h"
 
-auto rve = std::make_shared<Rve>(true, 10, 10, 10, 0.1, 0.1, 0.1);
-
 auto IsApprox(Real lhs, Real rhs, Real epsilon) -> bool {
-    return std::fabs(lhs - rhs) < epsilon;
+  return std::fabs(lhs - rhs) < epsilon;
 }
 
-
 TEST(TestHomogenization, TestHexahedron) {
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), Material{1},
+                                   Material{0});
+
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
 
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
@@ -28,9 +29,14 @@ TEST(TestHomogenization, TestHexahedron) {
 }
 
 TEST(TestHomogenization, TestComputeDegreesOfFreedom) {
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), Material{1},
+                                   Material{0});
+  rve->ComputeSurfaceMesh();
+
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
 
   const MatrixX<int> edof =
@@ -51,9 +57,13 @@ TEST(TestHomogenization, TestComputeDegreesOfFreedom) {
 }
 
 TEST(TestHomogenizations, TestComputeUniqueNodes) {
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), Material{1},
+                                   Material{0});
+
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
 
   const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(1000);
@@ -82,9 +92,14 @@ TEST(TestHomogenizations, TestComputeUniqueNodes) {
 }
 
 TEST(TestHomogenization, TestComputeUniqueDegreesOfFreedom) {
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), Material{1},
+                                   Material{0});
+  rve->ComputeSurfaceMesh();
+
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
 
   constexpr unsigned int n_elements = 1000;
@@ -109,11 +124,16 @@ TEST(TestHomogenization, TestComputeUniqueDegreesOfFreedom) {
 }
 
 TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
-  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
-  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
+
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
 
@@ -131,11 +151,15 @@ TEST(TestHomogenization, TestAssembleStiffnessMatrix) {
 }
 
 TEST(TestHomogenization, TestAssembleLoadMatrix) {
-  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
-  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
 
@@ -157,11 +181,64 @@ TEST(TestHomogenization, TestAssembleLoadMatrix) {
 }
 
 TEST(TestHomogenization, TestComputeDisplacement) {
-  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
-  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
+  ASSERT_TRUE(homogenization.get() != nullptr);
+  const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
+
+  constexpr unsigned int n_elements = 1000;
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(n_elements);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(n_elements);
+  const MatrixX<int> unique_dof =
+      homogenization->ComputeUniqueDegreesOfFreedom(edof, unique_nodes);
+  const MatrixXr F = homogenization->AssembleLoadMatrix(
+      1000, 3000, unique_dof, hexahedron.at(2), hexahedron.at(3));
+  const MatrixXr K = homogenization->AssembleStiffnessMatrix(
+      3000, unique_dof, hexahedron.at(0), hexahedron.at(1));
+
+  const MatrixXr X =
+      homogenization->ComputeDisplacement(3000, K, F, unique_dof);
+
+  for (int row = 0; row < F.rows(); ++row) {
+    for (int col = 0; col < F.cols(); ++col) {
+      // Whole thing ends up being basically 0
+      ASSERT_TRUE(F(row, col) < 0.00001);
+    }
+  }
+}
+
+TEST(TestHomogenization, TestComputeDisplacementWithVoidNodes) {
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  MatrixXr surface(10, 10);
+  surface.row(0) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+  surface.row(1) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(2) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(3) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(4) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(5) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(6) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(7) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(8) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(9) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+
+  Tensor3r surface_mesh = Tensor3r::Replicate(surface, 10);
+
+  const auto homogenization = std::make_shared<Homogenization>(
+      surface_mesh, rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
 
@@ -188,11 +265,15 @@ TEST(TestHomogenization, TestComputeDisplacement) {
 }
 
 TEST(TestHomogenization, TestComputeUnitStrainParameters) {
-  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
-  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
+  const auto homogenization = std::make_shared<Homogenization>(
+      rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
   const Tensor3r strain_param =
@@ -254,15 +335,15 @@ TEST(TestHomogenization, TestComputeUnitStrainParameters) {
 }
 
 TEST(TestHomogenization, TestSolverStep) {
-  rve->material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
-  rve->material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
   ASSERT_TRUE(rve.get() != nullptr);
 
-  const auto homogenization = std::make_shared<Homogenization>(rve);
-  ASSERT_TRUE(homogenization.get() != nullptr);
-
-  homogenization->Solve();
-  const MatrixXr constitutive_tensor = homogenization->Stiffness();
+  rve->Homogenize();
+  const MatrixXr constitutive_tensor = rve->ConsitutiveTensor();
 
   Matrix6r comp;
   comp.row(0) << 30, 10, 10, 0, 0, 0;

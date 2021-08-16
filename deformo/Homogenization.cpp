@@ -3,30 +3,31 @@
 #include <Eigen/Cholesky>
 #include <unsupported/Eigen/KroneckerProduct>
 
-Homogenization::Homogenization(std::shared_ptr<Rve> rve) : rve_(rve) {
-    voxel_ = rve_->ToImplicitSurface();
-    cell_len_x_ = rve_->width;
-    cell_len_y_ = rve_->height;
-    cell_len_z_ = rve_->depth;
+Homogenization::Homogenization(const Tensor3r& implicit_surface,
+                               const Material& material_1,
+                               const Material& material_2) : voxel_(implicit_surface) {
+    cell_len_x_ = voxel_.Dimension(0);
+    cell_len_y_ = voxel_.Dimension(1);
+    cell_len_z_ = voxel_.Dimension(2);
 
     // For two-material composites, we sum the material parameters
-    Tensor3r material_one_lambda = voxel_.Where(rve_->material_1.number);
+    Tensor3r material_one_lambda = voxel_.Where(material_1.number);
     Tensor3r scalar_tensor_placeholder(material_one_lambda.Dimensions());
-    scalar_tensor_placeholder.SetConstant(rve_->material_1.lambda);
+    scalar_tensor_placeholder.SetConstant(material_1.lambda);
     material_one_lambda.Instance() *= scalar_tensor_placeholder.Instance();
 
-    Tensor3r material_two_lambda = voxel_.Where(rve_->material_2.number);
-    scalar_tensor_placeholder.SetConstant(rve_->material_2.lambda);
+    Tensor3r material_two_lambda = voxel_.Where(material_2.number);
+    scalar_tensor_placeholder.SetConstant(material_2.lambda);
     material_two_lambda.Instance() *= scalar_tensor_placeholder.Instance();
 
     lambda_ = Tensor3r(material_one_lambda.Instance() +
                        material_two_lambda.Instance());
 
-    Tensor3r material_one_mu = voxel_.Where(rve_->material_1.number);
-    scalar_tensor_placeholder.SetConstant(rve_->material_1.G);
+    Tensor3r material_one_mu = voxel_.Where(material_1.number);
+    scalar_tensor_placeholder.SetConstant(material_1.G);
     material_one_mu.Instance() *= scalar_tensor_placeholder.Instance();
-    Tensor3r material_two_mu = voxel_.Where(rve_->material_2.number);
-    scalar_tensor_placeholder.SetConstant(rve_->material_2.G);
+    Tensor3r material_two_mu = voxel_.Where(material_2.number);
+    scalar_tensor_placeholder.SetConstant(material_2.G);
     material_two_mu.Instance() *= scalar_tensor_placeholder.Instance();
 
     mu_ = Tensor3r(material_one_mu.Instance() + material_two_mu.Instance());
@@ -67,6 +68,8 @@ auto Homogenization::Solve() -> void {
     AssembleConstitutiveTensor(unique_degrees_of_freedom, ke_lambda, ke_mu, X,
                                X0);
 }
+
+auto Homogenization::ComputeMaterialCoefficients() -> void {}
 
 auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
     -> std::array<MatrixXr, 4> {
@@ -562,7 +565,8 @@ auto Homogenization::AssembleConstitutiveTensor(
                          mu_contribution.Instance())
                     .Sum();
 
-            constitutive_tensor_(i, j) = static_cast<Real>(1) / volume * contribution_sum;
+            constitutive_tensor_(i, j) =
+                static_cast<Real>(1) / volume * contribution_sum;
         }
     }
 }

@@ -3,7 +3,6 @@
 #include "DeformoAssert.h"
 #include "Material.h"
 #include "Numerics.h"
-#include "Rve.h"
 #include "Utils.h"
 #include <random>
 #include <vector>
@@ -56,7 +55,7 @@ template <typename T> class ImplicitSurfaceGenerator {
   public:
     struct Inclusion {
         int n_inclusions;
-        int area; // DELETE THIS FIELD
+        int area;
         int depth;
         int rows;
         int cols;
@@ -84,23 +83,57 @@ template <typename T> class ImplicitSurfaceGenerator {
                              ImplicitSurfaceCharacteristics behavior,
                              ImplicitSurfaceMicrostructure microstructure,
                              const Inclusion inclusion,
-                             const Material& material_1,
-                             const Material& material_2)
+                             const int& material_1_number,
+                             const int& material_2_number)
         : behavior_(behavior), microstructure_(microstructure),
-          inclusion_(inclusion), material_1_(material_1),
-          material_2_(material_2) {
+          inclusion_(inclusion), material_1_number_(material_1_number),
+          material_2_number_(material_2_number) {
         implicit_surface_.Resize(height, width, depth);
-        implicit_surface_.SetConstant(static_cast<T>(material_1_.number));
+        implicit_surface_.SetConstant(static_cast<T>(material_1_number_));
+    }
+
+    ImplicitSurfaceGenerator(const unsigned int height,
+                             const unsigned int width, const unsigned int depth,
+                             const int& material_1_number)
+        : material_1_number_(material_1_number),
+          microstructure_(ImplicitSurfaceMicrostructure::kUniform),
+          behavior_(ImplicitSurfaceCharacteristics::kIsotropic) {
+        implicit_surface_.Resize(height, width, depth);
+        implicit_surface_.SetConstant(static_cast<T>(material_1_number_));
     }
 
     auto Generate() -> Tensor3<T> {
         if (microstructure_ == ImplicitSurfaceMicrostructure::kComposite) {
             behavior_ == ImplicitSurfaceCharacteristics::kIsotropic
-                       ? GenerateIsotropicMaterial()
-                       : GenerateAnisotropicMaterial();
-        } 
+                ? GenerateIsotropicMaterial()
+                : GenerateAnisotropicMaterial();
+        }
 
-        return AddSquarePaddingLayers();
+        return implicit_surface_;
+    }
+
+    auto AddSquarePaddingLayers() -> Tensor3<T> {
+        const int rows = implicit_surface_.Dimension(0) + 2;
+        const int cols = implicit_surface_.Dimension(1) + 2;
+        const int layers = implicit_surface_.Dimension(2) + 2;
+
+        Tensor3<T> new_surface(rows, cols, layers);
+
+        for (int layer = 0; layer < layers; ++layer) {
+            for (int row = 0; row < rows; ++row) {
+                for (int col = 0; col < cols; ++col) {
+                    if (layer == 0 || layer == layers - 1 || row == 0 ||
+                        row == rows - 1 || col == 0 || col == cols - 1) {
+                        new_surface(row, col, layer) = 0;
+                    } else {
+                        new_surface(row, col, layer) =
+                            implicit_surface_(row - 1, col - 1, layer - 1);
+                    }
+                }
+            }
+        }
+
+        return new_surface;
     }
 
     auto Info() -> GeneratorInfo { return info_; }
@@ -116,8 +149,8 @@ template <typename T> class ImplicitSurfaceGenerator {
 
     Inclusion inclusion_;
 
-    Material material_1_;
-    Material material_2_;
+    int material_1_number_;
+    int material_2_number_;
 
     std::vector<_Cube> cubes_;
 
@@ -130,7 +163,7 @@ template <typename T> class ImplicitSurfaceGenerator {
 
         for (int row = 0; row < rows; ++row) {
             for (int col = 0; col < cols; ++col) {
-                if (layer(row, col) == material_2_.number) {
+                if (layer(row, col) == material_2_number_) {
                     return true;
                 }
             }
@@ -273,7 +306,7 @@ template <typename T> class ImplicitSurfaceGenerator {
                 const unsigned int layer = index.z();
 
                 implicit_surface_(row, col, layer) =
-                    static_cast<T>(material_2_.number);
+                    static_cast<T>(material_2_number_);
             }
         }
 
@@ -316,31 +349,8 @@ template <typename T> class ImplicitSurfaceGenerator {
         -> void {
         for (const Vector3<unsigned int>& index : indices) {
             implicit_surface_(index.x(), index.y(), index.z()) =
-                material_2_.number;
+                material_2_number_;
         }
     }
 
-    auto AddSquarePaddingLayers() -> Tensor3<T> {
-        const int rows = implicit_surface_.Dimension(0) + 2;
-        const int cols = implicit_surface_.Dimension(1) + 2;
-        const int layers = implicit_surface_.Dimension(2) + 2;
-
-        Tensor3<T> new_surface(rows, cols, layers);
-
-        for (int layer = 0; layer < layers; ++layer) {
-            for (int row = 0; row < rows; ++row) {
-                for (int col = 0; col < cols; ++col) {
-                    if (layer == 0 || layer == layers - 1 || row == 0 ||
-                            row == rows - 1 || col == 0 || col == cols - 1) {
-                        new_surface(row, col, layer) = 0;
-                    } else {
-                        new_surface(row, col, layer) =
-                            implicit_surface_(row - 1, col - 1, layer - 1); 
-                    }
-                }
-            }
-        }
-
-        return new_surface;
-    }
 };

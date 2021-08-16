@@ -17,7 +17,7 @@ TEST(TestImplicitSurfaceGenerator, TestConstructor) {
       ImplicitSurfaceGenerator<
           Real>::ImplicitSurfaceCharacteristics::kIsotropic,
       ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure::kComposite,
-      inclusion, m1, m2);
+      inclusion, m1.number, m2.number);
   GTEST_ASSERT_NE(generator.get(), nullptr);
 }
 
@@ -30,7 +30,7 @@ TEST(TestImplicitSurfaceGenerator, TestConstructor) {
       ImplicitSurfaceGenerator<
           Real>::ImplicitSurfaceCharacteristics::kIsotropic,
       ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure::kComposite,
-      inclusion, m1, m2);
+      inclusion, m1.number, m2.number);
 
   const Tensor3r generated = generator->Generate();
   const MatrixXr layer = generated.Layer(0);
@@ -98,7 +98,7 @@ TEST(TestImplicitSurfaceGenerator, TestConstructor) {
       ImplicitSurfaceGenerator<
           Real>::ImplicitSurfaceCharacteristics::kAnisotropic,
       ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure::kComposite,
-      inclusion, m1, m2);
+      inclusion, m1.number, m2.number);
 
   const Tensor3r generated = generator->Generate();
   const bool has_secondary_material = generated.Where(0).Sum() > 0;

@@ -1,44 +1,54 @@
 #pragma once
 
+#include "DeformoAssert.h"
+#include "Homogenization.h"
 #include "ImplicitSurfaceGenerator.h"
-#include "Numerics.h"
+#include "MarchingCubes.h"
 #include "Material.h"
+#include "Numerics.h"
+#include <memory>
 #include <string>
 #include <utility>
 
 class Rve {
   public:
-    // Homogenous 1-material structure
-    const bool homogenous;
+    Rve(const Vector3<int>& size, const Material& material_1,
+        const Material& material_2);
 
-    // RVE Dimenions
-    const unsigned int width;
-    const unsigned int height;
-    const unsigned int depth;
+    auto Homogenize() -> void;
+    auto ComputeRenderableMesh(MatrixXr& V, MatrixX<int>& F) -> void;
+    auto ComputeSurfaceMesh() -> void;
+    auto ComputeSurfaceMesh(const Vector3<int>& inclusion_size,
+                            const int n_inclusions, const bool is_isotropic)
+        -> void;
 
-    // RVE Inclusion Dimensions
-    unsigned int inclusion_width;
-    unsigned int inclusion_height;
-    unsigned int inclusion_depth;
+    auto Height() const noexcept -> int { return height_; }
+    auto Width() const noexcept -> int { return width_; }
+    auto Depth() const noexcept -> int { return depth_; }
+    auto ConsitutiveTensor() const -> Matrix6r { return C_; }
+    auto SurfaceMesh() const -> Tensor3r { return surface_mesh_; }
+    auto PrimaryMaterial() const -> Material { return material_1_; }
+    auto SecondaryMaterial() const -> Material { return material_2_; }
 
-    // The applied strain
-    Real strain;
+  private:
+    static constexpr unsigned int kCellLength = 1;
 
-    // Tetgen tetrahedral element volume
-    Real mesh_density;
+    bool is_homogenized_ = false;
+    bool contains_surface_mesh_ = false;
 
-    // The fraction of the RVE which contains material 2
-    Real volume_fraction;
+    unsigned int height_ = 0;
+    unsigned int width_ = 0;
+    unsigned int depth_ = 0;
 
-    Material material_1;
-    Material material_2;
+    DeformoAssertion deformo_assertion_;
 
-    Rve(const bool homogenous, const unsigned int width,
-        const unsigned int height, const unsigned int depth, const Real strain,
-        const Real mesh_density, const Real volume_fraction)
-        : homogenous(homogenous), width(width), height(height), depth(depth),
-          strain(strain), mesh_density(mesh_density),
-          volume_fraction(volume_fraction) {}
+    Material material_1_;
+    Material material_2_;
 
-    auto ToImplicitSurface() -> Tensor3r;
+    std::unique_ptr<ImplicitSurfaceGenerator<Real>> generator_;
+    std::unique_ptr<MarchingCubes> marching_cubes_;
+    std::unique_ptr<Homogenization> homogenization_;
+
+    Matrix6r C_;
+    Tensor3r surface_mesh_;
 };

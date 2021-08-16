@@ -24,7 +24,7 @@ TEST(TestMarchingCubes, TestGeneration) {
       ImplicitSurfaceGenerator<
           Real>::ImplicitSurfaceCharacteristics::kIsotropic,
       ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure::kComposite,
-      inclusion, m1, m2);
+      inclusion, m1.number, m2.number);
 
   ASSERT_NE(generator.get(), nullptr);
 

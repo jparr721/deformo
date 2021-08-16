@@ -91,6 +91,7 @@ template <typename T> class Tensor3 {
     }
 
     auto Instance() noexcept -> Eigen::Tensor<T, 3>& { return instance_; }
+    auto Instance() const noexcept -> Eigen::Tensor<T, 3> { return instance_; }
 
     auto SetConstant(T value) -> void { instance_.setConstant(value); }
 
@@ -200,6 +201,13 @@ template <typename T> class Tensor3 {
         }
 
         return output;
+    }
+
+    auto WhereIdx(T value) const -> VectorX<int> {
+        Tensor3<T> output = Where(value);
+        VectorX<T> r = output.Vector(output.Dimension(0) * output.Dimension(1) *
+                                     output.Dimension(2));
+        return linear_algebra::Find(r, value);
     }
 
     /// <summary>
@@ -372,6 +380,24 @@ template <typename T> class Tensor3 {
             in.data(), x_dim, y_dim, z_dim));
     }
 
+    static auto FromStack(const std::vector<MatrixX<T>>& stack) {
+        Tensor3<T> out(stack.at(0).rows(), stack.at(0).cols(), stack.size());
+        for (int i = 0; i < stack.size(); ++i) {
+            out.SetLayer(i, stack.at(i));
+        }
+
+        return out;
+    }
+
+    static auto Replicate(const MatrixX<T>& layer, int times) -> Tensor3<T> {
+        Tensor3<T> out(layer.rows(), layer.cols(), times);
+        for (int i = 0; i < times; ++i) {
+            out.SetLayer(i, layer);
+        }
+
+        return out;
+    }
+
   private:
     Eigen::Tensor<T, 3> instance_;
 };
@@ -519,5 +545,22 @@ inline auto HStack(const std::vector<VectorX<T>>& vectors) -> MatrixX<T> {
     }
 
     return HStack(stacked);
+}
+
+template <typename T>
+inline auto Find(const VectorX<T>& in, T value) -> VectorX<int> {
+    std::vector<int> _out;
+    for (int r = 0; r < in.rows(); ++r) {
+        if (in(r) == value) {
+            _out.push_back(r);
+        }
+    }
+
+    VectorX<int> out(_out.size());
+    for (int i = 0; i < _out.size(); ++i) {
+        out(i) = _out.at(i);
+    }
+
+    return out;
 }
 } // namespace linear_algebra

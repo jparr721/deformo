@@ -166,7 +166,7 @@ TEST(TestNumerics, TestHStackVectors) {
   ASSERT_TRUE(stacked.isApprox(comp));
 }
 
-TEST(TestNumerics, TestSetLayer) { 
+TEST(TestNumerics, TestSetLayer) {
   Tensor3i t(2, 2, 1);
   t.SetConstant(1);
   MatrixX<int> layer(2, 2);
@@ -184,8 +184,8 @@ TEST(TestNumerics, TestSetLayer) {
   ASSERT_TRUE(t(1, 1, 0) = 5);
 }
 
-TEST(TestNumerics, TestReArrange) { 
-  MatrixX<int> m(6, 3); 
+TEST(TestNumerics, TestReArrange) {
+  MatrixX<int> m(6, 3);
   m.row(0) << 1, 2, 3;
   m.row(1) << 4, 5, 6;
   m.row(2) << 7, 8, 9;
@@ -206,8 +206,8 @@ TEST(TestNumerics, TestReArrange) {
   ASSERT_TRUE(m2.isApprox(comp));
 }
 
-TEST(TestNumerics, TestReArrange2) { 
-  MatrixX<int> m(6, 3); 
+TEST(TestNumerics, TestReArrange2) {
+  MatrixX<int> m(6, 3);
   m.row(0) << 1, 2, 3;
   m.row(1) << 4, 5, 6;
   m.row(2) << 7, 8, 9;
@@ -230,7 +230,7 @@ TEST(TestNumerics, TestReArrange2) {
 }
 
 TEST(TestNumerics, TestIndexMatrixByMatrix) {
-  MatrixX<int> m(6, 3); 
+  MatrixX<int> m(6, 3);
   m.row(0) << 1, 2, 3;
   m.row(1) << 4, 5, 6;
   m.row(2) << 7, 8, 9;
@@ -262,7 +262,7 @@ TEST(TestNumerics, TestIndexMatrixByMatrix) {
 }
 
 TEST(TestNumerics, TestIndexMatrixByMatrix2) {
-  MatrixXr m(6, 3); 
+  MatrixXr m(6, 3);
   m.row(0) << 1, 2, 3;
   m.row(1) << 4, 5, 6;
   m.row(2) << 7, 8, 9;
@@ -294,7 +294,7 @@ TEST(TestNumerics, TestIndexMatrixByMatrix2) {
 }
 
 TEST(TestNumerics, TestIndexMatrixByMatrixWithCol) {
-  MatrixX<int> m(6, 3); 
+  MatrixX<int> m(6, 3);
   m.row(0) << 1, 2, 3;
   m.row(1) << 4, 5, 6;
   m.row(2) << 7, 8, 9;
@@ -318,7 +318,7 @@ TEST(TestNumerics, TestIndexMatrixByMatrixWithCol) {
 }
 
 TEST(TestNumerics, TestIndexMatrixByMatrixWithCol2) {
-  MatrixXr m(6, 3); 
+  MatrixXr m(6, 3);
   m.row(0) << 1, 2, 3;
   m.row(1) << 4, 5, 6;
   m.row(2) << 7, 8, 9;
@@ -341,3 +341,74 @@ TEST(TestNumerics, TestIndexMatrixByMatrixWithCol2) {
   ASSERT_TRUE(m2.isApprox(comp));
 }
 
+TEST(TestNumerics, TestFromStack) {
+  MatrixXr m(2, 2);
+  m.setConstant(1);
+
+  std::vector<MatrixXr> stack{m, m, m, m};
+
+  Tensor3r value = Tensor3r::FromStack(stack);
+
+  ASSERT_TRUE(value.Layer(0).isApprox(m));
+  ASSERT_TRUE(value.Layer(1).isApprox(m));
+  ASSERT_TRUE(value.Layer(2).isApprox(m));
+  ASSERT_TRUE(value.Layer(3).isApprox(m));
+}
+
+TEST(TestNumerics, TestReplicate) {
+  MatrixXr m(2, 2);
+  m.setConstant(1);
+
+  Tensor3r value = Tensor3r::Replicate(m, 4);
+
+  ASSERT_TRUE(value.Layer(0).isApprox(m));
+  ASSERT_TRUE(value.Layer(1).isApprox(m));
+  ASSERT_TRUE(value.Layer(2).isApprox(m));
+  ASSERT_TRUE(value.Layer(3).isApprox(m));
+}
+
+TEST(TestNumerics, TestWhereIdx) {
+  VectorX<int> comp(360);
+  comp << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 30, 31, 40, 41, 50, 51, 60,
+      61, 70, 71, 80, 81, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102,
+      103, 104, 105, 106, 107, 108, 109, 110, 111, 120, 121, 130, 131, 140, 141,
+      150, 151, 160, 161, 170, 171, 180, 181, 190, 191, 192, 193, 194, 195, 196,
+      197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211,
+      220, 221, 230, 231, 240, 241, 250, 251, 260, 261, 270, 271, 280, 281, 290,
+      291, 292, 293, 294, 295, 296, 297, 298, 299, 300, 301, 302, 303, 304, 305,
+      306, 307, 308, 309, 310, 311, 320, 321, 330, 331, 340, 341, 350, 351, 360,
+      361, 370, 371, 380, 381, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399,
+      400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 420, 421, 430,
+      431, 440, 441, 450, 451, 460, 461, 470, 471, 480, 481, 490, 491, 492, 493,
+      494, 495, 496, 497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508,
+      509, 510, 511, 520, 521, 530, 531, 540, 541, 550, 551, 560, 561, 570, 571,
+      580, 581, 590, 591, 592, 593, 594, 595, 596, 597, 598, 599, 600, 601, 602,
+      603, 604, 605, 606, 607, 608, 609, 610, 611, 620, 621, 630, 631, 640, 641,
+      650, 651, 660, 661, 670, 671, 680, 681, 690, 691, 692, 693, 694, 695, 696,
+      697, 698, 699, 700, 701, 702, 703, 704, 705, 706, 707, 708, 709, 710, 711,
+      720, 721, 730, 731, 740, 741, 750, 751, 760, 761, 770, 771, 780, 781, 790,
+      791, 792, 793, 794, 795, 796, 797, 798, 799, 800, 801, 802, 803, 804, 805,
+      806, 807, 808, 809, 810, 811, 820, 821, 830, 831, 840, 841, 850, 851, 860,
+      861, 870, 871, 880, 881, 890, 891, 892, 893, 894, 895, 896, 897, 898, 899,
+      900, 901, 902, 903, 904, 905, 906, 907, 908, 909, 910, 911, 920, 921, 930,
+      931, 940, 941, 950, 951, 960, 961, 970, 971, 980, 981, 990, 991, 992, 993,
+      994, 995, 996, 997, 998, 999, 1000;
+  comp -= VectorX<int>::Ones(360);
+
+ MatrixXr surface(10, 10);
+  surface.row(0) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+  surface.row(1) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(2) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(3) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(4) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(5) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(6) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(7) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(8) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(9) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+
+  Tensor3r surface_mesh = Tensor3r::Replicate(surface, 10);
+  VectorX<int> indices = surface_mesh.WhereIdx(1);
+
+  ASSERT_TRUE(indices.isApprox(comp));
+}
