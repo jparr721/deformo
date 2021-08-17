@@ -4,8 +4,28 @@
 #include <unsupported/Eigen/KroneckerProduct>
 
 Homogenization::Homogenization(const Tensor3r& implicit_surface,
+                               const Material& material_1)
+    : voxel_(implicit_surface), primary_material_(material_1) {
+    cell_len_x_ = voxel_.Dimension(0);
+    cell_len_y_ = voxel_.Dimension(1);
+    cell_len_z_ = voxel_.Dimension(2);
+
+    Tensor3r scalar_tensor_placeholder(voxel_.Dimensions());
+    scalar_tensor_placeholder.SetConstant(material_1.lambda);
+    lambda_ = Tensor3r(voxel_.Where(material_1.number).Instance() *
+                       scalar_tensor_placeholder.Instance());
+
+    scalar_tensor_placeholder.SetConstant(material_1.G);
+    mu_ = Tensor3r(voxel_.Where(material_1.number).Instance() *
+                   scalar_tensor_placeholder.Instance());
+
+    is_one_material_ = true;
+}
+
+Homogenization::Homogenization(const Tensor3r& implicit_surface,
                                const Material& material_1,
-                               const Material& material_2) : voxel_(implicit_surface) {
+                               const Material& material_2)
+    : voxel_(implicit_surface), primary_material_(material_1) {
     cell_len_x_ = voxel_.Dimension(0);
     cell_len_y_ = voxel_.Dimension(1);
     cell_len_z_ = voxel_.Dimension(2);
@@ -371,6 +391,8 @@ auto Homogenization::AssembleStiffnessMatrix(
 
     K += KT;
 
+    // This is a hack to make sure K is _exactly_ symmetric otherwise the solver
+    // churns until the end of time
     return K * 1 / 2;
 }
 
@@ -414,16 +436,45 @@ auto Homogenization::ComputeDisplacement(
     unsigned int n_degrees_of_freedom, const MatrixXr& stiffness,
     const MatrixXr& load, const MatrixXi& unique_degrees_of_freedom)
     -> MatrixXr {
-    VectorXi active_dofs =
-        linear_algebra::MatrixToVector(unique_degrees_of_freedom);
+    // Get active dofs for nonzero sections
+    VectorXi active_dofs;
+
+    // If it's one material, then the second material may be a void-based
+    // element.
+    if (is_one_material_) {
+        // Get the indices where the values are defined (nonzero).
+        const VectorXi indices = voxel_.WhereIdx(primary_material_.number);
+
+        MatrixXi _dof(indices.rows(), unique_degrees_of_freedom.cols());
+
+        // Index the unique degrees of freedom by row
+        for (int i = 0; i < indices.rows(); ++i) {
+            _dof.row(i) = unique_degrees_of_freedom.row(indices(i));
+        }
+
+        active_dofs = linear_algebra::MatrixToVector(_dof);
+    } else {
+        // If it's a composite, we only support densely connected meshses, so
+        // all degrees of freedom remain active in this case.
+        active_dofs = linear_algebra::MatrixToVector(unique_degrees_of_freedom);
+    }
+
     utils::RemoveDuplicatesFromVector(active_dofs);
     active_dofs -= VectorXi::Ones(active_dofs.rows());
 
     MatrixXr K_sub;
+
     const unsigned int end = active_dofs.rows();
 
-    const VectorXi x_indices = VectorXi::LinSpaced(end - 3, 3, end);
-    const VectorXi y_indices = VectorXi::LinSpaced(end - 3, 3, end);
+    VectorXi x_indices;
+    x_indices.resize(end - 3);
+    VectorXi y_indices;
+    y_indices.resize(end - 3);
+
+    for (int i = 3; i < end; ++i) {
+        x_indices(i - 3) = active_dofs(i);
+        y_indices(i - 3) = active_dofs(i);
+    }
 
     utils::SliceByIndices(K_sub, stiffness, x_indices, y_indices);
 
@@ -435,10 +486,17 @@ auto Homogenization::ComputeDisplacement(
 
     std::vector<VectorXr> X_entries;
     for (int i = 0; i < 6; ++i) {
-        const VectorXr F_sub = load.col(i).segment(3, end - 3);
+        VectorXr F_sub(end - 3);
+        const VectorXr l = load.col(i);
+        for (int j = 3; j < end; ++j) {
+            F_sub(j - 3) = l(active_dofs(j));
+        }
         const VectorXr result = pcg.solve(F_sub);
         VectorXr entry = VectorXr::Zero(n_degrees_of_freedom);
-        entry.segment(3, end - 3) = F_sub;
+
+        for (int j = 3; j < active_dofs.rows(); ++j) {
+            entry(active_dofs(j)) = result(j - 3);
+        }
 
         X_entries.emplace_back(entry);
     }

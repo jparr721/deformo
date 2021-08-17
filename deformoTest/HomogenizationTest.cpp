@@ -180,6 +180,46 @@ TEST(TestHomogenization, TestAssembleLoadMatrix) {
   }
 }
 
+TEST(TestHomogenization, TestAssembleLoadMatrixWithVoids) {
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  MatrixXr surface(10, 10);
+  surface.row(0) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+  surface.row(1) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(2) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(3) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(4) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(5) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(6) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(7) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(8) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(9) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+
+  Tensor3r surface_mesh = Tensor3r::Replicate(surface, 10);
+
+  const auto homogenization =
+      std::make_shared<Homogenization>(surface_mesh, rve->PrimaryMaterial());
+  ASSERT_TRUE(homogenization.get() != nullptr);
+  const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
+
+  constexpr unsigned int n_elements = 1000;
+  const MatrixX<int> edof =
+      homogenization->ComputeElementDegreesOfFreedom(n_elements);
+  const Tensor3i unique_nodes = homogenization->ComputeUniqueNodes(n_elements);
+  const MatrixX<int> unique_dof =
+      homogenization->ComputeUniqueDegreesOfFreedom(edof, unique_nodes);
+  const MatrixXr F = homogenization->AssembleLoadMatrix(
+      1000, 3000, unique_dof, hexahedron.at(2), hexahedron.at(3));
+
+  // Whole thing ends up being basically 0 in the sum
+  ASSERT_TRUE(F.sum() < 0.00001);
+}
+
 TEST(TestHomogenization, TestComputeDisplacement) {
   const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
   const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
@@ -207,10 +247,10 @@ TEST(TestHomogenization, TestComputeDisplacement) {
   const MatrixXr X =
       homogenization->ComputeDisplacement(3000, K, F, unique_dof);
 
-  for (int row = 0; row < F.rows(); ++row) {
-    for (int col = 0; col < F.cols(); ++col) {
+  for (int row = 0; row < X.rows(); ++row) {
+    for (int col = 0; col < X.cols(); ++col) {
       // Whole thing ends up being basically 0
-      ASSERT_TRUE(F(row, col) < 0.00001);
+      ASSERT_TRUE(X(row, col) < 0.00001);
     }
   }
 }
@@ -237,8 +277,8 @@ TEST(TestHomogenization, TestComputeDisplacementWithVoidNodes) {
 
   Tensor3r surface_mesh = Tensor3r::Replicate(surface, 10);
 
-  const auto homogenization = std::make_shared<Homogenization>(
-      surface_mesh, rve->PrimaryMaterial(), rve->SecondaryMaterial());
+  const auto homogenization =
+      std::make_shared<Homogenization>(surface_mesh, rve->PrimaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
 
@@ -256,12 +296,14 @@ TEST(TestHomogenization, TestComputeDisplacementWithVoidNodes) {
   const MatrixXr X =
       homogenization->ComputeDisplacement(3000, K, F, unique_dof);
 
-  for (int row = 0; row < F.rows(); ++row) {
-    for (int col = 0; col < F.cols(); ++col) {
-      // Whole thing ends up being basically 0
-      ASSERT_TRUE(F(row, col) < 0.00001);
-    }
-  }
+  // Just compare some of the values.
+  const Real c_1 = X(4, 0);
+  const Real c_2 = X(4, 1);
+  const Real c_3 = X(4, 2);
+
+  ASSERT_TRUE(IsApprox(c_1, -0.325241, 0.0001));
+  ASSERT_TRUE(IsApprox(c_2, -0.0561329, 0.0001));
+  ASSERT_TRUE(IsApprox(c_3, -0.0953439, 0.0001));
 }
 
 TEST(TestHomogenization, TestComputeUnitStrainParameters) {
@@ -274,6 +316,90 @@ TEST(TestHomogenization, TestComputeUnitStrainParameters) {
 
   const auto homogenization = std::make_shared<Homogenization>(
       rve->SurfaceMesh(), rve->PrimaryMaterial(), rve->SecondaryMaterial());
+  ASSERT_TRUE(homogenization.get() != nullptr);
+  const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
+  const Tensor3r strain_param =
+      homogenization->ComputeUnitStrainParameters(1000, hexahedron);
+
+  const MatrixXr l0 = strain_param.Layer(0);
+  VectorXr row = l0.row(0);
+  Real sum = row.sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(3), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(6), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(15), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(18), 1, 0.0001));
+
+  const MatrixXr l1 = strain_param.Layer(1);
+  row = l1.row(0);
+  sum = row.sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(7), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(10), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(19), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(22), 1, 0.0001));
+
+  const MatrixXr l2 = strain_param.Layer(2);
+  row = l2.row(0);
+  sum = row.sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(14), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(17), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(20), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(23), 1, 0.0001));
+
+  const MatrixXr l3 = strain_param.Layer(3);
+  row = l3.row(0);
+  sum = l3.row(0).sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(6), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(9), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(18), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(21), 1, 0.0001));
+
+  const MatrixXr l4 = strain_param.Layer(4);
+  row = l4.row(0);
+  sum = l4.row(0).sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(13), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(16), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(19), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(22), 1, 0.0001));
+
+  const MatrixXr l5 = strain_param.Layer(5);
+  row = l5.row(0);
+  sum = l5.row(0).sum();
+  ASSERT_TRUE(std::fabs(sum - 4) < 0.0001);
+  ASSERT_TRUE(IsApprox(row(12), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(15), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(18), 1, 0.0001));
+  ASSERT_TRUE(IsApprox(row(21), 1, 0.0001));
+}
+
+TEST(TestHomogenization, TestComputeUnitStrainParametersWithVoids) {
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  MatrixXr surface(10, 10);
+  surface.row(0) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+  surface.row(1) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(2) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(3) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(4) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(5) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(6) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(7) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(8) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(9) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+
+  Tensor3r surface_mesh = Tensor3r::Replicate(surface, 10);
+
+  const auto homogenization =
+      std::make_shared<Homogenization>(surface_mesh, rve->PrimaryMaterial());
   ASSERT_TRUE(homogenization.get() != nullptr);
   const auto hexahedron = homogenization->ComputeHexahedron(0.5, 0.5, 0.5);
   const Tensor3r strain_param =
@@ -354,4 +480,42 @@ TEST(TestHomogenization, TestSolverStep) {
   comp.row(5) << 0, 0, 0, 0, 0, 10;
 
   ASSERT_TRUE(constitutive_tensor.isApprox(comp));
+}
+
+TEST(TestHomogenization, TestSolverStepWithVoids) {
+  const auto material_1 = MaterialFromLameCoefficients(1, "one", 10, 10);
+  const auto material_2 = MaterialFromLameCoefficients(2, "two", 0, 0);
+  auto rve = std::make_shared<Rve>(Eigen::Vector3i(10, 10, 10), material_1,
+                                   material_2);
+  rve->ComputeSurfaceMesh();
+  ASSERT_TRUE(rve.get() != nullptr);
+
+  MatrixXr surface(10, 10);
+  surface.row(0) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+  surface.row(1) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(2) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(3) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(4) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(5) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(6) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(7) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(8) << 1, 0, 0, 0, 0, 0, 0, 0, 0, 1;
+  surface.row(9) << 1, 1, 1, 1, 1, 1, 1, 1, 1, 1;
+
+  Tensor3r surface_mesh = Tensor3r::Replicate(surface, 10);
+
+  const auto homogenization =
+      std::make_shared<Homogenization>(surface_mesh, rve->PrimaryMaterial());
+  homogenization->Solve();
+  const MatrixXr C = homogenization->Stiffness();
+
+  Matrix6r comp;
+  comp.row(0) << 5.66474, 0.48163, 1.53659, 0, 0, 0;
+  comp.row(1) << 0.48163, 5.66474, 1.53659, 0, 0, 0;
+  comp.row(2) << 1.53659, 1.53659, 9.7683, 0, 0, 0;
+  comp.row(3) << 0, 0, 0, 0.16672, 0, 0;
+  comp.row(4) << 0, 0, 0, 0, 2.15082, 0;
+  comp.row(5) << 0, 0, 0, 0, 0, 2.15082;
+
+  ASSERT_TRUE(C.isApprox(comp));
 }

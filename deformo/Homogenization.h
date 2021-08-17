@@ -11,6 +11,8 @@ class Homogenization {
     using VectorXi = VectorX<int>;
 
   public:
+    Homogenization(const Tensor3r& implicit_surface,
+                   const Material& material_1);
     Homogenization(const Tensor3r& implicit_surface, const Material& material_1,
                    const Material& material_2);
 
@@ -76,6 +78,8 @@ class Homogenization {
         -> Tensor3r;
 
   private:
+    bool is_one_material_ = false;
+
     unsigned int cell_len_x_ = 0;
     unsigned int cell_len_y_ = 0;
     unsigned int cell_len_z_ = 0;
@@ -91,6 +95,8 @@ class Homogenization {
     Tensor3r voxel_;
 
     DeformoAssertion assertion;
+
+    Material primary_material_;
 
     // Constitutive Tensor Collection
     auto AssembleConstitutiveTensor(const MatrixXi& unique_degrees_of_freedom,
