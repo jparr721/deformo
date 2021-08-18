@@ -5,6 +5,9 @@
 #include "Utils.h"
 #include "WindowController.h"
 
+// Delete
+#include "NeuralNetwork.h"
+
 #include <Eigen/Dense>
 #include <filesystem>
 #include <fstream>

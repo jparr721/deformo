@@ -57,6 +57,12 @@
     <Filter Include="Windowing\Controllers">
       <UniqueIdentifier>{62fe412d-1d30-4f09-b7c6-49bc7ad50817}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ThirdParty">
+      <UniqueIdentifier>{fd2dd741-52aa-4e34-8065-7d4b7c2f6930}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Machine Learning\Py">
+      <UniqueIdentifier>{86285b1c-8bb3-4369-bbed-792369cad768}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -136,9 +142,6 @@
     <ClCompile Include="ModelLoader.cpp">
       <Filter>Machine Learning</Filter>
     </ClCompile>
-    <ClCompile Include="TFModel.cpp">
-      <Filter>Machine Learning</Filter>
-    </ClCompile>
     <ClCompile Include="MarchingCubes.cpp">
       <Filter>Engine\Meshing</Filter>
     </ClCompile>
@@ -160,11 +163,11 @@
     <ClCompile Include="DesignerController.cpp">
       <Filter>Windowing\Controllers</Filter>
     </ClCompile>
+    <ClCompile Include="NeuralNetwork.cpp">
+      <Filter>Machine Learning</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="LinearTetrahedral.h">
       <Filter>Physics</Filter>
     </ClInclude>
@@ -234,12 +237,6 @@
     <ClInclude Include="ModelLoader.h">
       <Filter>Machine Learning</Filter>
     </ClInclude>
-    <ClInclude Include="Tensorflow.h">
-      <Filter>Machine Learning</Filter>
-    </ClInclude>
-    <ClInclude Include="TFModel.h">
-      <Filter>Machine Learning</Filter>
-    </ClInclude>
     <ClInclude Include="MarchingCubes.h">
       <Filter>Engine\Meshing</Filter>
     </ClInclude>
@@ -266,6 +263,36 @@
     </ClInclude>
     <ClInclude Include="DesignerController.h">
       <Filter>Windowing\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\context.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\cppflow.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\datatype.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\defer.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\tensor.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\ops.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\raw_ops.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="ThirdParty\cppflow\model.h">
+      <Filter>ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NeuralNetwork.h">
+      <Filter>Machine Learning</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -302,6 +329,9 @@
     <None Include=".env" />
     <None Include="styles.stylesheet">
       <Filter>Assets</Filter>
+    </None>
+    <None Include="homogenization.py">
+      <Filter>Machine Learning\Py</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

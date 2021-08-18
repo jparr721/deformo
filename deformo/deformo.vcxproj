@@ -128,10 +128,10 @@
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshDiscretizer.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="NeuralNetwork.cpp" />
     <ClCompile Include="Numerics.cpp" />
     <ClCompile Include="Rve.cpp" />
     <ClCompile Include="SimulationController.cpp" />
-    <ClCompile Include="TFModel.cpp" />
     <ClCompile Include="WindowController.cpp" />
     <QtRcc Include="deformo.qrc" />
     <QtUic Include="deformo.ui" />
@@ -166,6 +166,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshDiscretizer.h" />
     <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="NeuralNetwork.h" />
     <ClInclude Include="Numerics.h" />
     <ClInclude Include="OpenGL.h" />
     <ClInclude Include="QTUtils.h" />
@@ -178,8 +179,14 @@
     <ClInclude Include="MeshGenerator.h" />
     <ClInclude Include="Simulation.h" />
     <ClInclude Include="SimulationController.h" />
-    <ClInclude Include="Tensorflow.h" />
-    <ClInclude Include="TFModel.h" />
+    <ClInclude Include="ThirdParty\cppflow\context.h" />
+    <ClInclude Include="ThirdParty\cppflow\cppflow.h" />
+    <ClInclude Include="ThirdParty\cppflow\datatype.h" />
+    <ClInclude Include="ThirdParty\cppflow\defer.h" />
+    <ClInclude Include="ThirdParty\cppflow\model.h" />
+    <ClInclude Include="ThirdParty\cppflow\ops.h" />
+    <ClInclude Include="ThirdParty\cppflow\raw_ops.h" />
+    <ClInclude Include="ThirdParty\cppflow\tensor.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="Vao.h" />
     <ClInclude Include="Vbo.h" />
@@ -198,6 +205,7 @@
     <None Include="core.frag.glsl" />
     <None Include="core.vs.glsl" />
     <None Include="cube.ply" />
+    <None Include="homogenization.py" />
     <None Include="styles.stylesheet" />
   </ItemGroup>
   <ItemGroup>
