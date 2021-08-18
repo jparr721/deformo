@@ -1,5 +1,6 @@
 #include "DesignerController.h"
 #include "MarchingCubes.h"
+#include "Rve.h"
 
 void DesignerController::SetImplicitSurfaceHeight(int value) {
     implicit_surface_height_ = value;
@@ -70,56 +71,31 @@ void DesignerController::SetIsotropicMaterial(const bool checked) {
 }
 
 void DesignerController::ComputeDesignedShapeButtonPressed() {
-    //material_1 =
-    //    MaterialFromEandv(1, material_1.name, material_1.E, material_1.v);
+    material_1 =
+        MaterialFromEandv(1, material_1.name, material_1.E, material_1.v);
 
-    //if (!is_uniform_) {
-    //    material_2 =
-    //        MaterialFromEandv(0, material_2.name, material_2.E, material_2.v);
-    //}
+    if (!is_uniform_) {
+        material_2 =
+            MaterialFromEandv(0, material_2.name, material_2.E, material_2.v);
+    }
 
-    //// Generate the shape
-    //const ImplicitSurfaceGenerator<Real>::Inclusion inclusion{
-    //    material_2_number_of_inclusions_,
-    //    inclusion_height_,
-    //    inclusion_height_,
-    //    inclusion_width_,
-    //    inclusion_depth_,
-    //};
+    const auto rve = std::make_unique<Rve>(
+        Vector3<int>(implicit_surface_height_, implicit_surface_width_,
+                     implicit_surface_depth_),
+        material_1, material_2);
 
-    //const ImplicitSurfaceGenerator<Real>::ImplicitSurfaceMicrostructure micro =
-    //    is_uniform_ ? ImplicitSurfaceGenerator<
-    //                      Real>::ImplicitSurfaceMicrostructure::kUniform
-    //                : ImplicitSurfaceGenerator<
-    //                      Real>::ImplicitSurfaceMicrostructure::kComposite;
+    if (is_uniform_) {
+        rve->ComputeSurfaceMesh();
+    } else {
+		rve->ComputeSurfaceMesh(
+			Vector3<int>(inclusion_height_, inclusion_width_, inclusion_depth_),
+			material_2_number_of_inclusions_, is_isotropic_);
+    }
 
-    //const ImplicitSurfaceGenerator<Real>::ImplicitSurfaceCharacteristics
-    //    behavior =
-    //        is_isotropic_
-    //            ? ImplicitSurfaceGenerator<
-    //                  Real>::ImplicitSurfaceCharacteristics::kIsotropic
-    //            : ImplicitSurfaceGenerator<
-    //                  Real>::ImplicitSurfaceCharacteristics::kAnisotropic;
-
-    //ImplicitSurfaceGenerator<Real> generator(
-    //    implicit_surface_height_, implicit_surface_width_,
-    //    implicit_surface_depth_, behavior, micro, inclusion, material_1,
-    //    material_2);
-
-    //std::cout << "Generating implicit surface" << std::endl;
-    //Tensor3r implicit_surface = generator.Generate();
-
-    //MarchingCubes marching_cubes(material_1.number, 1,
-    //                             implicit_surface.Instance().data());
-    //MatrixXr dV;
-    //MatrixX<int> dF;
-    //std::cout << "Marching cubes on iso surface" << std::endl;
-    //marching_cubes.GenerateGeometry(dV, dF, implicit_surface_height_ + 1,
-    //                                implicit_surface_width_ + 1,
-    //                                implicit_surface_depth_ + 1);
-
-    //std::cout << "Reloading mesh" << std::endl;
-    //mesh_->RefreshData(dV, dF);
+    MatrixXr V;
+    MatrixX<int> F;
+    rve->ComputeRenderableMesh(V, F);
+    mesh_->RefreshData(V, F);
 }
 
 void DesignerController::SetInclusionHeight(int value) {
