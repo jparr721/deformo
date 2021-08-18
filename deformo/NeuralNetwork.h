@@ -10,6 +10,8 @@ class NeuralNetwork {
   public:
     explicit NeuralNetwork(const std::string& model_path);
 
+    auto Predict(const MatrixXr& input) -> std::vector<Real>;
+    auto Predict(const Tensor3r& input) -> std::vector<Real>;
     auto Predict(const cppflow::tensor& input) -> std::vector<Real>;
 
     private:

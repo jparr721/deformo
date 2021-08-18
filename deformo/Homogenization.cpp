@@ -265,7 +265,7 @@ auto Homogenization::ComputeElementDegreesOfFreedom(unsigned int n_elements)
     _dof.Instance() += one.Instance();
 
     const VectorXi degrees_of_freedom =
-        _dof.Matrix(_dof.Dimensions().prod(), 1);
+        _dof.Vector();
 
     Vector6<int> _mid;
     _mid << 3, 4, 5, 0, 1, 2;
@@ -333,7 +333,7 @@ auto Homogenization::ComputeUniqueDegreesOfFreedom(
         (voxel_.Dimensions().array() + 1).matrix().prod();
 
     VectorXi _dof = VectorXi::Ones(3 * n_nodes);
-    VectorXi _uniq_vec = unique_nodes.Vector(unique_nodes.Dimensions().prod());
+    VectorXi _uniq_vec = unique_nodes.Vector();
 
     for (int i = 0; i < _dof.rows(); i += 3) {
         const int idx = i / 3;
@@ -375,9 +375,9 @@ auto Homogenization::AssembleStiffnessMatrix(
 
     const MatrixXr sK =
         (linear_algebra::MatrixToVector(ke_lambda) *
-         lambda_.Vector(lambda_.Dimensions().prod()).transpose()) +
+         lambda_.Vector().transpose()) +
         (linear_algebra::MatrixToVector(ke_mu) *
-         mu_.Vector(mu_.Dimensions().prod()).transpose());
+         mu_.Vector().transpose());
 
     const VectorXr stiffness_entries = linear_algebra::MatrixToVector(sK);
 
@@ -418,9 +418,9 @@ auto Homogenization::AssembleLoadMatrix(
 
     const MatrixXr sF =
         (linear_algebra::MatrixToVector(fe_lambda) *
-         lambda_.Vector(lambda_.Dimensions().prod()).transpose()) +
+         lambda_.Vector().transpose()) +
         (linear_algebra::MatrixToVector(fe_mu) *
-         mu_.Vector(mu_.Dimensions().prod()).transpose());
+         mu_.Vector().transpose());
     const VectorXr load_entries = linear_algebra::MatrixToVector(sF);
 
     const auto F_entries =

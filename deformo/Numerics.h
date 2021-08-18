@@ -72,12 +72,14 @@ template <typename T> class Tensor3 {
 
     Tensor3(int rows, int cols, int layers) { Resize(rows, cols, layers); }
 
-    auto Matrix(int rows, int cols) const -> MatrixX<T> {
-        const T* d = instance_.data();
-        return Eigen::Map<const MatrixX<T>>(d, rows, cols);
-    }
+    auto Matrix() const -> MatrixX<T> {
+        const int rows = Dimension(0) * Dimension(2);
+        const int cols = Dimension(1);
+        return Matrix(rows, cols);
+    } 
 
-    auto Vector(int rows) const -> VectorX<T> {
+    auto Vector() const -> VectorX<T> {
+        const int rows = Dimensions().prod();
         const T* d = instance_.data();
         return Eigen::Map<const VectorX<T>>(d, rows);
     }
@@ -205,8 +207,7 @@ template <typename T> class Tensor3 {
 
     auto WhereIdx(T value) const -> VectorX<int> {
         Tensor3<T> output = Where(value);
-        VectorX<T> r = output.Vector(output.Dimension(0) * output.Dimension(1) *
-                                     output.Dimension(2));
+        VectorX<T> r = output.Vector();
         return linear_algebra::Find(r, value);
     }
 

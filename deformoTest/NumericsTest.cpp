@@ -41,7 +41,7 @@ TEST(TestNumerics, TestTensor3AppendCol) {
   layer_comp.row(0) << 2, 1, 1;
   layer_comp.row(1) << 3, 1, 1;
 
-  const MatrixX<int> m = t2.Matrix(2, 3);
+  const MatrixX<int> m = t2.Matrix();
 
   ASSERT_TRUE(m.isApprox(layer_comp));
 }
@@ -66,7 +66,7 @@ TEST(TestNumerics, TestTensor3AppendRow) {
   layer_comp.row(1) << 1, 1;
   layer_comp.row(2) << 1, 1;
 
-  const MatrixX<int> m = t2.Matrix(3, 2);
+  const MatrixX<int> m = t2.Matrix();
 
   ASSERT_TRUE(m.isApprox(layer_comp));
 }
@@ -124,7 +124,7 @@ TEST(TestNumerics, TestIntoVector) {
   Tensor3i t(2, 2, 1);
   t.SetConstant(2);
 
-  const VectorX<int> v = t.Vector(4);
+  const VectorX<int> v = t.Vector();
   ASSERT_TRUE(v.rows() == 4);
 }
 
