@@ -61,14 +61,13 @@ class HomogenizationDatasetGeneratorDialog : public QDialog {
     void OnSetCubeDimensions(int value);
 
   private:
-    int min_inclusion_dimensions_ = 0;
-    int max_inclusion_dimensions_ = 0;
+    int min_inclusion_dimensions_ = 1;
+    int max_inclusion_dimensions_ = 5;
 
-    int min_inclusions_ = 0;
-    int max_inclusions_ = 0;
+    int min_inclusions_ = 1;
+    int max_inclusions_ = 20;
 
-    int cube_dimensions_ = 0;
+    int cube_dimensions_ = 50;
 
     auto MakeSpinBox() -> QSpinBox*;
-    auto ConnectWidgets() -> void;
 };

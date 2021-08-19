@@ -6,22 +6,45 @@
 #include "Numerics.h"
 #include <array>
 
-class Homogenization : public AbstractGenerator<Real> {
+class Homogenization : public AbstractGenerator<std::string> {
     using MatrixXi = MatrixX<int>;
     using VectorXi = VectorX<int>;
 
   public:
+    struct MaterialCoefficients {
+        Real E_11 = 0;
+        Real E_22 = 0;
+        Real E_33 = 0;
+
+        Real G_23 = 0;
+        Real G_31 = 0;
+        Real G_12 = 0;
+
+        Real v_21 = 0;
+        Real v_31 = 0;
+        Real v_12 = 0;
+        Real v_32 = 0;
+        Real v_13 = 0;
+        Real v_23 = 0;
+
+        auto Vector() const -> VectorXr {
+            VectorXr v(12);
+            v << E_11, E_22, E_33, G_23, G_31, G_12, v_21, v_31, v_12, v_32,
+                v_13, v_23;
+        }
+    };
     Homogenization(const Tensor3r& implicit_surface,
                    const Material& material_1);
     Homogenization(const Tensor3r& implicit_surface, const Material& material_1,
                    const Material& material_2);
     virtual ~Homogenization() = default;
 
-    auto E() const noexcept -> Real { return homogenized_E_; }
-    auto v() const noexcept -> Real { return homogenized_v_; }
     auto Stiffness() const -> Matrix6r { return constitutive_tensor_; }
+    auto CoefficientVector() const -> VectorXr {
+        return coefficients_.Vector();
+    }
 
-    auto Capture() -> void override { return; }
+    auto Capture() -> void override;
 
     /// <summary>
     /// Solves the integral over the volume of the voxel for the difference of
@@ -82,6 +105,7 @@ class Homogenization : public AbstractGenerator<Real> {
 
   private:
     bool is_one_material_ = false;
+    bool is_homogenized_ = false;
 
     unsigned int cell_len_x_ = 0;
     unsigned int cell_len_y_ = 0;
@@ -100,6 +124,8 @@ class Homogenization : public AbstractGenerator<Real> {
     DeformoAssertion assertion;
 
     Material primary_material_;
+
+    MaterialCoefficients coefficients_;
 
     // Constitutive Tensor Collection
     auto AssembleConstitutiveTensor(const MatrixXi& unique_degrees_of_freedom,

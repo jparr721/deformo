@@ -113,6 +113,7 @@ class WindowController : public QObject {
     void SetCSVPathButtonClicked();
     void SetOutputCSVFileName(const QString& value);
     void SetGenerator(const QString& value);
+    void SetDatasetGeneratorNumberOfEntries(int value);
     void DatasetGeneratorComputeButtonPressed();
 
 

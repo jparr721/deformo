@@ -267,9 +267,6 @@
     <ClInclude Include="SimulationController.h">
       <Filter>Windowing\Controllers</Filter>
     </ClInclude>
-    <ClInclude Include="DesignerController.h">
-      <Filter>Windowing\Controllers</Filter>
-    </ClInclude>
     <ClInclude Include="ThirdParty\cppflow\context.h">
       <Filter>ThirdParty</Filter>
     </ClInclude>
@@ -357,6 +354,9 @@
     </QtMoc>
     <QtMoc Include="HomogenizationDatasetGeneratorDialog.h">
       <Filter>Windowing\Dataset Generator Options</Filter>
+    </QtMoc>
+    <QtMoc Include="DesignerController.h">
+      <Filter>Windowing\Controllers</Filter>
     </QtMoc>
   </ItemGroup>
 </Project>

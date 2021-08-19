@@ -1,19 +1,22 @@
 #pragma once
 
+#include "HomogenizationDatasetGeneratorDialog.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "Numerics.h"
-#include "HomogenizationDatasetGeneratorDialog.h"
 #include "ui_deformo.h"
+#include <QObject>
 #include <string>
 
-class DesignerController {
+class DesignerController : public QObject {
+    Q_OBJECT
   public:
     Material material_1;
     Material material_2;
 
-    explicit DesignerController(const std::shared_ptr<Mesh> mesh)
-        : mesh_(mesh) {}
+    DesignerController(const std::shared_ptr<Mesh> mesh,
+                       const Ui::deformoClass& ui);
+    ~DesignerController();
 
     // Implicit surface
     void SetImplicitSurfaceHeight(int value);
@@ -49,9 +52,18 @@ class DesignerController {
     void SetCSVPathButtonClicked(const Ui::deformoClass& ui);
     void SetOutputCSVFileName(const std::string& value);
     void SetGenerator(const std::string& value);
-    void ComputeDatasetButtonPressed(const Ui::deformoClass& ui);
+    void ComputeDatasetButtonPressed();
+    void SetupAndDisplayHomogenizationDialog();
+    void SetNumberOfEntries(int value);
+
+  public slots:
+    void HomogenizationDialogSubmitted();
 
   private:
+    enum class Generator {
+        kHomogenization = 0,
+    };
+
     // Implicit Surface Options
     int implicit_surface_height_ = 0;
     int implicit_surface_width_ = 0;
@@ -61,6 +73,9 @@ class DesignerController {
     int inclusion_height_ = 0;
     int inclusion_width_ = 0;
     int inclusion_depth_ = 0;
+
+    // Dataset Generator
+    int number_of_dataset_entries_ = 1; 
 
     // Square shaped object
     bool is_square_ = false;
@@ -79,9 +94,10 @@ class DesignerController {
 
     std::string output_csv_path_;
     std::string output_csv_filename_;
-    std::string generator_;
+    Generator generator_ = Generator::kHomogenization;
 
     std::shared_ptr<Mesh> mesh_;
+    std::unique_ptr<Homogenization> homogenization_;
 
     HomogenizationDatasetGeneratorDialog* homogenization_dialog_;
 };

@@ -1,4 +1,5 @@
 #include "HomogenizationDatasetGeneratorDialog.h"
+#include <iostream>
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -61,6 +62,7 @@ HomogenizationDatasetGeneratorDialog::HomogenizationDatasetGeneratorDialog(
     parameters_layout->addWidget(submit_button, 6, 1);
 
     setLayout(parameters_layout);
+    setMinimumSize(300, 300);
     setWindowTitle("Homogenization Generator");
 }
 
@@ -71,46 +73,12 @@ auto HomogenizationDatasetGeneratorDialog::MakeSpinBox() -> QSpinBox* {
     return spin_box;
 }
 
-auto HomogenizationDatasetGeneratorDialog::ConnectWidgets() -> void {
-    connect(min_inclusion_dimensions,
-            QOverload<int>::of(&QSpinBox::valueChanged), this,
-            &HomogenizationDatasetGeneratorDialog::SetMinInclusionDimensions);
-    connect(this,
-            &HomogenizationDatasetGeneratorDialog::OnSetMinInclusionDimensions,
-            min_inclusion_dimensions, &QSpinBox::setValue);
-
-    connect(max_inclusion_dimensions,
-            QOverload<int>::of(&QSpinBox::valueChanged), this,
-            &HomogenizationDatasetGeneratorDialog::SetMaxInclusionDimensions);
-    connect(this,
-            &HomogenizationDatasetGeneratorDialog::OnSetMaxInclusionDimensions,
-            max_inclusion_dimensions, &QSpinBox::setValue);
-
-    connect(min_inclusions, QOverload<int>::of(&QSpinBox::valueChanged), this,
-            &HomogenizationDatasetGeneratorDialog::SetMinInclusions);
-    connect(this, &HomogenizationDatasetGeneratorDialog::SetMinInclusions,
-            min_inclusions, &QSpinBox::setValue);
-
-    connect(max_inclusions, QOverload<int>::of(&QSpinBox::valueChanged), this,
-            &HomogenizationDatasetGeneratorDialog::SetMaxInclusions);
-    connect(this, &HomogenizationDatasetGeneratorDialog::SetMaxInclusions,
-            max_inclusions, &QSpinBox::setValue);
-
-    connect(cube_dimensions, QOverload<int>::of(&QSpinBox::valueChanged), this,
-            &HomogenizationDatasetGeneratorDialog::SetCubeDimensions);
-    connect(this, &HomogenizationDatasetGeneratorDialog::SetCubeDimensions,
-            cube_dimensions, &QSpinBox::setValue);
-
-    connect(submit_button, &QPushButton::clicked, this,
-            &HomogenizationDatasetGeneratorDialog::done);
-}
-
 void HomogenizationDatasetGeneratorDialog::SetMinInclusionDimensions(
     int value) {
     min_inclusion_dimensions_ = value;
     OnSetMinInclusionDimensions(value);
 }
-//
+
 void HomogenizationDatasetGeneratorDialog::SetMaxInclusionDimensions(
     int value) {
     max_inclusion_dimensions_ = value;

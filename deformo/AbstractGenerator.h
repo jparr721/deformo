@@ -10,10 +10,10 @@
 #include <unordered_map>
 #include <vector>
 
-template <typename T = std::vector<Real>> class AbstractGenerator {
+template <typename T = std::string> class AbstractGenerator {
   public:
     std::string dataset_path;
-    std::unordered_map<std::string_view, std::vector<T>> dataset;
+    std::unordered_map<std::string, T> dataset;
 
     virtual ~AbstractGenerator() = default;
 

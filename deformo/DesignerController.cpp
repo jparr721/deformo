@@ -1,8 +1,21 @@
 #include "DesignerController.h"
 #include "MarchingCubes.h"
 #include "Rve.h"
-#include <QString>
 #include <QFileDialog>
+#include <QPushButton>
+#include <QString>
+#include "QTUtils.h"
+
+DesignerController::DesignerController(const std::shared_ptr<Mesh> mesh,
+                                       const Ui::deformoClass& ui)
+    : mesh_(mesh) {
+    homogenization_dialog_ =
+        new HomogenizationDatasetGeneratorDialog(ui.centralWidget);
+
+    ui.designer_dataset_generator_progressbar->setVisible(false);
+}
+
+DesignerController::~DesignerController() { delete homogenization_dialog_; }
 
 void DesignerController::SetImplicitSurfaceHeight(int value) {
     implicit_surface_height_ = value;
@@ -89,9 +102,9 @@ void DesignerController::ComputeDesignedShapeButtonPressed() {
     if (is_uniform_) {
         rve->ComputeSurfaceMesh();
     } else {
-		rve->ComputeSurfaceMesh(
-			Vector3<int>(inclusion_height_, inclusion_width_, inclusion_depth_),
-			material_2_number_of_inclusions_, is_isotropic_);
+        rve->ComputeSurfaceMesh(
+            Vector3<int>(inclusion_height_, inclusion_width_, inclusion_depth_),
+            material_2_number_of_inclusions_, is_isotropic_);
     }
 
     MatrixXr V;
@@ -120,9 +133,75 @@ void DesignerController::SetCSVPathButtonClicked(const Ui::deformoClass& ui) {
     const QString q_dirname =
         QFileDialog::getExistingDirectory(nullptr, "Choose CSV File");
     ui.designer_dataset_generator_csv_path_line_edit->setText(q_dirname);
+    const std::string dirname = utils::qt::QStringToString(q_dirname);
+    output_csv_path_ = dirname + "/";
 }
 
-void DesignerController::ComputeDatasetButtonPressed(const Ui::deformoClass& ui) {
-    homogenization_dialog_ = new HomogenizationDatasetGeneratorDialog(ui.centralWidget);
+void DesignerController::SetOutputCSVFileName(const std::string& value) {
+    output_csv_filename_ = value;
+}
+
+void DesignerController::SetGenerator(const std::string& value) {
+    if (value == "Homogenization") {
+        generator_ = Generator::kHomogenization;
+    }
+}
+
+void DesignerController::ComputeDatasetButtonPressed() {
+    switch (generator_) {
+    case Generator::kHomogenization:
+        SetupAndDisplayHomogenizationDialog();
+    }
+}
+
+void DesignerController::HomogenizationDialogSubmitted() {
+    homogenization_dialog_->accept();
+}
+
+void DesignerController::SetupAndDisplayHomogenizationDialog() {
+    connect(homogenization_dialog_->submit_button, &QPushButton::pressed,
+            this, &DesignerController::HomogenizationDialogSubmitted);
+
+    connect(homogenization_dialog_->min_inclusion_dimensions,
+            QOverload<int>::of(&QSpinBox::valueChanged), homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetMinInclusionDimensions);
+    connect(homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::OnSetMinInclusionDimensions,
+            homogenization_dialog_->min_inclusion_dimensions,
+            &QSpinBox::setValue);
+
+    connect(homogenization_dialog_->max_inclusion_dimensions,
+            QOverload<int>::of(&QSpinBox::valueChanged), homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetMaxInclusionDimensions);
+    connect(homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::OnSetMaxInclusionDimensions,
+            homogenization_dialog_->max_inclusion_dimensions,
+            &QSpinBox::setValue);
+
+    connect(homogenization_dialog_->min_inclusions,
+            QOverload<int>::of(&QSpinBox::valueChanged), homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetMinInclusions);
+    connect(homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::OnSetMinInclusions,
+            homogenization_dialog_->min_inclusions, &QSpinBox::setValue);
+
+    connect(homogenization_dialog_->max_inclusions,
+            QOverload<int>::of(&QSpinBox::valueChanged), homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetMaxInclusions);
+    connect(homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::OnSetMaxInclusions,
+            homogenization_dialog_->max_inclusions, &QSpinBox::setValue);
+
+    connect(homogenization_dialog_->cube_dimensions,
+            QOverload<int>::of(&QSpinBox::valueChanged), homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetCubeDimensions);
+    connect(homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::OnSetCubeDimensions,
+            homogenization_dialog_->cube_dimensions, &QSpinBox::setValue);
+
     homogenization_dialog_->exec();
+}
+
+void DesignerController::SetNumberOfEntries(int value) {
+    number_of_dataset_entries_ = value;
 }

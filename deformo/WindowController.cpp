@@ -9,11 +9,10 @@ WindowController::WindowController(Ui::deformoClass& ui) : ui_(ui) {
     mesh = std::make_shared<Mesh>(default_mesh_path, tetgen_flags_);
 
     simulation_controller_ = std::make_unique<SimulationController>(mesh);
-    designer_controller_ = std::make_unique<DesignerController>(mesh);
+    designer_controller_ = std::make_unique<DesignerController>(mesh, ui_);
 
     ConnectUiElementsToSimulation();
     ConnectUiElementsToDesigner();
-    ui_.designer_dataset_generator_progressbar->setVisible(false);
 }
 
 void WindowController::SetRenderer(const std::shared_ptr<Renderer>& renderer) {
@@ -223,12 +222,19 @@ void WindowController::SetCSVPathButtonClicked() {
     designer_controller_->SetCSVPathButtonClicked(ui_);
 }
 
-void WindowController::SetOutputCSVFileName(const QString& value) {}
+void WindowController::SetOutputCSVFileName(const QString& value) {
+    const std::string path = utils::qt::QStringToString(value);
+    designer_controller_->SetOutputCSVFileName(path);
+}
 
 void WindowController::SetGenerator(const QString& value) {}
 
+void WindowController::SetDatasetGeneratorNumberOfEntries(int value) {
+    designer_controller_->SetNumberOfEntries(value);
+}
+
 void WindowController::DatasetGeneratorComputeButtonPressed() {
-    designer_controller_->ComputeDatasetButtonPressed(ui_);
+    designer_controller_->ComputeDatasetButtonPressed();
 }
 
 void WindowController::ConnectUiElementsToSimulation() {
@@ -448,6 +454,14 @@ void WindowController::ConnectUiElementsToDesigner() {
     connect(ui_.designer_dataset_generator_compute_push_button,
             &QPushButton::pressed, this,
             &WindowController::DatasetGeneratorComputeButtonPressed);
+
+    connect(ui_.designer_dataset_generator_csv_name_line_edit,
+            &QLineEdit::textChanged, this,
+            &WindowController::SetOutputCSVFileName);
+
+    connect(ui_.designer_dataset_generator_number_of_entries_spinbox,
+            QOverload<int>::of(&QSpinBox::valueChanged), this,
+            &WindowController::SetDatasetGeneratorNumberOfEntries);
 }
 
 void WindowController::ResetPlaybackControls() {

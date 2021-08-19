@@ -72,11 +72,17 @@ template <typename T> class Tensor3 {
 
     Tensor3(int rows, int cols, int layers) { Resize(rows, cols, layers); }
 
+    auto ToString() const -> std::string {
+        std::stringstream ss;
+        ss << instance_;
+        return ss.str();
+    }
+
     auto Matrix() const -> MatrixX<T> {
         const int rows = Dimension(0) * Dimension(2);
         const int cols = Dimension(1);
         return Matrix(rows, cols);
-    } 
+    }
 
     auto Vector() const -> VectorX<T> {
         const int rows = Dimensions().prod();

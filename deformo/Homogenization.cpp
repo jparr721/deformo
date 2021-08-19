@@ -53,6 +53,30 @@ Homogenization::Homogenization(const Tensor3r& implicit_surface,
     mu_ = Tensor3r(material_one_mu.Instance() + material_two_mu.Instance());
 }
 
+auto Homogenization::Capture() -> void {
+    assertion.Assert(
+        is_homogenized_, __FUNCTION__, __FILE__, __LINE__,
+        "Cannot extract homogenization parameters, please solve first");
+
+    dataset.insert({"Tensor", voxel_.ToString()});
+    dataset.insert({
+        "Rows",
+        std::to_string(voxel_.Dimension(0)),
+    });
+    dataset.insert({
+        "Cols",
+        std::to_string(voxel_.Dimension(1)),
+    });
+    dataset.insert({
+        "Layers",
+        std::to_string(voxel_.Dimension(2)),
+    });
+
+    std::stringstream ss;
+    ss << CoefficientVector();
+    dataset.insert({"Y", ss.str()});
+}
+
 auto Homogenization::Solve() -> void {
     const unsigned int rows = voxel_.Dimension(0);
     const unsigned int cols = voxel_.Dimension(1);
@@ -87,9 +111,29 @@ auto Homogenization::Solve() -> void {
     const Tensor3r X0 = ComputeUnitStrainParameters(n_elements, hexahedron);
     AssembleConstitutiveTensor(unique_degrees_of_freedom, ke_lambda, ke_mu, X,
                                X0);
+    ComputeMaterialCoefficients();
+
+    is_homogenized_ = true;
 }
 
-auto Homogenization::ComputeMaterialCoefficients() -> void {}
+auto Homogenization::ComputeMaterialCoefficients() -> void {
+    const Matrix6r S = constitutive_tensor_.inverse();
+
+    coefficients_.E_11 = std::powf(S(0, 0), -1);
+    coefficients_.E_22 = std::powf(S(1, 1), -1);
+    coefficients_.E_33 = std::powf(S(2, 2), -1);
+
+    coefficients_.G_23 = std::powf(S(3, 3), -1);
+    coefficients_.G_31 = std::powf(S(4, 4), -1);
+    coefficients_.G_12 = std::powf(S(5, 5), -1);
+
+	coefficients_.v_21 = -1 * S(0, 1) * coefficients_.E_22;
+	coefficients_.v_31 = -1 * S(0, 2) * coefficients_.E_33;
+	coefficients_.v_12 = -1 * S(1, 0) * coefficients_.E_11;
+	coefficients_.v_32 = -1 * S(1, 2) * coefficients_.E_33;
+	coefficients_.v_13 = -1 * S(2, 0) * coefficients_.E_11;
+	coefficients_.v_23 = -1 * S(2, 1) * coefficients_.E_22;
+}
 
 auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
     -> std::array<MatrixXr, 4> {
@@ -264,8 +308,7 @@ auto Homogenization::ComputeElementDegreesOfFreedom(unsigned int n_elements)
     one.SetConstant(1);
     _dof.Instance() += one.Instance();
 
-    const VectorXi degrees_of_freedom =
-        _dof.Vector();
+    const VectorXi degrees_of_freedom = _dof.Vector();
 
     Vector6<int> _mid;
     _mid << 3, 4, 5, 0, 1, 2;
@@ -376,8 +419,7 @@ auto Homogenization::AssembleStiffnessMatrix(
     const MatrixXr sK =
         (linear_algebra::MatrixToVector(ke_lambda) *
          lambda_.Vector().transpose()) +
-        (linear_algebra::MatrixToVector(ke_mu) *
-         mu_.Vector().transpose());
+        (linear_algebra::MatrixToVector(ke_mu) * mu_.Vector().transpose());
 
     const VectorXr stiffness_entries = linear_algebra::MatrixToVector(sK);
 
@@ -419,8 +461,7 @@ auto Homogenization::AssembleLoadMatrix(
     const MatrixXr sF =
         (linear_algebra::MatrixToVector(fe_lambda) *
          lambda_.Vector().transpose()) +
-        (linear_algebra::MatrixToVector(fe_mu) *
-         mu_.Vector().transpose());
+        (linear_algebra::MatrixToVector(fe_mu) * mu_.Vector().transpose());
     const VectorXr load_entries = linear_algebra::MatrixToVector(sF);
 
     const auto F_entries =
