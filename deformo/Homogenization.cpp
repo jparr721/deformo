@@ -127,12 +127,12 @@ auto Homogenization::ComputeMaterialCoefficients() -> void {
     coefficients_.G_31 = std::powf(S(4, 4), -1);
     coefficients_.G_12 = std::powf(S(5, 5), -1);
 
-	coefficients_.v_21 = -1 * S(0, 1) * coefficients_.E_22;
-	coefficients_.v_31 = -1 * S(0, 2) * coefficients_.E_33;
-	coefficients_.v_12 = -1 * S(1, 0) * coefficients_.E_11;
-	coefficients_.v_32 = -1 * S(1, 2) * coefficients_.E_33;
-	coefficients_.v_13 = -1 * S(2, 0) * coefficients_.E_11;
-	coefficients_.v_23 = -1 * S(2, 1) * coefficients_.E_22;
+    coefficients_.v_21 = -1 * S(0, 1) * coefficients_.E_22;
+    coefficients_.v_31 = -1 * S(0, 2) * coefficients_.E_33;
+    coefficients_.v_12 = -1 * S(1, 0) * coefficients_.E_11;
+    coefficients_.v_32 = -1 * S(1, 2) * coefficients_.E_33;
+    coefficients_.v_13 = -1 * S(2, 0) * coefficients_.E_11;
+    coefficients_.v_23 = -1 * S(2, 1) * coefficients_.E_22;
 }
 
 auto Homogenization::ComputeHexahedron(Real a, Real b, Real c)
