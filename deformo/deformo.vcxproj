@@ -118,6 +118,7 @@
     <ClCompile Include="Dotenv.cpp" />
     <ClCompile Include="GLWidget.cpp" />
     <ClCompile Include="Homogenization.cpp" />
+    <ClCompile Include="HomogenizationDatasetGeneratorDialog.cpp" />
     <ClCompile Include="ImplicitSurfaceGenerator.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="ExplicitCentralDifference.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="DesignerController.h" />
     <ClInclude Include="Dotenv.h" />
     <ClInclude Include="Homogenization.h" />
+    <QtMoc Include="HomogenizationDatasetGeneratorDialog.h" />
     <ClInclude Include="ImplicitSurfaceGenerator.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="ExplicitCentralDifference.h" />

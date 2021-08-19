@@ -3,6 +3,7 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "Numerics.h"
+#include "HomogenizationDatasetGeneratorDialog.h"
 #include "ui_deformo.h"
 #include <string>
 
@@ -44,6 +45,12 @@ class DesignerController {
 
     void SetSquareShapedInclusion(bool checked);
 
+    // Dataset Generator
+    void SetCSVPathButtonClicked(const Ui::deformoClass& ui);
+    void SetOutputCSVFileName(const std::string& value);
+    void SetGenerator(const std::string& value);
+    void ComputeDatasetButtonPressed(const Ui::deformoClass& ui);
+
   private:
     // Implicit Surface Options
     int implicit_surface_height_ = 0;
@@ -70,5 +77,11 @@ class DesignerController {
     // Inclusion ratio for material 2
     int material_2_number_of_inclusions_ = 0;
 
+    std::string output_csv_path_;
+    std::string output_csv_filename_;
+    std::string generator_;
+
     std::shared_ptr<Mesh> mesh_;
+
+    HomogenizationDatasetGeneratorDialog* homogenization_dialog_;
 };

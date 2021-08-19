@@ -219,6 +219,18 @@ void WindowController::SetSquareShapedInclusion(bool checked) {
     designer_controller_->SetSquareShapedInclusion(checked);
 }
 
+void WindowController::SetCSVPathButtonClicked() {
+    designer_controller_->SetCSVPathButtonClicked(ui_);
+}
+
+void WindowController::SetOutputCSVFileName(const QString& value) {}
+
+void WindowController::SetGenerator(const QString& value) {}
+
+void WindowController::DatasetGeneratorComputeButtonPressed() {
+    designer_controller_->ComputeDatasetButtonPressed(ui_);
+}
+
 void WindowController::ConnectUiElementsToSimulation() {
     // Slice Axis Combo Box
     ui_.slice_axis_combo_box->addItem("X-Axis");
@@ -328,6 +340,8 @@ void WindowController::ConnectUiElementsToSimulation() {
 }
 
 void WindowController::ConnectUiElementsToDesigner() {
+    ui_.designer_dataset_generator_generator_select_combobox->addItem(
+        "Homogenization");
     // First 3 checkboxes
     connect(ui_.designer_force_square_dimensions_checkbox, &QCheckBox::clicked,
             this, &WindowController::SetForceSquareDimensions);
@@ -426,6 +440,14 @@ void WindowController::ConnectUiElementsToDesigner() {
     // Compute Button
     connect(ui_.designer_compute_shape_push_button, &QPushButton::pressed, this,
             &WindowController::ComputeDesignedShapeButtonPressed);
+
+    // Dataset Generator
+    connect(ui_.designer_dataset_generator_choose_csv_path_push_button,
+            &QPushButton::pressed, this,
+            &WindowController::SetCSVPathButtonClicked);
+    connect(ui_.designer_dataset_generator_compute_push_button,
+            &QPushButton::pressed, this,
+            &WindowController::DatasetGeneratorComputeButtonPressed);
 }
 
 void WindowController::ResetPlaybackControls() {

@@ -15,8 +15,13 @@ template <typename T = std::vector<Real>> class AbstractGenerator {
     std::string dataset_path;
     std::unordered_map<std::string_view, std::vector<T>> dataset;
 
-    virtual auto Write() -> void = 0;
+    virtual ~AbstractGenerator() = default;
+
     virtual auto Capture() -> void = 0;
+    virtual auto WriteDatasetToCSVPath() -> bool final {
+        _CsvFile c(dataset_path);
+        return c.Absorb(dataset);
+    }
 
   private:
     class _CsvFile {
@@ -60,7 +65,7 @@ template <typename T = std::vector<Real>> class AbstractGenerator {
             const int row_len = data.begin()->second.size();
             for (i = 0; i < row_len; ++i) {
                 for (int k = 0; k < keys.size(); ++k) {
-                    const auto k = keys.at(k);
+                    const auto key = keys.at(k);
                     if (k < keys.size() - 1) {
                         fs_ << data.at(key)[i] << ",";
                     } else {
@@ -80,9 +85,4 @@ template <typename T = std::vector<Real>> class AbstractGenerator {
     };
 
     DeformoAssertion assertion_;
-
-    auto WriteDatasetToCSVPath() -> bool {
-        const _CsvFile c(dataset_path);
-        c.Absorb(dataset);
-    }
 };

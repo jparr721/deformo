@@ -109,6 +109,12 @@ class WindowController : public QObject {
     // Designer -- Inclusion Is Square.
     void SetSquareShapedInclusion(bool checked);
 
+    // Designer -- Dataset Generator -- CSV Path
+    void SetCSVPathButtonClicked();
+    void SetOutputCSVFileName(const QString& value);
+    void SetGenerator(const QString& value);
+    void DatasetGeneratorComputeButtonPressed();
+
 
   signals:
     // Simulation Settings Window
@@ -153,6 +159,11 @@ class WindowController : public QObject {
     void OnSetInclusionHeight(int value);
     void OnSetInclusionWidth(int value);
     void OnSetInclusionDepth(int value);
+
+    // Designer -- Dataset Generatr -- CSV Path
+    void OnSetOutputCSVPath(const QString& value);
+    void OnSetOutputCSVFileName(const QString& value);
+    void OnSetGenerator(const QString& value);
 
   private:
     Ui::deformoClass ui_;

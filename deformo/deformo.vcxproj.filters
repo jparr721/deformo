@@ -63,6 +63,9 @@
     <Filter Include="Machine Learning\Py">
       <UniqueIdentifier>{86285b1c-8bb3-4369-bbed-792369cad768}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Windowing\Dataset Generator Options">
+      <UniqueIdentifier>{1ae30962-705a-4017-9a64-0b2c8934f3b6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="deformo.qrc">
@@ -165,6 +168,9 @@
     </ClCompile>
     <ClCompile Include="NeuralNetwork.cpp">
       <Filter>Machine Learning</Filter>
+    </ClCompile>
+    <ClCompile Include="HomogenizationDatasetGeneratorDialog.cpp">
+      <Filter>Windowing\Dataset Generator Options</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -348,6 +354,9 @@
     </QtMoc>
     <QtMoc Include="WindowController.h">
       <Filter>Windowing</Filter>
+    </QtMoc>
+    <QtMoc Include="HomogenizationDatasetGeneratorDialog.h">
+      <Filter>Windowing\Dataset Generator Options</Filter>
     </QtMoc>
   </ItemGroup>
 </Project>

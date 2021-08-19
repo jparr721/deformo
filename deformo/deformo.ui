@@ -336,15 +336,15 @@ QMenu::separator {
                </font>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>2</number>
               </property>
               <widget class="QWidget" name="page_5">
                <property name="geometry">
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>461</width>
-                 <height>907</height>
+                 <width>376</width>
+                 <height>592</height>
                 </rect>
                </property>
                <property name="font">
@@ -890,8 +890,8 @@ QMenu::separator {
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>461</width>
-                 <height>907</height>
+                 <width>244</width>
+                 <height>118</height>
                 </rect>
                </property>
                <attribute name="label">
@@ -1019,6 +1019,9 @@ QMenu::separator {
                    <number>20</number>
                   </property>
                   <item row="5" column="0" colspan="2">
+                   <widget class="QComboBox" name="designer_dataset_generator_generator_select_combobox"/>
+                  </item>
+                  <item row="9" column="0" colspan="2">
                    <widget class="QProgressBar" name="designer_dataset_generator_progressbar">
                     <property name="font">
                      <font>
@@ -1031,8 +1034,11 @@ QMenu::separator {
                     </property>
                    </widget>
                   </item>
-                  <item row="0" column="0" colspan="2">
-                   <widget class="QLabel" name="label_34">
+                  <item row="3" column="0" colspan="2">
+                   <widget class="QLineEdit" name="designer_dataset_generator_csv_name_line_edit"/>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="QLabel" name="label_5">
                     <property name="font">
                      <font>
                       <family>Segoe UI</family>
@@ -1040,11 +1046,24 @@ QMenu::separator {
                      </font>
                     </property>
                     <property name="text">
-                     <string>Output CSV Path:</string>
+                     <string>Output CSV File Name:</string>
                     </property>
                    </widget>
                   </item>
-                  <item row="2" column="0" colspan="2">
+                  <item row="1" column="0">
+                   <widget class="QLineEdit" name="designer_dataset_generator_csv_path_line_edit">
+                    <property name="font">
+                     <font>
+                      <family>Segoe UI</family>
+                      <pointsize>9</pointsize>
+                     </font>
+                    </property>
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0" colspan="2">
                    <widget class="QLabel" name="label_35">
                     <property name="font">
                      <font>
@@ -1057,10 +1076,40 @@ QMenu::separator {
                     </property>
                    </widget>
                   </item>
-                  <item row="3" column="0" colspan="2">
-                   <widget class="QComboBox" name="designer_dataset_generator_generator_select_combobox"/>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_34">
+                    <property name="font">
+                     <font>
+                      <family>Segoe UI</family>
+                      <pointsize>9</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Output CSV Path:</string>
+                    </property>
+                   </widget>
                   </item>
-                  <item row="4" column="0" colspan="2">
+                  <item row="6" column="0">
+                   <widget class="QLabel" name="label_31">
+                    <property name="font">
+                     <font>
+                      <family>Segoe UI</family>
+                      <pointsize>9</pointsize>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>Number of Entries:</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="QPushButton" name="designer_dataset_generator_choose_csv_path_push_button">
+                    <property name="text">
+                     <string>...</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0" colspan="2">
                    <widget class="QPushButton" name="designer_dataset_generator_compute_push_button">
                     <property name="font">
                      <font>
@@ -1073,13 +1122,13 @@ QMenu::separator {
                     </property>
                    </widget>
                   </item>
-                  <item row="1" column="0" colspan="2">
-                   <widget class="QLineEdit" name="designer_dataset_generator_csv_path_line_edit">
-                    <property name="font">
-                     <font>
-                      <family>Segoe UI</family>
-                      <pointsize>9</pointsize>
-                     </font>
+                  <item row="7" column="0" colspan="2">
+                   <widget class="QSpinBox" name="designer_dataset_generator_number_of_entries_spinbox">
+                    <property name="minimum">
+                     <number>1</number>
+                    </property>
+                    <property name="maximum">
+                     <number>10000000</number>
                     </property>
                    </widget>
                   </item>
@@ -1256,8 +1305,8 @@ QMenu::separator {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>461</width>
-               <height>816</height>
+               <width>267</width>
+               <height>486</height>
               </rect>
              </property>
              <attribute name="label">
@@ -1739,8 +1788,8 @@ QMenu::separator {
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>461</width>
-               <height>816</height>
+               <width>161</width>
+               <height>138</height>
               </rect>
              </property>
              <property name="font">

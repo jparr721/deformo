@@ -1,6 +1,8 @@
 #include "DesignerController.h"
 #include "MarchingCubes.h"
 #include "Rve.h"
+#include <QString>
+#include <QFileDialog>
 
 void DesignerController::SetImplicitSurfaceHeight(int value) {
     implicit_surface_height_ = value;
@@ -112,4 +114,15 @@ void DesignerController::SetInclusionDepth(int value) {
 
 void DesignerController::SetSquareShapedInclusion(bool checked) {
     inclusion_is_square_ = checked;
+}
+
+void DesignerController::SetCSVPathButtonClicked(const Ui::deformoClass& ui) {
+    const QString q_dirname =
+        QFileDialog::getExistingDirectory(nullptr, "Choose CSV File");
+    ui.designer_dataset_generator_csv_path_line_edit->setText(q_dirname);
+}
+
+void DesignerController::ComputeDatasetButtonPressed(const Ui::deformoClass& ui) {
+    homogenization_dialog_ = new HomogenizationDatasetGeneratorDialog(ui.centralWidget);
+    homogenization_dialog_->exec();
 }

@@ -6,7 +6,7 @@
 #include "Numerics.h"
 #include <array>
 
-class Homogenization {
+class Homogenization : public AbstractGenerator<Real> {
     using MatrixXi = MatrixX<int>;
     using VectorXi = VectorX<int>;
 
@@ -15,20 +15,23 @@ class Homogenization {
                    const Material& material_1);
     Homogenization(const Tensor3r& implicit_surface, const Material& material_1,
                    const Material& material_2);
+    virtual ~Homogenization() = default;
 
     auto E() const noexcept -> Real { return homogenized_E_; }
     auto v() const noexcept -> Real { return homogenized_v_; }
     auto Stiffness() const -> Matrix6r { return constitutive_tensor_; }
 
+    auto Capture() -> void override { return; }
+
     /// <summary>
-    /// Solves the integral over the volume of the voxel for the difference of the 
-    /// macro and micro scale strain tensors.
+    /// Solves the integral over the volume of the voxel for the difference of
+    /// the macro and micro scale strain tensors.
     /// </summary>
     auto Solve() -> void;
 
     /// <summary>
-    /// Creates the matrix S by inverting the stiffness constutive tensor C and gets 
-    /// the 6x6 compliance matrix which contains our material coefficients.
+    /// Creates the matrix S by inverting the stiffness constutive tensor C and
+    /// gets the 6x6 compliance matrix which contains our material coefficients.
     /// </summary>
     /// <returns></returns>
     auto ComputeMaterialCoefficients() -> void;
@@ -67,7 +70,7 @@ class Homogenization {
     /// nodes</param> <param name="stiffness">The stiffness matrix K</param>
     /// <param name="load">The load matrix F</param>
     /// <param name="unique_degrees_of_freedom">The degrees of freedom for
-    /// non-void regions</param> 
+    /// non-void regions</param>
     /// <returns>Nodal displacement matrix Chi (X_e)</returns>
     auto ComputeDisplacement(unsigned int n_degrees_of_freedom,
                              const MatrixXr& stiffness, const MatrixXr& load,
