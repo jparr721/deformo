@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CsvFile.h"
 #include "HomogenizationDatasetGeneratorDialog.h"
 #include "Material.h"
 #include "Mesh.h"
@@ -75,7 +76,7 @@ class DesignerController : public QObject {
     int inclusion_depth_ = 0;
 
     // Dataset Generator
-    int number_of_dataset_entries_ = 1; 
+    int number_of_dataset_entries_ = 1;
 
     // Square shaped object
     bool is_square_ = false;
@@ -100,4 +101,6 @@ class DesignerController : public QObject {
     std::unique_ptr<Homogenization> homogenization_;
 
     HomogenizationDatasetGeneratorDialog* homogenization_dialog_;
+
+    Ui::deformoClass ui_;
 };

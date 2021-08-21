@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Numerics.h"
 #include <QDialog>
 
 QT_BEGIN_NAMESPACE
@@ -7,6 +8,7 @@ class QDialogButtonBox;
 class QPushButton;
 class QLineEdit;
 class QSpinBox;
+class QDoubleSpinBox;
 class QLabel;
 QT_END_NAMESPACE
 
@@ -25,6 +27,9 @@ class HomogenizationDatasetGeneratorDialog : public QDialog {
 
     QLabel* cube_dimensions_label;
 
+    QLabel* material_E_label;
+    QLabel* material_v_label;
+
     // Buttons
     QPushButton* submit_button;
 
@@ -42,6 +47,21 @@ class HomogenizationDatasetGeneratorDialog : public QDialog {
     // Main cube dimensions
     QSpinBox* cube_dimensions;
 
+    // Material coeff for mesh
+    QDoubleSpinBox* E;
+    QDoubleSpinBox* v;
+
+    int min_inclusion_dimensions_ = 1;
+    int max_inclusion_dimensions_ = 5;
+
+    int min_inclusions_ = 1;
+    int max_inclusions_ = 20;
+
+    int cube_dimensions_ = 50;
+
+    Real E_;
+    Real v_;
+
   public slots:
     void SetMinInclusionDimensions(int value);
     void SetMaxInclusionDimensions(int value);
@@ -50,6 +70,9 @@ class HomogenizationDatasetGeneratorDialog : public QDialog {
     void SetMaxInclusions(int value);
 
     void SetCubeDimensions(int value);
+
+    void SetMaterialYoungsModulus(Real value);
+    void SetMaterialPoissonsRatio(Real value);
 
   signals:
     void OnSetMinInclusionDimensions(int value);
@@ -61,13 +84,5 @@ class HomogenizationDatasetGeneratorDialog : public QDialog {
     void OnSetCubeDimensions(int value);
 
   private:
-    int min_inclusion_dimensions_ = 1;
-    int max_inclusion_dimensions_ = 5;
-
-    int min_inclusions_ = 1;
-    int max_inclusions_ = 20;
-
-    int cube_dimensions_ = 50;
-
     auto MakeSpinBox() -> QSpinBox*;
 };

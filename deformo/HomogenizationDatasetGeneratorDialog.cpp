@@ -1,5 +1,4 @@
 #include "HomogenizationDatasetGeneratorDialog.h"
-#include <iostream>
 #include <QDialogButtonBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -8,6 +7,7 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QVBoxLayout>
+#include <iostream>
 
 HomogenizationDatasetGeneratorDialog::HomogenizationDatasetGeneratorDialog(
     QWidget* parent)
@@ -38,6 +38,19 @@ HomogenizationDatasetGeneratorDialog::HomogenizationDatasetGeneratorDialog(
     cube_dimensions->setValue(50);
     cube_dimensions_label->setBuddy(cube_dimensions);
 
+    // Material =========================================
+    material_E_label = new QLabel("Young's Modulus");
+    E = new QDoubleSpinBox;
+    E->setMinimum(1000);
+    E->setMaximum(1000000000000000);
+    material_E_label->setBuddy(E);
+
+    material_v_label = new QLabel("Poisson's Ratio");
+    v = new QDoubleSpinBox;
+    v->setMinimum(0.00000001);
+    v->setMaximum(0.5);
+    material_v_label->setBuddy(v);
+
     // Submission Buttons ================================
     submit_button = new QPushButton("Submit");
     // Automatically submit when the user presses enter.
@@ -59,7 +72,12 @@ HomogenizationDatasetGeneratorDialog::HomogenizationDatasetGeneratorDialog(
     parameters_layout->addWidget(cube_dimensions_label, 4, 0, 1, 1);
     parameters_layout->addWidget(cube_dimensions, 5, 0, 1, 1);
 
-    parameters_layout->addWidget(submit_button, 6, 1);
+    parameters_layout->addWidget(material_E_label, 6, 0, 1, 1);
+    parameters_layout->addWidget(material_v_label, 6, 1, 1, 1);
+    parameters_layout->addWidget(E, 7, 0, 1, 1);
+    parameters_layout->addWidget(v, 7, 1, 1, 1);
+
+    parameters_layout->addWidget(submit_button, 8, 1);
 
     setLayout(parameters_layout);
     setMinimumSize(300, 300);
@@ -98,4 +116,14 @@ void HomogenizationDatasetGeneratorDialog::SetMaxInclusions(int value) {
 void HomogenizationDatasetGeneratorDialog::SetCubeDimensions(int value) {
     cube_dimensions_ = value;
     OnSetCubeDimensions(value);
+}
+
+void HomogenizationDatasetGeneratorDialog::SetMaterialYoungsModulus(
+    Real value) {
+    E_ = value;
+}
+
+void HomogenizationDatasetGeneratorDialog::SetMaterialPoissonsRatio(
+    Real value) {
+    v_ = value;
 }

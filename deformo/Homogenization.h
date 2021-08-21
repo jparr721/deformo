@@ -1,12 +1,11 @@
 #pragma once
 
-#include "AbstractGenerator.h"
 #include "DeformoAssert.h"
 #include "Material.h"
 #include "Numerics.h"
 #include <array>
 
-class Homogenization : public AbstractGenerator<std::string> {
+class Homogenization {
     using MatrixXi = MatrixX<int>;
     using VectorXi = VectorX<int>;
 
@@ -31,6 +30,8 @@ class Homogenization : public AbstractGenerator<std::string> {
             VectorXr v(12);
             v << E_11, E_22, E_33, G_23, G_31, G_12, v_21, v_31, v_12, v_32,
                 v_13, v_23;
+
+            return v;
         }
     };
     Homogenization(const Tensor3r& implicit_surface,
@@ -43,8 +44,6 @@ class Homogenization : public AbstractGenerator<std::string> {
     auto CoefficientVector() const -> VectorXr {
         return coefficients_.Vector();
     }
-
-    auto Capture() -> void override;
 
     /// <summary>
     /// Solves the integral over the volume of the voxel for the difference of
@@ -102,6 +101,8 @@ class Homogenization : public AbstractGenerator<std::string> {
     auto ComputeUnitStrainParameters(unsigned int n_elements,
                                      const std::array<MatrixXr, 4>& hexahedron)
         -> Tensor3r;
+
+    auto Voxel() const -> const Tensor3r& { return voxel_; }
 
   private:
     bool is_one_material_ = false;

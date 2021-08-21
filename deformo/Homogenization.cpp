@@ -53,30 +53,6 @@ Homogenization::Homogenization(const Tensor3r& implicit_surface,
     mu_ = Tensor3r(material_one_mu.Instance() + material_two_mu.Instance());
 }
 
-auto Homogenization::Capture() -> void {
-    assertion.Assert(
-        is_homogenized_, __FUNCTION__, __FILE__, __LINE__,
-        "Cannot extract homogenization parameters, please solve first");
-
-    dataset.insert({"Tensor", voxel_.ToString()});
-    dataset.insert({
-        "Rows",
-        std::to_string(voxel_.Dimension(0)),
-    });
-    dataset.insert({
-        "Cols",
-        std::to_string(voxel_.Dimension(1)),
-    });
-    dataset.insert({
-        "Layers",
-        std::to_string(voxel_.Dimension(2)),
-    });
-
-    std::stringstream ss;
-    ss << CoefficientVector();
-    dataset.insert({"Y", ss.str()});
-}
-
 auto Homogenization::Solve() -> void {
     const unsigned int rows = voxel_.Dimension(0);
     const unsigned int cols = voxel_.Dimension(1);

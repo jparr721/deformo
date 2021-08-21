@@ -12,6 +12,7 @@
 
 class Rve {
   public:
+    Rve(const Vector3<int>& size, const Material& material_1);
     Rve(const Vector3<int>& size, const Material& material_1,
         const Material& material_2);
 
@@ -29,6 +30,9 @@ class Rve {
     auto SurfaceMesh() const -> Tensor3r { return surface_mesh_; }
     auto PrimaryMaterial() const -> Material { return material_1_; }
     auto SecondaryMaterial() const -> Material { return material_2_; }
+    auto Homogenized() const noexcept -> const std::unique_ptr<Homogenization>& {
+        return homogenization_;
+    }
 
   private:
     static constexpr unsigned int kCellLength = 1;

@@ -113,6 +113,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BoundaryCondition.cpp" />
+    <ClCompile Include="CsvFile.cpp" />
     <ClCompile Include="Cube.cpp" />
     <ClCompile Include="DesignerController.cpp" />
     <ClCompile Include="Dotenv.cpp" />
@@ -149,9 +150,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AbstractGenerator.h" />
     <ClInclude Include="BoundaryCondition.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CsvFile.h" />
     <ClInclude Include="Cube.h" />
     <ClInclude Include="DeformoAssert.h" />
     <QtMoc Include="DesignerController.h" />

@@ -1,18 +1,19 @@
 #include "DesignerController.h"
 #include "MarchingCubes.h"
+#include "QTUtils.h"
 #include "Rve.h"
 #include <QFileDialog>
 #include <QPushButton>
 #include <QString>
-#include "QTUtils.h"
+#include <random>
 
 DesignerController::DesignerController(const std::shared_ptr<Mesh> mesh,
                                        const Ui::deformoClass& ui)
-    : mesh_(mesh) {
+    : mesh_(mesh), ui_(ui) {
     homogenization_dialog_ =
-        new HomogenizationDatasetGeneratorDialog(ui.centralWidget);
+        new HomogenizationDatasetGeneratorDialog(ui_.centralWidget);
 
-    ui.designer_dataset_generator_progressbar->setVisible(false);
+    ui_.designer_dataset_generator_progressbar->setVisible(false);
 }
 
 DesignerController::~DesignerController() { delete homogenization_dialog_; }
@@ -155,12 +156,70 @@ void DesignerController::ComputeDatasetButtonPressed() {
 }
 
 void DesignerController::HomogenizationDialogSubmitted() {
+    ui_.designer_dataset_generator_progressbar->setVisible(true);
+    ui_.designer_dataset_generator_progressbar->setValue(0);
     homogenization_dialog_->accept();
+
+    assert(!output_csv_path_.empty());
+    assert(!output_csv_filename_.empty());
+    const std::string filename = output_csv_path_ + output_csv_filename_;
+
+    CsvFile<std::string> csv_file(
+        filename,
+        std::vector<std::string>({"Voxel", "Rows", "Cols", "Layers", "Coefficients"}));
+
+    for (int i = 0; i < number_of_dataset_entries_; ++i) {
+        ui_.designer_dataset_generator_progressbar->setValue(
+            ((i + 1) / number_of_dataset_entries_) * 100);
+
+        const Material m =
+            MaterialFromEandv(1, "material", homogenization_dialog_->E_,
+                              homogenization_dialog_->v_);
+        const auto rve = std::make_unique<Rve>(
+            Vector3<int>{homogenization_dialog_->cube_dimensions_,
+                         homogenization_dialog_->cube_dimensions_,
+                         homogenization_dialog_->cube_dimensions_},
+            m);
+
+        // Select random inclusion dimension in range
+        std::default_random_engine generator;
+        const std::uniform_int_distribution<int> inclusion_dims_distribution(
+            homogenization_dialog_->min_inclusion_dimensions_,
+            homogenization_dialog_->max_inclusion_dimensions_);
+
+        const int dim = inclusion_dims_distribution(generator);
+
+        const std::uniform_int_distribution<int> inclusions_distribution(
+            homogenization_dialog_->min_inclusions_,
+            homogenization_dialog_->max_inclusions_);
+
+        const int inclusions = inclusions_distribution(generator);
+
+        const Vector3<int> inclusion_size(dim, dim, dim);
+        rve->ComputeSurfaceMesh(inclusion_size, inclusions, false);
+        rve->Homogenize();
+
+        // Pull Params from homogenized system
+        // Voxel
+        const Tensor3r _voxel = rve->Homogenized()->Voxel();
+        const std::string voxel = rve->Homogenized()->Voxel().ToString();
+        const std::string rows = std::to_string(_voxel.Dimension(0));
+        const std::string cols = std::to_string(_voxel.Dimension(1));
+        const std::string layers = std::to_string(_voxel.Dimension(2));
+        const VectorXr _coefficients = rve->Homogenized()->CoefficientVector();
+        std::stringstream ss;
+        ss << _coefficients.transpose();
+        const std::string coefficients = ss.str();
+        const std::vector<std::string> entries(
+            {voxel, rows, cols, layers, coefficients});
+
+        csv_file << entries;
+    }
 }
 
 void DesignerController::SetupAndDisplayHomogenizationDialog() {
-    connect(homogenization_dialog_->submit_button, &QPushButton::pressed,
-            this, &DesignerController::HomogenizationDialogSubmitted);
+    connect(homogenization_dialog_->submit_button, &QPushButton::pressed, this,
+            &DesignerController::HomogenizationDialogSubmitted);
 
     connect(homogenization_dialog_->min_inclusion_dimensions,
             QOverload<int>::of(&QSpinBox::valueChanged), homogenization_dialog_,
@@ -198,6 +257,15 @@ void DesignerController::SetupAndDisplayHomogenizationDialog() {
     connect(homogenization_dialog_,
             &HomogenizationDatasetGeneratorDialog::OnSetCubeDimensions,
             homogenization_dialog_->cube_dimensions, &QSpinBox::setValue);
+
+    connect(homogenization_dialog_->E,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetMaterialYoungsModulus);
+    connect(homogenization_dialog_->v,
+            QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            homogenization_dialog_,
+            &HomogenizationDatasetGeneratorDialog::SetMaterialPoissonsRatio);
 
     homogenization_dialog_->exec();
 }
