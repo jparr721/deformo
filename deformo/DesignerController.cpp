@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QString>
 #include <random>
+#include <igl/writeOBJ.h>
 
 DesignerController::DesignerController(const std::shared_ptr<Mesh> mesh,
                                        const Ui::deformoClass& ui)
@@ -111,6 +112,7 @@ void DesignerController::ComputeDesignedShapeButtonPressed() {
     MatrixXr V;
     MatrixX<int> F;
     rve->ComputeRenderableMesh(V, F);
+    igl::writeOBJ("cuboid.obj", V, F);
     mesh_->RefreshData(V, F);
 }
 

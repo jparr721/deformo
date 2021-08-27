@@ -81,7 +81,7 @@ template <typename T> class Tensor3 {
     auto Matrix() const -> MatrixX<T> {
         const int rows = Dimension(0) * Dimension(2);
         const int cols = Dimension(1);
-        return Matrix(rows, cols);
+        return Matrix();
     }
 
     auto Vector() const -> VectorX<T> {
